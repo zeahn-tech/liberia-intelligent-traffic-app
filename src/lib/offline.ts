@@ -7,6 +7,8 @@ export type OfflineStore =
   | "incidents"
   | "evidence"
   | "ai_analyses"
+  | "ai_analysis_jobs"
+  | "anpr_scans"
   | "violation_types"
   | "pending_sync"
   | "drafts"
@@ -39,6 +41,20 @@ function getDB(): Promise<IDBPDatabase> {
         if (!db.objectStoreNames.contains("ai_analyses")) {
           const ai = db.createObjectStore("ai_analyses", { keyPath: "id" });
           ai.createIndex("incident_id", "incident_id");
+        }
+
+        // AI analysis jobs (queue)
+        if (!db.objectStoreNames.contains("ai_analysis_jobs")) {
+          const jobs = db.createObjectStore("ai_analysis_jobs", { keyPath: "id" });
+          jobs.createIndex("incident_id", "incident_id");
+          jobs.createIndex("status", "status");
+        }
+
+        // ANPR scan records
+        if (!db.objectStoreNames.contains("anpr_scans")) {
+          const scans = db.createObjectStore("anpr_scans", { keyPath: "id" });
+          scans.createIndex("incident_id", "incident_id");
+          scans.createIndex("normalized_plate", "normalized_plate");
         }
 
         // Violation types (cache)

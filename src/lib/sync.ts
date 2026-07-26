@@ -68,6 +68,15 @@ export async function processSyncQueue(callbacks?: SyncCallback): Promise<{ sync
           case "ai_analyses":
             await syncAIAnalysis(item);
             break;
+          case "ai_analysis_jobs":
+            await syncAIAnalysisJob(item);
+            break;
+          case "anpr_scans":
+            await syncANPRScan(item);
+            break;
+          case "stolen_vehicles":
+            await syncStolenVehicle(item);
+            break;
           default:
             await syncGenericRecord(item);
         }
@@ -140,10 +149,103 @@ async function syncEvidence(item: any): Promise<void> {
 }
 
 async function syncAIAnalysis(item: any): Promise<void> {
-  const { payload } = item;
+  const { recordId, operation, payload } = item;
   const client = supabase as any;
-  const { error } = await client.from("ai_analyses").insert(payload);
-  if (error) throw error;
+
+  switch (operation) {
+    case "create": {
+      const { error } = await client.from("ai_analyses").insert(payload);
+      if (error) throw error;
+      break;
+    }
+    case "update": {
+      const { error } = await client
+        .from("ai_analyses")
+        .update(payload)
+        .eq("id", recordId);
+      if (error) throw error;
+      break;
+    }
+    case "delete": {
+      const { error } = await client
+        .from("ai_analyses")
+        .delete()
+        .eq("id", recordId);
+      if (error) throw error;
+      break;
+    }
+  }
+}
+
+async function syncAIAnalysisJob(item: any): Promise<void> {
+  const { recordId, operation, payload } = item;
+  const client = supabase as any;
+
+  switch (operation) {
+    case "create": {
+      const { error } = await client.from("ai_analysis_jobs").insert(payload);
+      if (error) throw error;
+      break;
+    }
+    case "update": {
+      const { error } = await client
+        .from("ai_analysis_jobs")
+        .update(payload)
+        .eq("id", recordId);
+      if (error) throw error;
+      break;
+    }
+  }
+}
+
+async function syncANPRScan(item: any): Promise<void> {
+  const { recordId, operation, payload } = item;
+  const client = supabase as any;
+
+  switch (operation) {
+    case "create": {
+      const { error } = await client.from("anpr_scans").insert(payload);
+      if (error) throw error;
+      break;
+    }
+    case "update": {
+      const { error } = await client
+        .from("anpr_scans")
+        .update(payload)
+        .eq("id", recordId);
+      if (error) throw error;
+      break;
+    }
+  }
+}
+
+async function syncStolenVehicle(item: any): Promise<void> {
+  const { recordId, operation, payload } = item;
+  const client = supabase as any;
+
+  switch (operation) {
+    case "create": {
+      const { error } = await client.from("stolen_vehicles").insert(payload);
+      if (error) throw error;
+      break;
+    }
+    case "update": {
+      const { error } = await client
+        .from("stolen_vehicles")
+        .update(payload)
+        .eq("id", recordId);
+      if (error) throw error;
+      break;
+    }
+    case "delete": {
+      const { error } = await client
+        .from("stolen_vehicles")
+        .delete()
+        .eq("id", recordId);
+      if (error) throw error;
+      break;
+    }
+  }
 }
 
 async function syncGenericRecord(item: any): Promise<void> {

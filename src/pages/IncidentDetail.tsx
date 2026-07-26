@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -23,18 +23,122 @@ import {
   Share2,
   Trash2,
   Edit,
-  ChevronRight,
   WifiOff,
   Image,
   Video,
   File,
+  ScanLine,
+  RefreshCw,
 } from "lucide-react";
 import { IncidentMap } from "@/components/IncidentMap";
+import { AIAnalysisPanel } from "@/ai/components/AIAnalysisPanel";
+import { ANPREditor } from "@/ai/components/ANPREditor";
+import { submitForAnalysis, reviewAnalysisResult, getAnalysisResultsForIncident } from "@/ai/pipeline";
+import { providerRegistry } from "@/ai/registry";
+import { VlyAIProvider } from "@/ai/providers/vly-provider";
+import type { AIAnalysisResult } from "@/ai/types";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export default function IncidentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiInitialized, setAiInitialized] = useState(false);
+
+  // Initialize AI provider
+  const initAI = useCallback(async () => {
+    if (aiInitialized) return;
+    try {
+      const existing = providerRegistry.getProvider("vly");
+      if (!existing) {
+        await providerRegistry.initialize({
+          id: "vly",
+          name: "TrafficWatch AI Engine",
+          version: "1.0",
+          capabilities: ["image_analysis", "license_plate_detection", "object_detection", "violation_classification", "ocr"],
+        });
+      }
+      setAiInitialized(true);
+    } catch (err) {
+      console.error("Failed to initialize AI provider:", err);
+    }
+  }, [aiInitialized]);
+
+  // Trigger AI analysis
+  const handleRunAnalysis = useCallback(async () => {
+    if (!id) return;
+    await initAI();
+    setAiLoading(true);
+    try {
+      const result = await submitForAnalysis(
+        id,
+        [
+          {
+            type: "photo",
+            url: "evidence/front-view.jpg",
+            mimeType: "image/jpeg",
+            fileName: "front_view.jpg",
+          },
+        ],
+        ["ev-001"]
+      );
+      setAiAnalysis(result);
+      setActiveTab("ai");
+      toast.success("AI analysis completed");
+    } catch (err) {
+      toast.error("AI analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setAiLoading(false);
+    }
+  }, [id, initAI]);
+
+  // Handle officer confirmation
+  const handleConfirmAnalysis = useCallback(async (notes?: string) => {
+    if (!aiAnalysis || !user?.id) return;
+    try {
+      await reviewAnalysisResult(aiAnalysis.id, {
+        confirmed: true,
+        officerId: user.id,
+        notes,
+      });
+      setAiAnalysis((prev) =>
+        prev ? { ...prev, isReviewed: true, reviewedBy: user.id, reviewedAt: new Date().toISOString(), officerNotes: notes || "" } : prev
+      );
+      toast.success("AI findings confirmed");
+    } catch (err) {
+      toast.error("Failed to confirm analysis");
+    }
+  }, [aiAnalysis, user]);
+
+  // Handle officer rejection
+  const handleRejectAnalysis = useCallback(async (notes?: string, correctedPlate?: string) => {
+    if (!aiAnalysis || !user?.id) return;
+    try {
+      await reviewAnalysisResult(aiAnalysis.id, {
+        confirmed: false,
+        officerId: user.id,
+        notes,
+        correctedPlate,
+      });
+      setAiAnalysis((prev) =>
+        prev ? {
+          ...prev,
+          isReviewed: true,
+          reviewedBy: user.id,
+          reviewedAt: new Date().toISOString(),
+          officerNotes: notes || "",
+          officerOverride: { correctedPlate, notes: notes || "" },
+        } : prev
+      );
+      toast.success("AI findings overridden");
+    } catch (err) {
+      toast.error("Failed to override analysis");
+    }
+  }, [aiAnalysis, user]);
 
   // Mock incident data
   const incident = {
@@ -145,7 +249,7 @@ export default function IncidentDetail() {
           {/* Left column - Main content */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 rounded-xl p-1 bg-secondary">
+              <TabsList className="grid grid-cols-5 rounded-xl p-1 bg-secondary">
                 <TabsTrigger value="overview" className="rounded-lg text-xs">
                   <FileText className="w-3.5 h-3.5 mr-1" />
                   Overview
@@ -157,6 +261,10 @@ export default function IncidentDetail() {
                 <TabsTrigger value="ai" className="rounded-lg text-xs">
                   <Brain className="w-3.5 h-3.5 mr-1" />
                   AI Analysis
+                </TabsTrigger>
+                <TabsTrigger value="anpr" className="rounded-lg text-xs">
+                  <ScanLine className="w-3.5 h-3.5 mr-1" />
+                  ANPR
                 </TabsTrigger>
                 <TabsTrigger value="timeline" className="rounded-lg text-xs">
                   <Clock className="w-3.5 h-3.5 mr-1" />
@@ -264,99 +372,82 @@ export default function IncidentDetail() {
 
               {/* AI Analysis Tab */}
               <TabsContent value="ai" className="space-y-4 mt-4">
-                <Card className={`clay-card border-border/50 !rounded-2xl overflow-hidden ${
-                  incident.ai_analysis.confidence >= 90 ? "ring-2 ring-success/20" : ""
-                }`}>
-                  <CardHeader className="pb-3 border-b border-border/50 bg-gradient-to-r from-primary/5 to-accent/5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Brain className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-base">AI Analysis Results</CardTitle>
-                          <CardDescription>TrafficWatch AI Detection Engine</CardDescription>
-                        </div>
+                {!aiInitialized && !aiAnalysis && (
+                  <Card className="clay-card !rounded-2xl">
+                    <CardContent className="p-6 text-center space-y-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mx-auto">
+                        <Brain className="w-7 h-7 text-primary" />
                       </div>
-                      <Badge className={`clay-pill text-xs px-3 py-0.5 h-6 ${
-                        incident.ai_analysis.confidence >= 90 ? "bg-success/10 text-success" :
-                        incident.ai_analysis.confidence >= 70 ? "bg-warning/10 text-warning" :
-                        "bg-destructive/10 text-destructive"
-                      }`}>
-                        {incident.ai_analysis.confidence}% confidence
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-4">
-                    {/* Confidence bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Detection Confidence</span>
-                        <span className="font-medium">{incident.ai_analysis.confidence}%</span>
+                      <div>
+                        <p className="text-sm font-medium mb-1">AI Analysis Ready</p>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                          Run AI-powered analysis on evidence to detect violations,
+                          read license plates, and identify vehicles automatically.
+                        </p>
                       </div>
-                      <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ${
-                            incident.ai_analysis.confidence >= 90 ? "bg-success" :
-                            incident.ai_analysis.confidence >= 70 ? "bg-warning" :
-                            "bg-destructive"
-                          }`}
-                          style={{ width: `${incident.ai_analysis.confidence}%` }}
-                        />
+                      <Button
+                        className="clay-btn rounded-xl"
+                        onClick={handleRunAnalysis}
+                        disabled={aiLoading}
+                      >
+                        {aiLoading ? (
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Brain className="w-4 h-4 mr-2" />
+                        )}
+                        {aiLoading ? "Analyzing..." : "Run AI Analysis"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <AIAnalysisPanel
+                  analysis={aiAnalysis}
+                  isLoading={aiLoading}
+                  officerId={user?.id}
+                  onConfirm={handleConfirmAnalysis}
+                  onReject={handleRejectAnalysis}
+                  onReanalyze={handleRunAnalysis}
+                />
+              </TabsContent>
+
+              {/* ANPR Tab */}
+              <TabsContent value="anpr" className="space-y-4 mt-4">
+                <ANPREditor
+                  plateResult={aiAnalysis?.licensePlate || null}
+                  onVerify={(corrected) => {
+                    if (aiAnalysis) {
+                      handleConfirmAnalysis(`Plate verified: ${corrected}`);
+                    }
+                  }}
+                  onReject={() => {
+                    if (aiAnalysis) {
+                      handleRejectAnalysis("Plate detection rejected");
+                    }
+                  }}
+                />
+
+                {!aiAnalysis && (
+                  <Card className="clay-card !rounded-2xl">
+                    <CardContent className="p-6 text-center space-y-3">
+                      <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto">
+                        <ScanLine className="w-6 h-6 text-muted-foreground" />
                       </div>
-                    </div>
-
-                    {/* Analysis summary */}
-                    <div className="p-4 rounded-xl bg-secondary/30 text-sm leading-relaxed">
-                      <p className="font-medium mb-1">AI Summary</p>
-                      <p className="text-muted-foreground">{incident.ai_analysis.summary}</p>
-                    </div>
-
-                    {/* Detected details */}
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {[
-                        { label: "Detected Violation", value: incident.ai_analysis.violation },
-                        { label: "Vehicle", value: incident.ai_analysis.vehicle },
-                        { label: "License Plate", value: incident.ai_analysis.plate },
-                        { label: "Estimated Severity", value: incident.ai_analysis.severity },
-                      ].map((det) => (
-                        <div key={det.label} className="flex justify-between items-center p-3 rounded-xl bg-secondary/20">
-                          <span className="text-xs text-muted-foreground">{det.label}</span>
-                          <span className="text-xs font-medium">{det.value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Detected objects */}
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Detected Objects</p>
-                      <div className="flex flex-wrap gap-2">
-                        {incident.ai_analysis.objects.map((obj) => (
-                          <Badge key={obj} variant="outline" className="clay-pill text-[10px] px-2 py-0.5">
-                            {obj}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Review actions */}
-                    <div className="border-t border-border/50 pt-4">
-                      <p className="text-xs text-muted-foreground mb-3 font-medium">
-                        AI results require officer review before final determination
+                      <p className="text-sm text-muted-foreground">
+                        Run AI analysis first to detect license plates via ANPR
                       </p>
-                      <div className="flex gap-3">
-                        <Button className="flex-1 clay-btn rounded-xl bg-success hover:bg-success/90 text-white">
-                          <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Confirm AI Findings
-                        </Button>
-                        <Button variant="outline" className="flex-1 rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10">
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Reject & Override
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl"
+                        onClick={handleRunAnalysis}
+                      >
+                        <Brain className="w-4 h-4 mr-2" />
+                        Run Analysis
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               {/* Timeline Tab */}

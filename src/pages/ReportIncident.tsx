@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,13 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { AIAnalysisPanel } from "@/ai/components/AIAnalysisPanel";
+import { submitForAnalysis, reviewAnalysisResult } from "@/ai/pipeline";
+import { providerRegistry } from "@/ai/registry";
+import { VlyAIProvider } from "@/ai/providers/vly-provider";
+import type { AIAnalysisResult } from "@/ai/types";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export default function ReportIncident() {
   const navigate = useNavigate();
@@ -41,6 +48,8 @@ export default function ReportIncident() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
+  const [aiInitialized, setAiInitialized] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   // Form state
@@ -89,13 +98,76 @@ export default function ReportIncident() {
     setEvidenceFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const initAI = useCallback(async () => {
+    if (aiInitialized) return;
+    try {
+      const existing = providerRegistry.getProvider("vly");
+      if (!existing) {
+        await providerRegistry.initialize({
+          id: "vly",
+          name: "TrafficWatch AI Engine",
+          version: "1.0",
+          capabilities: ["image_analysis", "license_plate_detection", "object_detection", "violation_classification", "ocr"],
+        });
+      }
+      setAiInitialized(true);
+    } catch (err) {
+      console.error("Failed to init AI:", err);
+    }
+  }, [aiInitialized]);
+
   const handleRunAI = async () => {
     setAiLoading(true);
-    // Simulate AI analysis
-    await new Promise((r) => setTimeout(r, 2000));
-    setAiLoading(false);
-    setShowAIAnalysis(true);
+    await initAI();
+    try {
+      const result = await submitForAnalysis(
+        "new-incident",
+        evidenceFiles.map((f) => ({
+          type: f.type === "video" ? "video" as const : "photo" as const,
+          url: f.preview || f.name,
+          mimeType: f.type === "video" ? "video/mp4" : "image/jpeg",
+          fileName: f.name,
+        })),
+        []
+      );
+      setAiAnalysis(result);
+      setShowAIAnalysis(true);
+      toast.success("AI analysis completed");
+    } catch (err) {
+      toast.error("AI analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setAiLoading(false);
+    }
   };
+
+  const handleConfirmAI = useCallback(async (notes?: string) => {
+    if (!aiAnalysis) return;
+    try {
+      await reviewAnalysisResult(aiAnalysis.id, {
+        confirmed: true,
+        officerId: "current-user",
+        notes,
+      });
+      toast.success("AI findings confirmed");
+    } catch (err) {
+      toast.error("Failed to confirm analysis");
+    }
+  }, [aiAnalysis]);
+
+  const handleRejectAI = useCallback(async (notes?: string, correctedPlate?: string) => {
+    if (!aiAnalysis) return;
+    try {
+      await reviewAnalysisResult(aiAnalysis.id, {
+        confirmed: false,
+        officerId: "current-user",
+        notes,
+        correctedPlate,
+      });
+      toast.success("AI findings overridden");
+    } catch (err) {
+      toast.error("Failed to override analysis");
+    }
+  }, [aiAnalysis]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -398,44 +470,14 @@ export default function ReportIncident() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-success/10 border border-success/20">
-                    <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">Analysis Complete</p>
-                      <p className="text-xs text-muted-foreground">
-                        AI detected potential violations with 94.7% confidence
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {[
-                      { label: "Detected Violation", value: formData.violationType || "Speeding", confidence: "94.7%" },
-                      { label: "License Plate", value: formData.licensePlate || "LBR-4521", confidence: "98.2%" },
-                      { label: "Vehicle", value: `${formData.vehicleColor || "White"} ${formData.vehicleType || "Sedan"}`, confidence: "96.5%" },
-                      { label: "Estimated Severity", value: formData.severity || "Moderate", confidence: "89.1%" },
-                    ].map((det) => (
-                      <div key={det.label} className="p-3 rounded-xl bg-secondary/30">
-                        <p className="text-xs text-muted-foreground">{det.label}</p>
-                        <p className="text-sm font-medium mt-0.5">{det.value}</p>
-                        <p className="text-[10px] text-success mt-1">{det.confidence} confidence</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-medium text-warning">AI Disclaimer</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          AI analysis is an assistive tool only. All results must be reviewed and confirmed by an authorized officer before being used as evidence or legal basis for enforcement action.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <AIAnalysisPanel
+                  analysis={aiAnalysis}
+                  isLoading={false}
+                  officerId="current-user"
+                  onConfirm={handleConfirmAI}
+                  onReject={handleRejectAI}
+                  onReanalyze={handleRunAI}
+                />
               )}
 
               <div className="flex justify-between">
