@@ -48,6 +48,7 @@ import { AssignDialog } from "@/components/AssignDialog";
 import { EscalateDialog } from "@/components/EscalateDialog";
 import { InvolvedPersons } from "@/components/InvolvedPersons";
 import { ReportGenerator } from "@/components/ReportGenerator";
+import { AuditLog, generateMockAuditEvents } from "@/components/AuditLog";
 import { toast } from "sonner";
 
 export default function IncidentDetail() {
@@ -296,7 +297,7 @@ export default function IncidentDetail() {
           {/* Left column - Main content */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-6 rounded-xl p-1 bg-secondary">
+              <TabsList className="grid grid-cols-7 rounded-xl p-1 bg-secondary">
                 <TabsTrigger value="overview" className="rounded-lg text-xs">
                   <FileText className="w-3.5 h-3.5 mr-1" />
                   Overview
@@ -316,6 +317,10 @@ export default function IncidentDetail() {
                 <TabsTrigger value="anpr" className="rounded-lg text-xs">
                   <ScanLine className="w-3.5 h-3.5 mr-1" />
                   ANPR
+                </TabsTrigger>
+                <TabsTrigger value="audit" className="rounded-lg text-xs">
+                  <Shield className="w-3.5 h-3.5 mr-1" />
+                  Audit
                 </TabsTrigger>
                 <TabsTrigger value="timeline" className="rounded-lg text-xs">
                   <Clock className="w-3.5 h-3.5 mr-1" />
@@ -481,6 +486,16 @@ export default function IncidentDetail() {
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              {/* Audit Tab */}
+              <TabsContent value="audit" className="space-y-4 mt-4">
+                <AuditLog
+                  events={generateMockAuditEvents(incident.id, 12)}
+                  title="Incident Audit Log"
+                  description="All actions and evidence interactions for this incident"
+                  maxHeight="500px"
+                />
               </TabsContent>
 
               {/* Timeline Tab */}

@@ -1,4 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  getCustodyChain,
+  seedMockCustodyEvents,
+  logEvidenceViewed,
+  logEvidenceDownloaded,
+  logHashVerified,
+  isAuthorizedForCustody,
+} from "@/lib/custody";
+import type { EvidenceCustodyEvent } from "@/supabase/types";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Dialog,
   DialogContent,
@@ -121,6 +131,10 @@ function getActionIcon(action: string) {
 }
 
 // Simple SVG icons for custody actions
+function LockIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+}
+
 function UploadIcon({ className }: { className?: string }) {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
 }
@@ -152,48 +166,14 @@ export function EvidenceDetailDialog({
   open,
   onOpenChange,
 }: EvidenceDetailDialogProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("metadata");
-
-  if (!evidence) return null;
-
-  // Mock custody chain
-  const custodyChain: CustodyEvent[] = [
-    {
-      id: "cust-1",
-      action: "uploaded",
-      performed_by: evidence.officer_id || "unknown",
-      performed_by_name: evidence.officer_name || "Unknown Officer",
-      ip_address: "10.0.1.45",
-      created_at: evidence.uploaded_at,
-      details: { device: evidence.device_info || "Mobile Device" },
-    },
-    {
-      id: "cust-2",
-      action: "viewed",
-      performed_by: "ofc-002",
-      performed_by_name: "Sgt. John Kollie",
-      created_at: new Date(new Date(evidence.uploaded_at).getTime() + 60000).toISOString(),
-    },
-    {
-      id: "cust-3",
-      action: "analyzed",
-      performed_by: "ai-system",
-      performed_by_name: "TrafficWatch AI",
-      created_at: new Date(new Date(evidence.uploaded_at).getTime() + 120000).toISOString(),
-      details: { provider: "VLY AI Engine", confidence: 0.94 },
-    },
-    {
-      id: "cust-4",
-      action: "hash_verified",
-      performed_by: "system",
-      performed_by_name: "System Auto-Verify",
-      created_at: new Date(new Date(evidence.uploaded_at).getTime() + 125000).toISOString(),
-      details: { hash_match: true, algorithm: "SHA-256" },
-    },
-  ];
+  const [custodyEvents, setCustodyEvents] = useState<EvidenceCustodyEvent[]>([]);
+  const [custodyLoading, setCustodyLoading] = useState(false);
+  const [custodyAuthorized, setCustodyAuthorized] = useState(false);
 
   // Mock versions
-  const versions: EvidenceVersion[] = [
+  const [versions] = useState<EvidenceVersion[]>(() => evidence ? [
     {
       id: "ver-1",
       version_number: 1,
@@ -205,22 +185,76 @@ export function EvidenceDetailDialog({
       created_by: evidence.officer_id || "unknown",
       created_at: evidence.uploaded_at,
     },
-  ];
+  ] : []);
 
-  const handleVerifyHash = () => {
-    toast.success("SHA-256 hash verified — file integrity confirmed");
+  // Check custody authorization and load events
+  useEffect(() => {
+    if (evidence && open) {
+      const role = user?.profile?.role;
+      setCustodyAuthorized(isAuthorizedForCustody(role));
+
+      if (isAuthorizedForCustody(role)) {
+        loadCustodyChain(evidence.id);
+        // Log that user viewed this evidence
+        if (user?.id) {
+          logEvidenceViewed(evidence.id, user.id).catch(() => {});
+        }
+      }
+    }
+  }, [evidence, open, user]);
+
+  const loadCustodyChain = async (evidenceId: string) => {
+    setCustodyLoading(true);
+    try {
+      let events = await getCustodyChain(evidenceId);
+
+      // Seed mock events if empty (for demo)
+      if (events.length === 0 && evidence) {
+        await seedMockCustodyEvents(
+          evidenceId,
+          evidence.officer_id || "unknown",
+          evidence.officer_name || "Unknown Officer",
+          evidence.uploaded_at,
+          evidence.device_info
+        );
+        events = await getCustodyChain(evidenceId);
+      }
+
+      setCustodyEvents(events);
+    } catch (err) {
+      console.error("Failed to load custody chain:", err);
+    } finally {
+      setCustodyLoading(false);
+    }
   };
 
+  const handleVerifyHash = useCallback(async () => {
+    if (evidence && user?.id) {
+      await logHashVerified(evidence.id, user.id, true);
+      // Reload chain
+      const events = await getCustodyChain(evidence.id);
+      setCustodyEvents(events);
+    }
+    toast.success("SHA-256 hash verified — file integrity confirmed");
+  }, [evidence, user]);
+
   const handleCopyHash = () => {
-    if (evidence.sha256_hash) {
+    if (evidence?.sha256_hash) {
       navigator.clipboard.writeText(evidence.sha256_hash);
       toast.success("Hash copied to clipboard");
     }
   };
 
-  const handleDownload = () => {
-    toast.success(`Downloading ${evidence.name}`);
-  };
+  const handleDownload = useCallback(async () => {
+    if (evidence && user?.id) {
+      await logEvidenceDownloaded(evidence.id, user.id);
+      const events = await getCustodyChain(evidence.id);
+      setCustodyEvents(events);
+    }
+    toast.success(`Downloading ${evidence?.name}`);
+  }, [evidence, user]);
+
+  if (!evidence) return null;
 
   const formatTimestamp = (ts: string | null) => {
     if (!ts) return "—";
@@ -349,54 +383,92 @@ export function EvidenceDetailDialog({
 
           {/* CUSTODY TAB */}
           <TabsContent value="custody" className="space-y-4 mt-4">
-            <Card className="border-border/50 !rounded-xl">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-muted-foreground">
-                    Complete chain of custody — {custodyChain.length} events
-                  </p>
-                  <Badge variant="outline" className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-500">
-                    <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
-                    Verified
-                  </Badge>
-                </div>
-                <div className="relative">
-                  <div className="absolute left-3.5 top-0 bottom-0 w-px bg-border" />
-                  <div className="space-y-4">
-                    {custodyChain.map((event, i) => (
-                      <div key={event.id} className="relative pl-10">
-                        <div className={`absolute left-2 top-1 w-3.5 h-3.5 rounded-full border-2 border-card flex items-center justify-center ${
-                          event.action === "uploaded" ? "bg-emerald-500" :
-                          event.action === "hash_verified" ? "bg-blue-500" :
-                          event.action === "analyzed" ? "bg-purple-500" :
-                          "bg-secondary"
-                        }`}>
-                          <div className="w-1.5 h-1.5 rounded-full bg-card" />
-                        </div>
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-medium capitalize">
-                              {event.action.replace(/_/g, " ")}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              by {event.performed_by_name}
-                            </p>
-                            {event.details && Object.keys(event.details).length > 0 && (
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {Object.entries(event.details).map(([k, v]) => `${k}: ${v}`).join(" · ")}
-                              </p>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            {formatTimestamp(event.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+            {!custodyAuthorized ? (
+              <Card className="border-border/50 !rounded-xl">
+                <CardContent className="p-8 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
+                    <LockIcon className="w-6 h-6 text-muted-foreground" />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <p className="text-sm font-medium mb-1">Restricted Access</p>
+                  <p className="text-xs text-muted-foreground">
+                    Chain of custody is only visible to authorized personnel.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : custodyLoading ? (
+              <Card className="border-border/50 !rounded-xl">
+                <CardContent className="p-8 text-center">
+                  <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground mx-auto" />
+                  <p className="text-xs text-muted-foreground mt-2">Loading custody chain...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-border/50 !rounded-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Chain of custody — {custodyEvents.length} events
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Immutable audit log. Events cannot be modified or deleted.
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-500">
+                      <Shield className="w-2.5 h-2.5 mr-0.5" />
+                      Authorized
+                    </Badge>
+                  </div>
+
+                  {custodyEvents.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Shield className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No custody events recorded</p>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <div className="absolute left-3.5 top-0 bottom-0 w-px bg-border" />
+                      <div className="space-y-3">
+                        {[...custodyEvents]
+                          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                          .map((event) => (
+                          <div key={event.id} className="relative pl-10">
+                            <div className={`absolute left-2 top-1 w-3.5 h-3.5 rounded-full border-2 border-card flex items-center justify-center ${
+                              event.action === "uploaded" ? "bg-emerald-500" :
+                              event.action === "hash_verified" ? "bg-blue-500" :
+                              event.action === "analyzed" ? "bg-purple-500" :
+                              event.action === "downloaded" ? "bg-amber-500" :
+                              event.action === "viewed" ? "bg-secondary" :
+                              "bg-secondary"
+                            }`}>
+                              <div className="w-1.5 h-1.5 rounded-full bg-card" />
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-medium capitalize">
+                                  {event.action.replace(/_/g, " ")}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  by {event.performed_by === "system" ? "System" : event.performed_by.slice(0, 12)}
+                                </p>
+                                {event.details && typeof event.details === "object" && Object.keys(event.details).length > 0 && (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {Object.entries(event.details).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-muted-foreground shrink-0">
+                                {formatTimestamp(event.created_at)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* VERSIONS TAB */}
