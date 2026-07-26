@@ -17,7 +17,9 @@ export type OfflineStore =
   | "involved_persons"
   | "witnesses"
   | "incident_assignments"
-  | "incident_logs";
+  | "incident_logs"
+  | "evidence_custody"
+  | "evidence_versions";
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -115,6 +117,20 @@ function getDB(): Promise<IDBPDatabase> {
           const logs = db.createObjectStore("incident_logs", { keyPath: "id", autoIncrement: true });
           logs.createIndex("incident_id", "incident_id");
           logs.createIndex("created_at", "created_at");
+        }
+
+        // Evidence custody chain (immutable log)
+        if (!db.objectStoreNames.contains("evidence_custody")) {
+          const custody = db.createObjectStore("evidence_custody", { keyPath: "id", autoIncrement: true });
+          custody.createIndex("evidence_id", "evidence_id");
+          custody.createIndex("created_at", "created_at");
+        }
+
+        // Evidence versions (immutable originals + derivatives)
+        if (!db.objectStoreNames.contains("evidence_versions")) {
+          const versions = db.createObjectStore("evidence_versions", { keyPath: "id" });
+          versions.createIndex("evidence_id", "evidence_id");
+          versions.createIndex("version_number", "version_number");
         }
 
         // User profile cache

@@ -66,6 +66,16 @@ export interface Database {
         Insert: Omit<IncidentLog, "id" | "created_at">;
         Update: never;
       };
+      evidence_custody: {
+        Row: EvidenceCustodyEvent;
+        Insert: Omit<EvidenceCustodyEvent, "id" | "created_at">;
+        Update: never;
+      };
+      evidence_versions: {
+        Row: EvidenceVersion;
+        Insert: Omit<EvidenceVersion, "id" | "created_at">;
+        Update: never;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -128,7 +138,19 @@ export interface Evidence {
   is_offline_capture: boolean;
   ai_analysis_requested: boolean;
   ai_analysis_completed: boolean;
+  officer_id: string | null;
+  captured_at: string | null;
+  capture_lat: number | null;
+  capture_lng: number | null;
+  device_info: string | null;
+  sha256_hash: string | null;
+  officer_notes: string | null;
+  evidence_status: "original" | "processed" | "reviewed" | "archived" | "expunged";
+  original_file_url: string | null;
+  original_file_hash: string | null;
+  source: string;
   uploaded_at: string;
+  updated_at: string;
 }
 
 export interface AIAnalysis {
@@ -270,6 +292,33 @@ export interface IncidentLog {
   action: string;
   performed_by: string;
   details: any;
+  created_at: string;
+}
+
+export interface EvidenceCustodyEvent {
+  id: string;
+  evidence_id: string;
+  action: "uploaded" | "viewed" | "downloaded" | "analyzed" | "transferred" | "reviewed" | "verified" | "exported" | "archived" | "restored" | "expunged" | "hash_verified" | "officer_notes_added";
+  performed_by: string;
+  from_officer: string | null;
+  to_officer: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  details: any;
+  created_at: string;
+}
+
+export interface EvidenceVersion {
+  id: string;
+  evidence_id: string;
+  version_number: number;
+  file_url: string;
+  file_size: number | null;
+  mime_type: string | null;
+  sha256_hash: string;
+  processing_type: "original" | "resized" | "cropped" | "compressed" | "converted" | "watermarked" | "redacted" | "ai_enhanced" | "export";
+  processing_params: any;
+  created_by: string;
   created_at: string;
 }
 

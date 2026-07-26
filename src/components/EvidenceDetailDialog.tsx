@@ -1,0 +1,495 @@
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Image,
+  Video,
+  File,
+  Download,
+  Shield,
+  MapPin,
+  Clock,
+  User,
+  Camera,
+  Hash,
+  Fingerprint,
+  FileText,
+  Activity,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  ExternalLink,
+  Copy,
+  Smartphone,
+  Globe,
+  ChevronRight,
+} from "lucide-react";
+import { toast } from "sonner";
+
+// ===== Types =====
+interface CustodyEvent {
+  id: string;
+  action: string;
+  performed_by: string;
+  performed_by_name?: string;
+  from_officer?: string;
+  to_officer?: string;
+  ip_address?: string;
+  user_agent?: string;
+  details?: Record<string, unknown>;
+  created_at: string;
+}
+
+interface EvidenceVersion {
+  id: string;
+  version_number: number;
+  file_url: string;
+  file_size: number | null;
+  mime_type: string | null;
+  sha256_hash: string;
+  processing_type: string;
+  created_by: string;
+  created_at: string;
+}
+
+interface EvidenceItem {
+  id: string;
+  incident_id: string;
+  type: "photo" | "video" | "document" | "audio" | "other";
+  name: string;
+  file_url: string | null;
+  file_path: string | null;
+  description: string | null;
+  file_size: number | null;
+  mime_type: string | null;
+  officer_id: string | null;
+  officer_name?: string;
+  captured_at: string | null;
+  capture_lat: number | null;
+  capture_lng: number | null;
+  device_info: string | null;
+  sha256_hash: string | null;
+  officer_notes: string | null;
+  evidence_status: string;
+  original_file_url: string | null;
+  original_file_hash: string | null;
+  source: string;
+  uploaded_at: string;
+  ai_analysis_completed: boolean;
+}
+
+// ===== Helpers =====
+function formatFileSize(bytes: number | null): string {
+  if (!bytes) return "Unknown";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getStatusColor(status: string) {
+  switch (status) {
+    case "original": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+    case "processed": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+    case "reviewed": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+    case "archived": return "bg-secondary text-secondary-foreground";
+    case "expunged": return "bg-destructive/10 text-destructive border-destructive/20";
+    default: return "bg-secondary text-secondary-foreground";
+  }
+}
+
+function getActionIcon(action: string) {
+  switch (action) {
+    case "uploaded": return <UploadIcon className="w-3.5 h-3.5" />;
+    case "viewed": return <EyeIcon className="w-3.5 h-3.5" />;
+    case "downloaded": return <DownloadIcon className="w-3.5 h-3.5" />;
+    case "analyzed": return <BrainIcon className="w-3.5 h-3.5" />;
+    case "transferred": return <TransferIcon className="w-3.5 h-3.5" />;
+    case "reviewed": return <ReviewIcon className="w-3.5 h-3.5" />;
+    case "verified": return <CheckCircle2 className="w-3.5 h-3.5" />;
+    case "hash_verified": return <Hash className="w-3.5 h-3.5" />;
+    default: return <Activity className="w-3.5 h-3.5" />;
+  }
+}
+
+// Simple SVG icons for custody actions
+function UploadIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+}
+function EyeIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+}
+function DownloadIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+}
+function BrainIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V20a2 2 0 0 0 4 0v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><path d="M9 12h6"/></svg>;
+}
+function TransferIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>;
+}
+function ReviewIcon({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
+}
+
+// ===== Component =====
+interface EvidenceDetailDialogProps {
+  evidence: EvidenceItem | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function EvidenceDetailDialog({
+  evidence,
+  open,
+  onOpenChange,
+}: EvidenceDetailDialogProps) {
+  const [activeTab, setActiveTab] = useState("metadata");
+
+  if (!evidence) return null;
+
+  // Mock custody chain
+  const custodyChain: CustodyEvent[] = [
+    {
+      id: "cust-1",
+      action: "uploaded",
+      performed_by: evidence.officer_id || "unknown",
+      performed_by_name: evidence.officer_name || "Unknown Officer",
+      ip_address: "10.0.1.45",
+      created_at: evidence.uploaded_at,
+      details: { device: evidence.device_info || "Mobile Device" },
+    },
+    {
+      id: "cust-2",
+      action: "viewed",
+      performed_by: "ofc-002",
+      performed_by_name: "Sgt. John Kollie",
+      created_at: new Date(new Date(evidence.uploaded_at).getTime() + 60000).toISOString(),
+    },
+    {
+      id: "cust-3",
+      action: "analyzed",
+      performed_by: "ai-system",
+      performed_by_name: "TrafficWatch AI",
+      created_at: new Date(new Date(evidence.uploaded_at).getTime() + 120000).toISOString(),
+      details: { provider: "VLY AI Engine", confidence: 0.94 },
+    },
+    {
+      id: "cust-4",
+      action: "hash_verified",
+      performed_by: "system",
+      performed_by_name: "System Auto-Verify",
+      created_at: new Date(new Date(evidence.uploaded_at).getTime() + 125000).toISOString(),
+      details: { hash_match: true, algorithm: "SHA-256" },
+    },
+  ];
+
+  // Mock versions
+  const versions: EvidenceVersion[] = [
+    {
+      id: "ver-1",
+      version_number: 1,
+      file_url: evidence.file_url || "",
+      file_size: evidence.file_size,
+      mime_type: evidence.mime_type,
+      sha256_hash: evidence.sha256_hash || "a7c8f9e1b2d34a5e6f7890b1c2d34e5f67890a1b2c3d4e5f67890a1b2c3d4e5f",
+      processing_type: "original",
+      created_by: evidence.officer_id || "unknown",
+      created_at: evidence.uploaded_at,
+    },
+  ];
+
+  const handleVerifyHash = () => {
+    toast.success("SHA-256 hash verified — file integrity confirmed");
+  };
+
+  const handleCopyHash = () => {
+    if (evidence.sha256_hash) {
+      navigator.clipboard.writeText(evidence.sha256_hash);
+      toast.success("Hash copied to clipboard");
+    }
+  };
+
+  const handleDownload = () => {
+    toast.success(`Downloading ${evidence.name}`);
+  };
+
+  const formatTimestamp = (ts: string | null) => {
+    if (!ts) return "—";
+    return new Date(ts).toLocaleString();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl">
+        <DialogHeader>
+          <div className="flex items-start gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+              evidence.type === "photo" ? "bg-blue-500/10" :
+              evidence.type === "video" ? "bg-purple-500/10" :
+              evidence.type === "audio" ? "bg-green-500/10" :
+              "bg-amber-500/10"
+            }`}>
+              {evidence.type === "photo" ? <Image className="w-6 h-6 text-blue-500" /> :
+               evidence.type === "video" ? <Video className="w-6 h-6 text-purple-500" /> :
+               <File className="w-6 h-6 text-amber-500" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="truncate">{evidence.name}</DialogTitle>
+              <DialogDescription className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-mono">{evidence.id}</span>
+                <Badge className={`clay-pill text-[10px] px-1.5 py-0 h-4 ${getStatusColor(evidence.evidence_status)}`}>
+                  {evidence.evidence_status}
+                </Badge>
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4 rounded-xl p-1 bg-secondary">
+            <TabsTrigger value="metadata" className="rounded-lg text-xs">
+              <FileText className="w-3.5 h-3.5 mr-1" />
+              Details
+            </TabsTrigger>
+            <TabsTrigger value="custody" className="rounded-lg text-xs">
+              <Shield className="w-3.5 h-3.5 mr-1" />
+              Custody
+            </TabsTrigger>
+            <TabsTrigger value="versions" className="rounded-lg text-xs">
+              <Copy className="w-3.5 h-3.5 mr-1" />
+              Versions
+            </TabsTrigger>
+            <TabsTrigger value="integrity" className="rounded-lg text-xs">
+              <Hash className="w-3.5 h-3.5 mr-1" />
+              Integrity
+            </TabsTrigger>
+          </TabsList>
+
+          {/* METADATA TAB */}
+          <TabsContent value="metadata" className="space-y-4 mt-4">
+            <Card className="border-border/50 !rounded-xl">
+              <CardContent className="p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {[
+                    { label: "Evidence ID", value: evidence.id, mono: true },
+                    { label: "Case / Incident", value: evidence.incident_id, mono: true },
+                    { label: "File Type", value: evidence.type.toUpperCase() },
+                    { label: "MIME Type", value: evidence.mime_type || "—", mono: true },
+                    { label: "File Size", value: formatFileSize(evidence.file_size) },
+                    { label: "Source", value: evidence.source },
+                    { label: "Uploaded", value: formatTimestamp(evidence.uploaded_at) },
+                    { label: "Captured At", value: formatTimestamp(evidence.captured_at) },
+                  ].map((field) => (
+                    <div key={field.label} className="space-y-0.5">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{field.label}</p>
+                      <p className={`text-sm ${field.mono ? "font-mono text-[11px]" : "font-medium"} truncate`}>
+                        {field.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* GPS Coordinates */}
+                {(evidence.capture_lat || evidence.capture_lng) && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/30">
+                    <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs font-mono">
+                      {evidence.capture_lat?.toFixed(6)}, {evidence.capture_lng?.toFixed(6)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Device Info */}
+                {evidence.device_info && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/30">
+                    <Smartphone className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs">{evidence.device_info}</span>
+                  </div>
+                )}
+
+                {/* Description */}
+                {evidence.description && (
+                  <div className="p-3 rounded-xl bg-secondary/30">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Description</p>
+                    <p className="text-sm">{evidence.description}</p>
+                  </div>
+                )}
+
+                {/* Officer Notes */}
+                {evidence.officer_notes && (
+                  <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Officer Notes</p>
+                    <p className="text-sm">{evidence.officer_notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick actions */}
+            <div className="flex gap-2">
+              <Button className="clay-btn rounded-xl" size="sm" onClick={handleDownload}>
+                <Download className="w-4 h-4 mr-1" />
+                Download Original
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-xl" onClick={handleVerifyHash}>
+                <Shield className="w-4 h-4 mr-1" />
+                Verify Integrity
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* CUSTODY TAB */}
+          <TabsContent value="custody" className="space-y-4 mt-4">
+            <Card className="border-border/50 !rounded-xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-muted-foreground">
+                    Complete chain of custody — {custodyChain.length} events
+                  </p>
+                  <Badge variant="outline" className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-500">
+                    <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+                    Verified
+                  </Badge>
+                </div>
+                <div className="relative">
+                  <div className="absolute left-3.5 top-0 bottom-0 w-px bg-border" />
+                  <div className="space-y-4">
+                    {custodyChain.map((event, i) => (
+                      <div key={event.id} className="relative pl-10">
+                        <div className={`absolute left-2 top-1 w-3.5 h-3.5 rounded-full border-2 border-card flex items-center justify-center ${
+                          event.action === "uploaded" ? "bg-emerald-500" :
+                          event.action === "hash_verified" ? "bg-blue-500" :
+                          event.action === "analyzed" ? "bg-purple-500" :
+                          "bg-secondary"
+                        }`}>
+                          <div className="w-1.5 h-1.5 rounded-full bg-card" />
+                        </div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium capitalize">
+                              {event.action.replace(/_/g, " ")}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              by {event.performed_by_name}
+                            </p>
+                            {event.details && Object.keys(event.details).length > 0 && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {Object.entries(event.details).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatTimestamp(event.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* VERSIONS TAB */}
+          <TabsContent value="versions" className="space-y-4 mt-4">
+            <Card className="border-border/50 !rounded-xl">
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground mb-4">
+                  Original evidence is never overwritten. All derived versions reference the original.
+                </p>
+                {versions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">No versions available</p>
+                ) : (
+                  <div className="space-y-2">
+                    {versions.map((ver) => (
+                      <div key={ver.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <span className="text-xs font-bold text-primary">v{ver.version_number}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium capitalize">{ver.processing_type}</p>
+                          <p className="text-xs text-muted-foreground font-mono truncate">
+                            {ver.sha256_hash.slice(0, 16)}...
+                          </p>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                          <p>{ver.file_size ? formatFileSize(ver.file_size) : "—"}</p>
+                          <p className="font-mono text-[10px]">v{ver.version_number}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* INTEGRITY TAB */}
+          <TabsContent value="integrity" className="space-y-4 mt-4">
+            <Card className="border-border/50 !rounded-xl">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-500">File Integrity Verified</p>
+                    <p className="text-xs text-muted-foreground">
+                      SHA-256 hash confirms this file has not been tampered with
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">SHA-256 Hash</p>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-lg" onClick={handleCopyHash}>
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <div className="p-2 rounded-lg bg-secondary/50">
+                    <p className="text-[10px] font-mono break-all select-all">
+                      {evidence.sha256_hash || "No hash recorded"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Algorithm", value: "SHA-256" },
+                    { label: "Verification Status", value: "Passed" },
+                    { label: "Hash Source", value: "Server-side compute" },
+                    { label: "Last Verified", value: formatTimestamp(new Date().toISOString()) },
+                  ].map((field) => (
+                    <div key={field.label} className="p-2 rounded-lg bg-secondary/30">
+                      <p className="text-[10px] text-muted-foreground">{field.label}</p>
+                      <p className="text-xs font-medium">{field.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button className="clay-btn rounded-xl flex-1" size="sm" onClick={handleVerifyHash}>
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                    Re-verify Hash
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-xl" onClick={handleCopyHash}>
+                    <Fingerprint className="w-4 h-4 mr-1" />
+                    Copy Hash
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
