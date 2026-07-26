@@ -77,6 +77,12 @@ export async function processSyncQueue(callbacks?: SyncCallback): Promise<{ sync
           case "stolen_vehicles":
             await syncStolenVehicle(item);
             break;
+          case "involved_persons":
+          case "witnesses":
+          case "incident_assignments":
+          case "incident_logs":
+            await syncGenericRecord(item);
+            break;
           default:
             await syncGenericRecord(item);
         }

@@ -13,7 +13,11 @@ export type OfflineStore =
   | "pending_sync"
   | "drafts"
   | "cache"
-  | "user_profile";
+  | "user_profile"
+  | "involved_persons"
+  | "witnesses"
+  | "incident_assignments"
+  | "incident_logs";
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
@@ -84,6 +88,33 @@ function getDB(): Promise<IDBPDatabase> {
         if (!db.objectStoreNames.contains("cache")) {
           const cache = db.createObjectStore("cache", { keyPath: "key" });
           cache.createIndex("expires_at", "expires_at");
+        }
+
+        // Involved persons
+        if (!db.objectStoreNames.contains("involved_persons")) {
+          const persons = db.createObjectStore("involved_persons", { keyPath: "id" });
+          persons.createIndex("incident_id", "incident_id");
+        }
+
+        // Witnesses
+        if (!db.objectStoreNames.contains("witnesses")) {
+          const witnesses = db.createObjectStore("witnesses", { keyPath: "id" });
+          witnesses.createIndex("incident_id", "incident_id");
+        }
+
+        // Incident assignments
+        if (!db.objectStoreNames.contains("incident_assignments")) {
+          const assignments = db.createObjectStore("incident_assignments", { keyPath: "id" });
+          assignments.createIndex("incident_id", "incident_id");
+          assignments.createIndex("assigned_to", "assigned_to");
+          assignments.createIndex("is_active", "is_active");
+        }
+
+        // Incident logs (audit trail)
+        if (!db.objectStoreNames.contains("incident_logs")) {
+          const logs = db.createObjectStore("incident_logs", { keyPath: "id", autoIncrement: true });
+          logs.createIndex("incident_id", "incident_id");
+          logs.createIndex("created_at", "created_at");
         }
 
         // User profile cache

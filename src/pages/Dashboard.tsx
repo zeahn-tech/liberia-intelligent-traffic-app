@@ -302,6 +302,9 @@ export default function Dashboard() {
                       <Badge className={`clay-pill text-[10px] px-2 py-0 h-5 shrink-0 ${
                         incident.status === "Resolved" ? "bg-success/10 text-success" :
                         incident.status === "Under Review" ? "bg-warning/10 text-warning" :
+                        incident.status === "Assigned" ? "bg-blue-500/10 text-blue-500" :
+                        incident.status === "Investigating" ? "bg-purple-500/10 text-purple-500" :
+                        incident.status === "Confirmed" ? "bg-emerald-500/10 text-emerald-500" :
                         "bg-info/10 text-info"
                       }`}>
                         {incident.status}

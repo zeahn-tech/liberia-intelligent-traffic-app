@@ -29,15 +29,25 @@ import {
   File,
   ScanLine,
   RefreshCw,
+  ArrowUpCircle,
+  UserPlus,
+  Users,
+  Eye,
+  FileSpreadsheet,
+  GripVertical,
+  MessageSquare,
 } from "lucide-react";
 import { IncidentMap } from "@/components/IncidentMap";
 import { AIAnalysisPanel } from "@/ai/components/AIAnalysisPanel";
 import { ANPREditor } from "@/ai/components/ANPREditor";
 import { submitForAnalysis, reviewAnalysisResult, getAnalysisResultsForIncident } from "@/ai/pipeline";
 import { providerRegistry } from "@/ai/registry";
-import { VlyAIProvider } from "@/ai/providers/vly-provider";
 import type { AIAnalysisResult } from "@/ai/types";
 import { useAuth } from "@/hooks/use-auth";
+import { AssignDialog } from "@/components/AssignDialog";
+import { EscalateDialog } from "@/components/EscalateDialog";
+import { InvolvedPersons } from "@/components/InvolvedPersons";
+import { ReportGenerator } from "@/components/ReportGenerator";
 import { toast } from "sonner";
 
 export default function IncidentDetail() {
@@ -48,6 +58,29 @@ export default function IncidentDetail() {
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInitialized, setAiInitialized] = useState(false);
+
+  // Dialogs
+  const [showAssign, setShowAssign] = useState(false);
+  const [showEscalate, setShowEscalate] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  // Incident state (mutable for status transitions)
+  const [incidentStatus, setIncidentStatus] = useState("under_review");
+  const [assignedTo, setAssignedTo] = useState<{ id: string; name: string } | null>(null);
+  const [timeline, setTimeline] = useState([
+    { action: "Incident Reported", time: "2024-07-26 09:23", user: "Sgt. John Kollie" },
+    { action: "Evidence Uploaded", time: "2024-07-26 09:30", user: "Sgt. John Kollie" },
+    { action: "AI Analysis Complete", time: "2024-07-26 09:32", user: "TrafficWatch AI" },
+    { action: "Submitted for Review", time: "2024-07-26 09:35", user: "Sgt. John Kollie" },
+  ]);
+
+  const addTimelineEntry = (action: string) => {
+    setTimeline(prev => [...prev, {
+      action,
+      time: new Date().toLocaleString(),
+      user: user?.profile?.full_name || "Officer",
+    }]);
+  };
 
   // Initialize AI provider
   const initAI = useCallback(async () => {
@@ -76,19 +109,13 @@ export default function IncidentDetail() {
     try {
       const result = await submitForAnalysis(
         id,
-        [
-          {
-            type: "photo",
-            url: "evidence/front-view.jpg",
-            mimeType: "image/jpeg",
-            fileName: "front_view.jpg",
-          },
-        ],
+        [{ type: "photo", url: "evidence/front-view.jpg", mimeType: "image/jpeg", fileName: "front_view.jpg" }],
         ["ev-001"]
       );
       setAiAnalysis(result);
       setActiveTab("ai");
       toast.success("AI analysis completed");
+      addTimelineEntry("AI Analysis Complete");
     } catch (err) {
       toast.error("AI analysis failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
@@ -96,49 +123,79 @@ export default function IncidentDetail() {
     }
   }, [id, initAI]);
 
-  // Handle officer confirmation
   const handleConfirmAnalysis = useCallback(async (notes?: string) => {
     if (!aiAnalysis || !user?.id) return;
     try {
-      await reviewAnalysisResult(aiAnalysis.id, {
-        confirmed: true,
-        officerId: user.id,
-        notes,
-      });
-      setAiAnalysis((prev) =>
-        prev ? { ...prev, isReviewed: true, reviewedBy: user.id, reviewedAt: new Date().toISOString(), officerNotes: notes || "" } : prev
-      );
+      await reviewAnalysisResult(aiAnalysis.id, { confirmed: true, officerId: user.id, notes });
+      setAiAnalysis(prev => prev ? { ...prev, isReviewed: true, reviewedBy: user.id, reviewedAt: new Date().toISOString(), officerNotes: notes || "" } : prev);
       toast.success("AI findings confirmed");
+      addTimelineEntry("AI Analysis Confirmed");
     } catch (err) {
       toast.error("Failed to confirm analysis");
     }
   }, [aiAnalysis, user]);
 
-  // Handle officer rejection
   const handleRejectAnalysis = useCallback(async (notes?: string, correctedPlate?: string) => {
     if (!aiAnalysis || !user?.id) return;
     try {
-      await reviewAnalysisResult(aiAnalysis.id, {
-        confirmed: false,
-        officerId: user.id,
-        notes,
-        correctedPlate,
-      });
-      setAiAnalysis((prev) =>
-        prev ? {
-          ...prev,
-          isReviewed: true,
-          reviewedBy: user.id,
-          reviewedAt: new Date().toISOString(),
-          officerNotes: notes || "",
-          officerOverride: { correctedPlate, notes: notes || "" },
-        } : prev
-      );
+      await reviewAnalysisResult(aiAnalysis.id, { confirmed: false, officerId: user.id, notes, correctedPlate });
+      setAiAnalysis(prev => prev ? { ...prev, isReviewed: true, reviewedBy: user.id, reviewedAt: new Date().toISOString(), officerNotes: notes || "", officerOverride: { correctedPlate, notes: notes || "" } } : prev);
       toast.success("AI findings overridden");
+      addTimelineEntry("AI Analysis Overridden by Officer");
     } catch (err) {
       toast.error("Failed to override analysis");
     }
   }, [aiAnalysis, user]);
+
+  // Status transition handlers
+  const handleAssign = async (officerId: string, role: string, notes?: string) => {
+    setAssignedTo({ id: officerId, name: "Officer #" + officerId.slice(-4) });
+    setIncidentStatus("assigned");
+    addTimelineEntry(`Assigned to ${role} for ${role}`);
+    return;
+  };
+
+  const handleEscalate = async (level: string, reason: string, notes: string) => {
+    setIncidentStatus("escalated");
+    addTimelineEntry(`Escalated to ${level} — ${reason.replace(/_/g, " ")}`);
+    return;
+  };
+
+  const handleStartInvestigation = () => {
+    setIncidentStatus("investigating");
+    addTimelineEntry("Investigation Started");
+    toast.success("Investigation started");
+  };
+
+  const handleConfirm = () => {
+    setIncidentStatus("confirmed");
+    addTimelineEntry("Violation Confirmed");
+    toast.success("Incident confirmed");
+  };
+
+  const handleResolve = () => {
+    setIncidentStatus("resolved");
+    addTimelineEntry("Incident Resolved");
+    toast.success("Incident resolved");
+  };
+
+  const handleClose = () => {
+    setIncidentStatus("closed");
+    addTimelineEntry("Case Closed");
+    toast.success("Case closed");
+  };
+
+  const handleReopen = () => {
+    setIncidentStatus("under_review");
+    addTimelineEntry("Case Reopened for Review");
+    toast.success("Case reopened");
+  };
+
+  const handleArchive = () => {
+    setIncidentStatus("archived");
+    addTimelineEntry("Case Archived");
+    toast.success("Case archived");
+  };
 
   // Mock incident data
   const incident = {
@@ -148,7 +205,6 @@ export default function IncidentDetail() {
     location: "Monrovia, UN Drive",
     description: "Vehicle observed traveling at an estimated 95 km/h in a 50 km/h zone. Officer visually confirmed speed using calibrated radar gun. Driver was notified and vehicle was stopped at the next checkpoint.",
     severity: "moderate" as string,
-    status: "under_review",
     date: "2024-07-26T09:23:00",
     officer: "Sgt. John Kollie",
     officer_badge: "LNP-8741",
@@ -157,29 +213,7 @@ export default function IncidentDetail() {
     vehicle_color: "White",
     lat: 6.3156,
     lng: -10.8074,
-    ai_analysis: {
-      detected: true,
-      violation: "Speeding",
-      confidence: 94.7,
-      summary: "AI analysis confirms vehicle exceeding posted speed limit. Front license plate clearly visible. Vehicle identified as white Toyota Corolla. Estimated speed: 92-98 km/h.",
-      vehicle: "White Toyota Corolla",
-      plate: "LBR-4521 (confirmed)",
-      severity: "moderate",
-      objects: ["Vehicle", "License Plate", "Road Sign", "Speed Limit Sign"],
-      reviewed: false,
-    },
-    evidence: [
-      { id: "EV-001", type: "photo", name: "Front view", file: "photo_001.jpg", size: "2.4 MB" },
-      { id: "EV-002", type: "photo", name: "License plate", file: "photo_002.jpg", size: "1.8 MB" },
-      { id: "EV-003", type: "video", name: "Speed radar footage", file: "video_001.mp4", size: "15.2 MB" },
-      { id: "EV-004", type: "document", name: "Officer notes", file: "notes_001.pdf", size: "0.3 MB" },
-    ],
-    timeline: [
-      { action: "Incident Reported", time: "2024-07-26 09:23", user: "Sgt. John Kollie" },
-      { action: "Evidence Uploaded", time: "2024-07-26 09:30", user: "Sgt. John Kollie" },
-      { action: "AI Analysis Complete", time: "2024-07-26 09:32", user: "TrafficWatch AI" },
-      { action: "Submitted for Review", time: "2024-07-26 09:35", user: "Sgt. John Kollie" },
-    ],
+    evidence_count: 4,
   };
 
   const getStatusColor = (status: string) => {
@@ -187,9 +221,14 @@ export default function IncidentDetail() {
       case "draft": return "bg-secondary text-secondary-foreground";
       case "submitted": return "bg-info/10 text-info border-info/20";
       case "under_review": return "bg-warning/10 text-warning border-warning/20";
-      case "approved": return "bg-success/10 text-success border-success/20";
-      case "rejected": return "bg-destructive/10 text-destructive border-destructive/20";
+      case "assigned": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "investigating": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+      case "escalated": return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+      case "confirmed": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
       case "resolved": return "bg-success/10 text-success border-success/20";
+      case "closed": return "bg-secondary text-secondary-foreground";
+      case "rejected": return "bg-destructive/10 text-destructive border-destructive/20";
+      case "archived": return "bg-secondary/50 text-muted-foreground border-border/50";
       default: return "bg-secondary text-secondary-foreground";
     }
   };
@@ -203,6 +242,13 @@ export default function IncidentDetail() {
       default: return "bg-secondary";
     }
   };
+
+  const canInvestigate = ["submitted", "under_review", "assigned"].includes(incidentStatus);
+  const canConfirm = ["investigating", "under_review"].includes(incidentStatus);
+  const canResolve = ["confirmed", "under_review", "investigating"].includes(incidentStatus);
+  const canClose = ["resolved"].includes(incidentStatus);
+  const canReopen = ["closed", "archived", "rejected"].includes(incidentStatus);
+  const canArchive = ["closed", "resolved"].includes(incidentStatus);
 
   return (
     <AppLayout>
@@ -224,12 +270,13 @@ export default function IncidentDetail() {
             <div>
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold">{incident.type}</h1>
-                <Badge className={`clay-pill text-xs px-3 py-0.5 h-5 ${getStatusColor(incident.status)}`}>
-                  {incident.status.replace("_", " ")}
+                <Badge className={`clay-pill text-xs px-3 py-0.5 h-5 ${getStatusColor(incidentStatus)}`}>
+                  {incidentStatus.replace("_", " ")}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {incident.plate} · {incident.vehicle_color} {incident.vehicle_type}
+                {assignedTo && ` · Assigned to ${assignedTo.name}`}
               </p>
             </div>
           </div>
@@ -249,14 +296,18 @@ export default function IncidentDetail() {
           {/* Left column - Main content */}
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-5 rounded-xl p-1 bg-secondary">
+              <TabsList className="grid grid-cols-6 rounded-xl p-1 bg-secondary">
                 <TabsTrigger value="overview" className="rounded-lg text-xs">
                   <FileText className="w-3.5 h-3.5 mr-1" />
                   Overview
                 </TabsTrigger>
                 <TabsTrigger value="evidence" className="rounded-lg text-xs">
                   <Camera className="w-3.5 h-3.5 mr-1" />
-                  Evidence (4)
+                  Evidence ({incident.evidence_count})
+                </TabsTrigger>
+                <TabsTrigger value="people" className="rounded-lg text-xs">
+                  <Users className="w-3.5 h-3.5 mr-1" />
+                  People
                 </TabsTrigger>
                 <TabsTrigger value="ai" className="rounded-lg text-xs">
                   <Brain className="w-3.5 h-3.5 mr-1" />
@@ -306,7 +357,6 @@ export default function IncidentDetail() {
                   </CardContent>
                 </Card>
 
-                {/* Mini map */}
                 <Card className="clay-card border-border/50 !rounded-2xl overflow-hidden">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base">Location</CardTitle>
@@ -336,7 +386,7 @@ export default function IncidentDetail() {
                   <CardHeader className="pb-3 flex flex-row items-center justify-between">
                     <div>
                       <CardTitle className="text-base">Evidence Files</CardTitle>
-                      <CardDescription>{incident.evidence.length} files attached</CardDescription>
+                      <CardDescription>{incident.evidence_count} files attached</CardDescription>
                     </div>
                     <Button variant="outline" size="sm" className="rounded-xl">
                       <Camera className="w-4 h-4 mr-1" />
@@ -345,12 +395,16 @@ export default function IncidentDetail() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid sm:grid-cols-2 gap-3">
-                      {incident.evidence.map((ev) => (
+                      {[
+                        { id: "EV-001", type: "photo", name: "Front view", file: "photo_001.jpg", size: "2.4 MB" },
+                        { id: "EV-002", type: "photo", name: "License plate", file: "photo_002.jpg", size: "1.8 MB" },
+                        { id: "EV-003", type: "video", name: "Speed radar footage", file: "video_001.mp4", size: "15.2 MB" },
+                        { id: "EV-004", type: "document", name: "Officer notes", file: "notes_001.pdf", size: "0.3 MB" },
+                      ].map((ev) => (
                         <div key={ev.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                             ev.type === "photo" ? "bg-blue-500/10" :
-                            ev.type === "video" ? "bg-purple-500/10" :
-                            "bg-amber-500/10"
+                            ev.type === "video" ? "bg-purple-500/10" : "bg-amber-500/10"
                           }`}>
                             {ev.type === "photo" ? <Image className="w-5 h-5 text-blue-500" /> :
                              ev.type === "video" ? <Video className="w-5 h-5 text-purple-500" /> :
@@ -370,6 +424,11 @@ export default function IncidentDetail() {
                 </Card>
               </TabsContent>
 
+              {/* People Tab */}
+              <TabsContent value="people" className="space-y-4 mt-4">
+                <InvolvedPersons incidentId={incident.id} />
+              </TabsContent>
+
               {/* AI Analysis Tab */}
               <TabsContent value="ai" className="space-y-4 mt-4">
                 {!aiInitialized && !aiAnalysis && (
@@ -385,22 +444,13 @@ export default function IncidentDetail() {
                           read license plates, and identify vehicles automatically.
                         </p>
                       </div>
-                      <Button
-                        className="clay-btn rounded-xl"
-                        onClick={handleRunAnalysis}
-                        disabled={aiLoading}
-                      >
-                        {aiLoading ? (
-                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Brain className="w-4 h-4 mr-2" />
-                        )}
+                      <Button className="clay-btn rounded-xl" onClick={handleRunAnalysis} disabled={aiLoading}>
+                        {aiLoading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Brain className="w-4 h-4 mr-2" />}
                         {aiLoading ? "Analyzing..." : "Run AI Analysis"}
                       </Button>
                     </CardContent>
                   </Card>
                 )}
-
                 <AIAnalysisPanel
                   analysis={aiAnalysis}
                   isLoading={aiLoading}
@@ -415,35 +465,18 @@ export default function IncidentDetail() {
               <TabsContent value="anpr" className="space-y-4 mt-4">
                 <ANPREditor
                   plateResult={aiAnalysis?.licensePlate || null}
-                  onVerify={(corrected) => {
-                    if (aiAnalysis) {
-                      handleConfirmAnalysis(`Plate verified: ${corrected}`);
-                    }
-                  }}
-                  onReject={() => {
-                    if (aiAnalysis) {
-                      handleRejectAnalysis("Plate detection rejected");
-                    }
-                  }}
+                  onVerify={(corrected) => { if (aiAnalysis) handleConfirmAnalysis(`Plate verified: ${corrected}`); }}
+                  onReject={() => { if (aiAnalysis) handleRejectAnalysis("Plate detection rejected"); }}
                 />
-
                 {!aiAnalysis && (
                   <Card className="clay-card !rounded-2xl">
                     <CardContent className="p-6 text-center space-y-3">
                       <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mx-auto">
                         <ScanLine className="w-6 h-6 text-muted-foreground" />
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Run AI analysis first to detect license plates via ANPR
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl"
-                        onClick={handleRunAnalysis}
-                      >
-                        <Brain className="w-4 h-4 mr-2" />
-                        Run Analysis
+                      <p className="text-sm text-muted-foreground">Run AI analysis first to detect license plates via ANPR</p>
+                      <Button variant="outline" size="sm" className="rounded-xl" onClick={handleRunAnalysis}>
+                        <Brain className="w-4 h-4 mr-2" /> Run Analysis
                       </Button>
                     </CardContent>
                   </Card>
@@ -460,7 +493,7 @@ export default function IncidentDetail() {
                     <div className="relative">
                       <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                       <div className="space-y-6">
-                        {incident.timeline.map((event, i) => (
+                        {timeline.map((event, i) => (
                           <div key={i} className="relative pl-10">
                             <div className="absolute left-2.5 top-1 w-3 h-3 rounded-full bg-primary border-2 border-card" />
                             <div>
@@ -483,34 +516,117 @@ export default function IncidentDetail() {
 
           {/* Right sidebar */}
           <div className="space-y-4">
-            {/* Actions */}
+            {/* Status Workflow */}
             <Card className="clay-card border-border/50 !rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Actions</CardTitle>
+                <CardTitle className="text-base">Workflow Actions</CardTitle>
+                <CardDescription>Manage the incident lifecycle</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button className="w-full clay-btn rounded-xl" variant="default">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Approve Report
+                {/* Assign */}
+                <Button
+                  className="w-full rounded-xl"
+                  variant="outline"
+                  onClick={() => setShowAssign(true)}
+                  disabled={!["submitted", "under_review", "draft"].includes(incidentStatus)}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  {assignedTo ? "Reassign" : "Assign"}
                 </Button>
-                <Button className="w-full rounded-xl" variant="outline">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Request Revision
+
+                {/* Start Investigation */}
+                {canInvestigate && (
+                  <Button className="w-full rounded-xl" variant="outline" onClick={handleStartInvestigation}>
+                    <Search className="w-4 h-4 mr-2" />
+                    Start Investigation
+                  </Button>
+                )}
+
+                {/* Escalate */}
+                <Button
+                  className="w-full rounded-xl"
+                  variant="outline"
+                  onClick={() => setShowEscalate(true)}
+                  disabled={!["submitted", "under_review", "assigned", "investigating"].includes(incidentStatus)}
+                >
+                  <ArrowUpCircle className="w-4 h-4 mr-2" />
+                  Escalate
                 </Button>
-                <Button className="w-full rounded-xl" variant="outline">
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share Report
-                </Button>
-                <Button className="w-full rounded-xl" variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export PDF
-                </Button>
-                <Button variant="ghost" className="w-full rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Report
-                </Button>
+
+                {/* Confirm Violation */}
+                {canConfirm && (
+                  <Button className="w-full clay-btn rounded-xl" variant="default" onClick={handleConfirm}>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Confirm Violation
+                  </Button>
+                )}
+
+                {/* Resolve */}
+                {canResolve && (
+                  <Button className="w-full rounded-xl" variant="outline" onClick={handleResolve}>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Resolve Incident
+                  </Button>
+                )}
+
+                {/* Close Case */}
+                {canClose && (
+                  <Button className="w-full rounded-xl" variant="outline" onClick={handleClose}>
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Close Case
+                  </Button>
+                )}
+
+                {/* Reopen */}
+                {canReopen && (
+                  <Button className="w-full rounded-xl" variant="outline" onClick={handleReopen}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reopen Case
+                  </Button>
+                )}
+
+                {/* Archive */}
+                {canArchive && (
+                  <Button className="w-full rounded-xl" variant="outline" onClick={handleArchive}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archive
+                  </Button>
+                )}
+
+                <div className="border-t border-border/50 pt-2 mt-2 space-y-2">
+                  <Button className="w-full rounded-xl" variant="outline" onClick={() => setShowReport(true)}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Generate Report
+                  </Button>
+                  <Button className="w-full rounded-xl" variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export PDF
+                  </Button>
+                  <Button variant="ghost" className="w-full rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Report
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Assignee info */}
+            {assignedTo && (
+              <Card className="clay-card border-border/50 !rounded-2xl">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{assignedTo.name}</p>
+                    <p className="text-xs text-muted-foreground">Assigned Investigator</p>
+                  </div>
+                  <Badge className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-blue-500/10 text-blue-500 border-blue-500/20">
+                    Active
+                  </Badge>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Officer notes */}
             <Card className="clay-card border-border/50 !rounded-2xl">
@@ -529,7 +645,7 @@ export default function IncidentDetail() {
               </CardContent>
             </Card>
 
-            {/* Related info */}
+            {/* Info */}
             <Card className="clay-card border-border/50 !rounded-2xl">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -545,6 +661,35 @@ export default function IncidentDetail() {
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <AssignDialog
+        open={showAssign}
+        onOpenChange={setShowAssign}
+        incidentId={incident.id}
+        currentAssignee={assignedTo}
+        onAssign={handleAssign}
+      />
+      <EscalateDialog
+        open={showEscalate}
+        onOpenChange={setShowEscalate}
+        incidentId={incident.id}
+        onEscalate={handleEscalate}
+      />
+      <ReportGenerator
+        open={showReport}
+        onOpenChange={setShowReport}
+        incidentId={incident.id}
+        incidentTitle={incident.type}
+      />
     </AppLayout>
   );
+}
+
+function Search({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>;
+}
+
+function Archive({ className }: { className?: string }) {
+  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>;
 }

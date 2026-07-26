@@ -46,11 +46,31 @@ export interface Database {
         Insert: Omit<SyncQueueItem, "id">;
         Update: Partial<Omit<SyncQueueItem, "id">>;
       };
+      involved_persons: {
+        Row: InvolvedPerson;
+        Insert: Omit<InvolvedPerson, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<InvolvedPerson, "id">>;
+      };
+      witnesses: {
+        Row: Witness;
+        Insert: Omit<Witness, "id" | "created_at">;
+        Update: Partial<Omit<Witness, "id">>;
+      };
+      incident_assignments: {
+        Row: IncidentAssignment;
+        Insert: Omit<IncidentAssignment, "id" | "assigned_at">;
+        Update: Partial<Omit<IncidentAssignment, "id">>;
+      };
+      incident_logs: {
+        Row: IncidentLog;
+        Insert: Omit<IncidentLog, "id" | "created_at">;
+        Update: never;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: {
-      incident_status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "resolved";
+      incident_status: "draft" | "submitted" | "under_review" | "assigned" | "investigating" | "escalated" | "confirmed" | "resolved" | "closed" | "rejected" | "archived";
       violation_severity: "minor" | "moderate" | "serious" | "critical";
       evidence_type: "photo" | "video" | "document" | "audio" | "other";
       user_role: "officer" | "supervisor" | "admin" | "investigator";
@@ -89,7 +109,7 @@ export interface Incident {
   vehicle_type: string | null;
   vehicle_color: string | null;
   severity: "minor" | "moderate" | "serious" | "critical";
-  status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "resolved";
+  status: "draft" | "submitted" | "under_review" | "assigned" | "investigating" | "escalated" | "confirmed" | "resolved" | "closed" | "rejected" | "archived";
   is_synced: boolean;
   officer_notes: string | null;
   created_at: string;
@@ -202,6 +222,54 @@ export interface ViolationType {
   penalty_points: number | null;
   severity: "minor" | "moderate" | "serious" | "critical";
   is_active: boolean;
+  created_at: string;
+}
+
+export interface InvolvedPerson {
+  id: string;
+  incident_id: string;
+  full_name: string;
+  id_type: "drivers_license" | "national_id" | "passport" | "other";
+  id_number: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  role: "driver" | "passenger" | "pedestrian" | "owner" | "other";
+  statement: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Witness {
+  id: string;
+  incident_id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  statement: string | null;
+  consent_given: boolean;
+  created_at: string;
+}
+
+export interface IncidentAssignment {
+  id: string;
+  incident_id: string;
+  assigned_to: string;
+  assigned_by: string;
+  role: "investigator" | "reviewer" | "supervisor";
+  notes: string | null;
+  is_active: boolean;
+  assigned_at: string;
+  unassigned_at: string | null;
+}
+
+export interface IncidentLog {
+  id: string;
+  incident_id: string;
+  action: string;
+  performed_by: string;
+  details: any;
   created_at: string;
 }
 

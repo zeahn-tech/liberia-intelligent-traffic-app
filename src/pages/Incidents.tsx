@@ -155,9 +155,15 @@ export default function Incidents() {
       case "draft": return "bg-secondary text-secondary-foreground";
       case "submitted": return "bg-info/10 text-info";
       case "under_review": return "bg-warning/10 text-warning";
+      case "assigned": return "bg-blue-500/10 text-blue-500";
+      case "investigating": return "bg-purple-500/10 text-purple-500";
+      case "escalated": return "bg-orange-500/10 text-orange-500";
+      case "confirmed": return "bg-emerald-500/10 text-emerald-500";
       case "approved": return "bg-success/10 text-success";
       case "rejected": return "bg-destructive/10 text-destructive";
       case "resolved": return "bg-success/10 text-success";
+      case "closed": return "bg-secondary text-secondary-foreground";
+      case "archived": return "bg-secondary/50 text-muted-foreground";
       default: return "bg-secondary text-secondary-foreground";
     }
   };
@@ -239,9 +245,14 @@ export default function Incidents() {
                   <SelectItem value="draft">Draft</SelectItem>
                   <SelectItem value="submitted">Submitted</SelectItem>
                   <SelectItem value="under_review">Under Review</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="investigating">Investigating</SelectItem>
+                  <SelectItem value="escalated">Escalated</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
                   <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={severityFilter} onValueChange={setSeverityFilter}>
@@ -268,8 +279,8 @@ export default function Incidents() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: "Total", count: filteredIncidents.length, color: "text-foreground" },
-            { label: "Pending", count: filteredIncidents.filter(i => i.status === "submitted" || i.status === "under_review").length, color: "text-warning" },
-            { label: "Resolved", count: filteredIncidents.filter(i => i.status === "resolved" || i.status === "approved").length, color: "text-success" },
+            { label: "Pending", count: filteredIncidents.filter(i => ["submitted", "under_review", "assigned", "investigating"].includes(i.status)).length, color: "text-warning" },
+            { label: "Resolved", count: filteredIncidents.filter(i => ["resolved", "confirmed", "closed"].includes(i.status)).length, color: "text-success" },
             { label: "AI Detected", count: filteredIncidents.filter(i => i.ai_detected).length, color: "text-info" },
           ].map((stat) => (
             <div key={stat.label} className="clay-card bg-card p-4 rounded-xl text-center">
