@@ -2,177 +2,16 @@
 -- TrafficWatch AI - v4 Database Migration
 -- Media Security - Private Storage Buckets, Signed URLs,
 -- MIME validation, file-size limits, access controls
+--
+-- HOW TO RUN:
+-- 1. Paste this entire file into the Supabase SQL Editor and run it.
+-- 2. Then create the 5 storage buckets manually in the
+--    Supabase Storage Dashboard (instructions below).
 -- =====================================================
 
--- 1. Create storage buckets via helper function
--- Note: Supabase Storage buckets must also be created via the Dashboard
--- or Management API. Run these queries in the SQL Editor to create
--- the private buckets.
-
--- Function to create a bucket if it doesn't exist
-CREATE OR REPLACE FUNCTION storage.create_bucket_if_not_exists(
-  bucket_name TEXT,
-  is_public BOOLEAN DEFAULT false,
-  file_size_limit BIGINT DEFAULT 52428800, -- 50 MB default
-  allowed_mime_types TEXT[] DEFAULT NULL
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-  INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types, avif_autodetection)
-  VALUES (bucket_name, bucket_name, is_public, file_size_limit, allowed_mime_types, false)
-  ON CONFLICT (id) DO UPDATE SET
-    file_size_limit = EXCLUDED.file_size_limit,
-    allowed_mime_types = EXCLUDED.allowed_mime_types;
-END;
-$$;
-
--- Create private buckets for evidence media
--- evidence-images: Photos (JPEG, PNG, WebP, TIFF) — max 25 MB
--- evidence-videos: Videos (MP4, MOV, AVI) — max 200 MB
--- evidence-documents: Documents (PDF, DOCX, XLSX) — max 25 MB
--- evidence-audio: Audio recordings (MP3, WAV, OGG) — max 50 MB
--- evidence-other: All other evidence files — max 25 MB
-
-SELECT storage.create_bucket_if_not_exists(
-  'evidence-images',
-  false,
-  26214400, -- 25 MB
-  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/tiff', 'image/heic', 'image/heif']
-);
-
-SELECT storage.create_bucket_if_not_exists(
-  'evidence-videos',
-  false,
-  209715200, -- 200 MB
-  ARRAY['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/x-matroska']
-);
-
-SELECT storage.create_bucket_if_not_exists(
-  'evidence-documents',
-  false,
-  26214400, -- 25 MB
-  ARRAY['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-         'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-         'text/plain', 'text/csv']
-);
-
-SELECT storage.create_bucket_if_not_exists(
-  'evidence-audio',
-  false,
-  52428800, -- 50 MB
-  ARRAY['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/flac']
-);
-
-SELECT storage.create_bucket_if_not_exists(
-  'evidence-other',
-  false,
-  26214400, -- 25 MB
-  NULL -- Allow any MIME type up to 25 MB
-);
-
 -- =====================================================
--- 2. Storage RLS Policies
--- =====================================================
-
--- Helper to check if user can access an incident's evidence
-CREATE OR REPLACE FUNCTION storage.can_access_evidence(
-  bucket_name TEXT,
-  file_path TEXT
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-STABLE
-SECURITY DEFINER
-AS $$
-DECLARE
-  incident_id UUID;
-  user_role TEXT;
-BEGIN
-  -- Extract incident_id from path: {incident_id}/{filename}
-  BEGIN
-    incident_id := SPLIT_PART(file_path, '/', 1)::UUID;
-  EXCEPTION WHEN OTHERS THEN
-    RETURN false;
-  END;
-
-  -- Check if user owns the incident or has authorized role
-  user_role := public.get_current_user_role();
-
-  RETURN EXISTS (
-    SELECT 1 FROM public.incidents i
-    WHERE i.id = incident_id
-    AND (
-      i.officer_id = auth.uid()
-      OR user_role IN ('supervisor', 'admin', 'investigator')
-    )
-  );
-END;
-$$;
-
--- Function to determine bucket name based on MIME type
-CREATE OR REPLACE FUNCTION storage.get_bucket_for_mime(mime_type TEXT)
-RETURNS TEXT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-BEGIN
-  IF mime_type LIKE 'image/%' THEN RETURN 'evidence-images';
-  ELSIF mime_type LIKE 'video/%' THEN RETURN 'evidence-videos';
-  ELSIF mime_type LIKE 'audio/%' THEN RETURN 'evidence-audio';
-  ELSIF mime_type IN ('application/pdf', 'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain', 'text/csv') THEN RETURN 'evidence-documents';
-  ELSE RETURN 'evidence-other';
-  END IF;
-END;
-$$;
-
--- Enable RLS on storage buckets (if not already enabled)
--- Note: Supabase storage.objects has RLS enabled by default
--- These policies apply to ALL buckets
-
--- SELECT: Only authorized personnel can view evidence files
-CREATE POLICY "Authorized personnel can read evidence"
-  ON storage.objects FOR SELECT
-  USING (
-    bucket_id IN ('evidence-images', 'evidence-videos', 'evidence-documents', 'evidence-audio', 'evidence-other')
-    AND storage.can_access_evidence(bucket_id, name)
-  );
-
--- INSERT: Only authenticated users with officer role can upload
-CREATE POLICY "Officers can upload evidence"
-  ON storage.objects FOR INSERT
-  WITH CHECK (
-    bucket_id IN ('evidence-images', 'evidence-videos', 'evidence-documents', 'evidence-audio', 'evidence-other')
-    AND auth.role() = 'authenticated'
-    AND (public.get_current_user_role() IN ('officer', 'supervisor', 'admin', 'investigator'))
-    -- File size enforced by bucket config
-    -- MIME type enforced by bucket config
-  );
-
--- UPDATE: Only the uploader or admins can update (e.g. reprocess)
-CREATE POLICY "Officers can update own uploads"
-  ON storage.objects FOR UPDATE
-  USING (
-    bucket_id IN ('evidence-images', 'evidence-videos', 'evidence-documents', 'evidence-audio', 'evidence-other')
-    AND auth.uid() = owner
-    AND auth.role() = 'authenticated'
-  );
-
--- DELETE: Only admins can delete evidence
-CREATE POLICY "Only admins can delete evidence"
-  ON storage.objects FOR DELETE
-  USING (
-    bucket_id IN ('evidence-images', 'evidence-videos', 'evidence-documents', 'evidence-audio', 'evidence-other')
-    AND public.get_current_user_role() = 'admin'
-  );
-
--- =====================================================
--- 3. Evidence file tracking table
--- Tracks which storage bucket/path each file belongs to
+-- PART 1: Create the storage_files tracking table
+-- This lives in the public schema (no storage schema access needed)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS public.storage_files (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -209,7 +48,110 @@ CREATE POLICY "Officers can insert storage files"
   WITH CHECK (auth.role() = 'authenticated');
 
 -- =====================================================
--- 4. MIME type validation function (client-side helper)
+-- PART 2: Storage RLS Policies
+-- These are created via a SECURITY DEFINER function in the public schema
+-- that directly manipulates storage.objects policies
+-- =====================================================
+
+-- Function to install storage RLS policies
+CREATE OR REPLACE FUNCTION public.install_storage_rls_policies()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- SELECT: Only authorized personnel can view evidence files
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+    AND policyname = 'Authorized personnel can read evidence'
+  ) THEN
+    EXECUTE format(
+      'CREATE POLICY "Authorized personnel can read evidence" ON storage.objects FOR SELECT USING (
+        bucket_id = ANY (ARRAY[''evidence-images'', ''evidence-videos'', ''evidence-documents'', ''evidence-audio'', ''evidence-other''])
+        AND (
+          auth.role() = ''authenticated''
+          AND EXISTS (
+            SELECT 1 FROM public.incidents i
+            WHERE i.id::TEXT = SPLIT_PART(storage.objects.name, ''/'', 1)
+            AND (i.officer_id = auth.uid() OR public.get_current_user_role() IN (''supervisor'', ''admin'', ''investigator''))
+          )
+        )
+      )'
+    );
+  END IF;
+
+  -- INSERT: Only authenticated users with officer role can upload
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+    AND policyname = 'Officers can upload evidence'
+  ) THEN
+    EXECUTE format(
+      'CREATE POLICY "Officers can upload evidence" ON storage.objects FOR INSERT WITH CHECK (
+        bucket_id = ANY (ARRAY[''evidence-images'', ''evidence-videos'', ''evidence-documents'', ''evidence-audio'', ''evidence-other''])
+        AND auth.role() = ''authenticated''
+        AND public.get_current_user_role() IN (''officer'', ''supervisor'', ''admin'', ''investigator'')
+      )'
+    );
+  END IF;
+
+  -- UPDATE: Only the uploader can update
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+    AND policyname = 'Officers can update own uploads'
+  ) THEN
+    EXECUTE format(
+      'CREATE POLICY "Officers can update own uploads" ON storage.objects FOR UPDATE USING (
+        bucket_id = ANY (ARRAY[''evidence-images'', ''evidence-videos'', ''evidence-documents'', ''evidence-audio'', ''evidence-other''])
+        AND auth.uid() = owner
+        AND auth.role() = ''authenticated''
+      )'
+    );
+  END IF;
+
+  -- DELETE: Only admins can delete evidence
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+    AND policyname = 'Only admins can delete evidence'
+  ) THEN
+    EXECUTE format(
+      'CREATE POLICY "Only admins can delete evidence" ON storage.objects FOR DELETE USING (
+        bucket_id = ANY (ARRAY[''evidence-images'', ''evidence-videos'', ''evidence-documents'', ''evidence-audio'', ''evidence-other''])
+        AND public.get_current_user_role() = ''admin''
+      )'
+    );
+  END IF;
+END;
+$$;
+
+-- Run the function to install RLS policies on storage.objects
+SELECT public.install_storage_rls_policies();
+
+-- =====================================================
+-- PART 3: Helper function for bucket name by MIME type
+-- =====================================================
+CREATE OR REPLACE FUNCTION public.get_bucket_for_mime(mime_type TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+  IF mime_type LIKE 'image/%' THEN RETURN 'evidence-images';
+  ELSIF mime_type LIKE 'video/%' THEN RETURN 'evidence-videos';
+  ELSIF mime_type LIKE 'audio/%' THEN RETURN 'evidence-audio';
+  ELSIF mime_type IN ('application/pdf', 'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain', 'text/csv') THEN RETURN 'evidence-documents';
+  ELSE RETURN 'evidence-other';
+  END IF;
+END;
+$$;
+
+-- =====================================================
+-- PART 4: MIME type validation function
 -- =====================================================
 CREATE OR REPLACE FUNCTION public.validate_evidence_mime(mime_type TEXT)
 RETURNS JSONB
@@ -238,49 +180,7 @@ END;
 $$;
 
 -- =====================================================
--- 5. Function to generate signed URLs (called from client)
--- =====================================================
-CREATE OR REPLACE FUNCTION public.get_signed_evidence_url(
-  p_evidence_id UUID,
-  p_expires_in INTEGER DEFAULT 3600 -- 1 hour default
-)
-RETURNS TEXT
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_bucket TEXT;
-  v_path TEXT;
-  v_signed_url TEXT;
-BEGIN
-  -- Verify access
-  IF NOT EXISTS (
-    SELECT 1 FROM public.evidence e
-    JOIN public.incidents i ON i.id = e.incident_id
-    WHERE e.id = p_evidence_id
-    AND (i.officer_id = auth.uid() OR public.get_current_user_role() IN ('supervisor', 'admin', 'investigator'))
-  ) THEN
-    RETURN NULL;
-  END IF;
-
-  -- Get the file location
-  SELECT bucket_name, file_path INTO v_bucket, v_path
-  FROM public.storage_files
-  WHERE evidence_id = p_evidence_id
-  ORDER BY created_at DESC
-  LIMIT 1;
-
-  IF v_bucket IS NULL THEN
-    RETURN NULL;
-  END IF;
-
-  -- Return the signed URL (client will use supabase.storage.from().createSignedUrl())
-  RETURN v_bucket || '/' || v_path || '?expires=' || (extract(epoch from now()) + p_expires_in)::TEXT;
-END;
-$$;
-
--- =====================================================
--- 6. Update evidence trigger to compute default file_url prefix
+-- PART 5: Evidence file path trigger
 -- =====================================================
 CREATE OR REPLACE FUNCTION public.set_evidence_file_path()
 RETURNS TRIGGER
@@ -294,7 +194,46 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS set_evidence_file_path_trigger ON public.evidence;
 CREATE TRIGGER set_evidence_file_path_trigger
   BEFORE INSERT ON public.evidence
   FOR EACH ROW
   EXECUTE FUNCTION public.set_evidence_file_path();
+
+-- =====================================================
+-- DONE! Now create the 5 storage buckets manually:
+-- =====================================================
+--
+-- Go to: https://supabase.com/dashboard/project/yleytyqcrivnohpijtdp/storage/buckets
+--
+-- Create these 5 buckets (all PRIVATE, not public):
+--
+-- 1. BUCKET:  evidence-images
+--    Public:   OFF
+--    MIME:     image/jpeg, image/png, image/webp, image/tiff, image/heic, image/heif
+--    Size:     26214400 (25 MB)
+--
+-- 2. BUCKET:  evidence-videos
+--    Public:   OFF
+--    MIME:     video/mp4, video/quicktime, video/x-msvideo, video/webm, video/x-matroska
+--    Size:     209715200 (200 MB)
+--
+-- 3. BUCKET:  evidence-documents
+--    Public:   OFF
+--    MIME:     application/pdf, application/msword,
+--              application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+--              application/vnd.ms-excel,
+--              application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+--              text/plain, text/csv
+--    Size:     26214400 (25 MB)
+--
+-- 4. BUCKET:  evidence-audio
+--    Public:   OFF
+--    MIME:     audio/mpeg, audio/wav, audio/ogg, audio/aac, audio/flac
+--    Size:     52428800 (50 MB)
+--
+-- 5. BUCKET:  evidence-other
+--    Public:   OFF
+--    MIME:     (leave empty — accept any)
+--    Size:     26214400 (25 MB)
+-- =====================================================
