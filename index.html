@@ -6,13 +6,36 @@
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TrafficWatch AI</title>
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="description" content="AI-powered traffic monitoring, incident reporting, evidence management, and analytics platform for national police operations." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TrafficWatch AI" />
+  <link rel="apple-touch-icon" href="/logo-192.png" />
+  <link rel="apple-touch-icon-precomposed" href="/logo-192.png" />
+  <link rel="mask-icon" href="/logo.svg" color="#1a1a2e" />
+  <!-- iOS splash screen support -->
+  <link rel="apple-touch-startup-image" href="/logo-512.png" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="TrafficWatch AI" />
+  <meta property="og:description" content="AI-powered traffic monitoring platform for national police operations." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/logo-512.png" />
+  <title>TrafficWatch AI — Liberia Intelligent Traffic App</title>
 </head>
-
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
+  <!-- Offline fallback script -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // Service worker registration is handled by vite-plugin-pwa
+        console.log('TrafficWatch AI ready for install');
+      });
+    }
+  </script>
 </body>
 
 </html>

@@ -1,45 +1,38 @@
-import '@vly-ai/integrations';
 import { Toaster } from "@/components/ui/sonner";
 import { RequireAuth } from "@/components/RequireAuth";
-import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
-import { ConvexReactClient } from "convex/react";
+import { AuthProvider } from "@/hooks/use-auth";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
+import { initAutoSync } from "@/lib/sync";
+import { isSupabaseConfigured } from "@/supabase/client";
 import "./index.css";
+
+// Initialize auto-sync for offline support
+initAutoSync();
 
 // Lazy load route components for better code splitting
 const Landing = lazy(() => import("./pages/Landing.tsx"));
 const AuthPage = lazy(() => import("./pages/Auth.tsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
+const Incidents = lazy(() => import("./pages/Incidents.tsx"));
+const IncidentDetail = lazy(() => import("./pages/IncidentDetail.tsx"));
+const ReportIncident = lazy(() => import("./pages/ReportIncident.tsx"));
+const Evidence = lazy(() => import("./pages/Evidence.tsx"));
+const Settings = lazy(() => import("./pages/Settings.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
+// PWA registration handled by vite-plugin-pwa
 // Simple loading fallback for route transitions
 function RouteLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+        <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+      </div>
     </div>
   );
-}
-
-/** Silent error boundary — if VlyToolbar crashes it renders nothing instead of
- *  crashing the whole app (e.g. hook errors in WebContainer environment). */
-class ToolbarErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(err: Error) {
-    console.warn("[VlyToolbar] Caught error, toolbar disabled:", err.message);
-  }
-  render() {
-    return this.state.hasError ? null : this.props.children;
-  }
 }
 
 /** Hard guard so runtime errors never leave the preview as a blank page. */
@@ -56,7 +49,7 @@ class RootErrorBoundary extends React.Component<
     };
   }
   componentDidCatch(err: Error) {
-    console.error("[WebContainer preview] Root crash:", err);
+    console.error("[Preview] Root crash:", err);
   }
   render() {
     if (this.state.hasError) {
@@ -79,10 +72,6 @@ class RootErrorBoundary extends React.Component<
     return this.props.children;
   }
 }
-
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
-
-
 
 function RouteSyncer() {
   const location = useLocation();
@@ -107,14 +96,17 @@ function RouteSyncer() {
   return null;
 }
 
+// Check Supabase configuration
+if (!isSupabaseConfigured()) {
+  console.warn(
+    "Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables."
+  );
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RootErrorBoundary>
-      <ToolbarErrorBoundary>
-        <VlyToolbar />
-      </ToolbarErrorBoundary>
-      <ConvexAuthProvider client={convex}>
+      <AuthProvider>
         <BrowserRouter>
           <RouteSyncer />
           <Suspense fallback={<RouteLoading />}>
@@ -132,12 +124,52 @@ createRoot(document.getElementById("root")!).render(
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/incidents"
+                element={
+                  <RequireAuth>
+                    <Incidents />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/incidents/new"
+                element={
+                  <RequireAuth>
+                    <ReportIncident />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/incidents/:id"
+                element={
+                  <RequireAuth>
+                    <IncidentDetail />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/evidence"
+                element={
+                  <RequireAuth>
+                    <Evidence />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <RequireAuth>
+                    <Settings />
+                  </RequireAuth>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          <Toaster />
         </BrowserRouter>
-        <Toaster />
-      </ConvexAuthProvider>
+      </AuthProvider>
     </RootErrorBoundary>
   </StrictMode>,
 );

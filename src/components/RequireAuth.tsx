@@ -10,7 +10,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground animate-pulse">Verifying session...</p>
+        </div>
       </main>
     );
   }

@@ -1,9 +1,9 @@
-/* DO NOT CHANGE */
+/* ===== TRAFFICWATCH AI — CLAYMORPHISM THEME ===== */
 @import "tailwindcss";
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
 
-/* DO NOT CHANGE */
+/* ===== CLAYMORPHISM DESIGN TOKENS ===== */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -24,6 +24,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -40,87 +41,234 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-safe: var(--safe);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --font-family: var(--font-sans);
+  --clay-shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05), inset 0 -2px 0 rgb(0 0 0 / 0.02);
+  --clay-shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04), inset 0 -3px 0 rgb(0 0 0 / 0.02);
+  --clay-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04), inset 0 -4px 0 rgb(0 0 0 / 0.02);
+  --clay-shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.12), inset 0 -4px 0 rgb(0 0 0 / 0.02);
+  --clay-inset: inset 0 2px 4px rgb(0 0 0 / 0.04);
+  --clay-inset-sm: inset 0 1px 2px rgb(0 0 0 / 0.03);
 }
 
-/* CHANGE VALUES FOR THEME */
+/* ===== COSMETIC / SEMANTIC TOKENS ===== */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 1rem;
+  --font-sans: "Inter", "SF Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Base — soft matte off-white/pastel */
+  --background: oklch(0.97 0.01 85);
+  --foreground: oklch(0.22 0.02 260);
+
+  /* Card — raised clay surface */
+  --card: oklch(0.99 0.005 85);
+  --card-foreground: oklch(0.22 0.02 260);
+
+  /* Popover */
+  --popover: oklch(0.99 0.005 85);
+  --popover-foreground: oklch(0.22 0.02 260);
+
+  /* Primary — deep navy blue (police authority) */
+  --primary: oklch(0.28 0.06 260);
+  --primary-foreground: oklch(0.96 0.01 85);
+
+  /* Secondary — warm clay beige */
+  --secondary: oklch(0.93 0.015 80);
+  --secondary-foreground: oklch(0.28 0.02 260);
+
+  /* Muted */
+  --muted: oklch(0.94 0.01 85);
+  --muted-foreground: oklch(0.55 0.02 260);
+
+  /* Accent — traffic amber */
+  --accent: oklch(0.85 0.12 80);
+  --accent-foreground: oklch(0.28 0.02 260);
+
+  /* Destructive — alert red */
+  --destructive: oklch(0.58 0.18 25);
+  --destructive-foreground: oklch(0.96 0.01 85);
+
+  /* Borders — subtle clay seams */
+  --border: oklch(0.88 0.01 85 / 0.6);
+  --input: oklch(0.88 0.01 85 / 0.6);
+  --ring: oklch(0.28 0.06 260 / 0.3);
+
+  /* Chart colors — pastel traffic palette */
+  --chart-1: oklch(0.58 0.18 25);
+  --chart-2: oklch(0.75 0.15 80);
+  --chart-3: oklch(0.55 0.12 200);
+  --chart-4: oklch(0.65 0.1 150);
+  --chart-5: oklch(0.7 0.14 300);
+
+  /* Sidebar — slightly deeper clay */
+  --sidebar: oklch(0.95 0.01 85);
+  --sidebar-foreground: oklch(0.22 0.02 260);
+  --sidebar-primary: oklch(0.28 0.06 260);
+  --sidebar-primary-foreground: oklch(0.96 0.01 85);
+  --sidebar-accent: oklch(0.85 0.12 80);
+  --sidebar-accent-foreground: oklch(0.22 0.02 260);
+  --sidebar-border: oklch(0.88 0.01 85 / 0.6);
+  --sidebar-ring: oklch(0.28 0.06 260 / 0.3);
+
+  /* Semantic status colors */
+  --safe: oklch(0.65 0.12 150);
+  --warning: oklch(0.75 0.15 80);
+  --info: oklch(0.6 0.1 200);
+  --success: oklch(0.6 0.12 145);
 }
 
+/* ===== DARK MODE — deep clay ===== */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.18 0.01 260);
+  --foreground: oklch(0.93 0.01 85);
+  --card: oklch(0.22 0.015 260);
+  --card-foreground: oklch(0.93 0.01 85);
+  --popover: oklch(0.22 0.015 260);
+  --popover-foreground: oklch(0.93 0.01 85);
+  --primary: oklch(0.55 0.08 260);
+  --primary-foreground: oklch(0.15 0.01 260);
+  --secondary: oklch(0.28 0.02 260);
+  --secondary-foreground: oklch(0.93 0.01 85);
+  --muted: oklch(0.26 0.015 260);
+  --muted-foreground: oklch(0.6 0.02 260);
+  --accent: oklch(0.4 0.08 80);
+  --accent-foreground: oklch(0.93 0.01 85);
+  --destructive: oklch(0.5 0.16 25);
+  --destructive-foreground: oklch(0.93 0.01 85);
+  --border: oklch(0.3 0.01 260 / 0.6);
+  --input: oklch(0.3 0.01 260 / 0.6);
+  --ring: oklch(0.55 0.08 260 / 0.3);
+  --sidebar: oklch(0.22 0.015 260);
+  --sidebar-foreground: oklch(0.93 0.01 85);
+  --sidebar-primary: oklch(0.55 0.08 260);
+  --sidebar-primary-foreground: oklch(0.15 0.01 260);
+  --sidebar-accent: oklch(0.35 0.06 80);
+  --sidebar-accent-foreground: oklch(0.93 0.01 85);
+  --sidebar-border: oklch(0.3 0.01 260 / 0.6);
+  --sidebar-ring: oklch(0.55 0.08 260 / 0.3);
+  --safe: oklch(0.55 0.1 150);
+  --warning: oklch(0.65 0.12 80);
+  --info: oklch(0.5 0.08 200);
+  --success: oklch(0.5 0.1 145);
 }
 
+/* ===== BASE STYLES ===== */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  html {
+    font-family: var(--font-family);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-family);
   }
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
+
+  /* Claymorphism button base style */
+  .clay-btn {
+    border-radius: var(--radius);
+    box-shadow: var(--clay-shadow-md);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .clay-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--clay-shadow-lg);
+  }
+  .clay-btn:active {
+    transform: translateY(1px);
+    box-shadow: var(--clay-inset);
+  }
+
+  /* Claymorphism card style */
+  .clay-card {
+    border-radius: calc(var(--radius) + 0.25rem);
+    box-shadow: var(--clay-shadow-md);
+    transition: all 0.25s ease-out;
+  }
+  .clay-card:hover {
+    box-shadow: var(--clay-shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  /* Inset clay (for inputs, depressed areas) */
+  .clay-inset {
+    border-radius: calc(var(--radius) - 0.25rem);
+    box-shadow: var(--clay-inset), var(--clay-inset-sm);
+  }
+
+  /* Pill / badge style */
+  .clay-pill {
+    border-radius: 9999px;
+    box-shadow: var(--clay-shadow-sm);
+  }
+
+  /* Soft glow for AI / active states */
+  .clay-glow {
+    box-shadow: var(--clay-shadow-md), 0 0 20px -5px var(--ring);
+  }
+
+  /* Map container fix */
+  .leaflet-container {
+    border-radius: var(--radius);
+    box-shadow: var(--clay-shadow-md);
+    z-index: 0;
+  }
+}
+
+/* Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--clay-shadow-md) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  min-width: 200px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.8 0.01 85 / 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.7 0.01 85 / 0.6);
+}
+
+/* Loading shimmer */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.9 0.01 85 / 0.5) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
 }
