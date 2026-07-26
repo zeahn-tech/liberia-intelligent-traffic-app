@@ -29,11 +29,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   MoreHorizontal,
+  Lock,
 } from "lucide-react";
 import { submitForAnalysis } from "@/ai/pipeline";
 import { providerRegistry } from "@/ai/registry";
 import { toast } from "sonner";
 import { EvidenceDetailDialog } from "@/components/EvidenceDetailDialog";
+import { EvidenceUpload } from "@/components/EvidenceUpload";
+import { generateSignedUrl, processOfflineUploads } from "@/lib/storage";
 
 interface EvidenceItem {
   id: string;
@@ -188,6 +191,7 @@ export default function Evidence() {
   const [aiInitialized, setAiInitialized] = useState(false);
   const [selectedEvidence, setSelectedEvidence] = useState<EvidenceItem | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
 
   const initAI = useCallback(async () => {
     if (aiInitialized) return;
@@ -302,9 +306,9 @@ export default function Evidence() {
                 <List className="w-3.5 h-3.5" />
               </button>
             </div>
-            <Button className="clay-btn rounded-xl">
+            <Button className="clay-btn rounded-xl" onClick={() => setShowUploader(!showUploader)}>
               <Upload className="w-4 h-4 mr-1" />
-              Upload
+              {showUploader ? "Close" : "Upload Evidence"}
             </Button>
           </div>
         </div>
@@ -345,6 +349,27 @@ export default function Evidence() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Secure Upload Section */}
+        {showUploader && (
+          <div className="clay-card bg-card p-4 rounded-2xl border border-border/50">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Lock className="w-4 h-4 text-primary" />
+              Secure Evidence Upload
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Files are uploaded to private Supabase Storage buckets with signed URL access.
+              SHA-256 hashes are computed client-side before transmission.
+            </p>
+            <EvidenceUpload
+              incidentId="INC-2024-0891"
+              onUploadComplete={(results) => {
+                toast.success(`${results.length} file(s) uploaded securely`);
+                setShowUploader(false);
+              }}
+            />
+          </div>
+        )}
 
         {/* Summary stats */}
         <div className="grid grid-cols-4 gap-3">

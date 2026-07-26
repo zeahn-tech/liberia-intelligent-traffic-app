@@ -9,6 +9,7 @@ import {
 } from "@/lib/custody";
 import type { EvidenceCustodyEvent } from "@/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
+import { generateSignedUrl, triggerFileDownload } from "@/lib/storage";
 import {
   Dialog,
   DialogContent,
@@ -245,14 +246,55 @@ export function EvidenceDetailDialog({
     }
   };
 
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [signedUrlLoading, setSignedUrlLoading] = useState(false);
+
+  // Load signed URL when dialog opens
+  useEffect(() => {
+    if (evidence && open && evidence.file_path) {
+      loadSignedUrl();
+    }
+  }, [evidence, open]);
+
+  const loadSignedUrl = useCallback(async () => {
+    if (!evidence?.file_path) return;
+    setSignedUrlLoading(true);
+    try {
+      const bucket = evidence.type === "photo" ? "evidence-images" :
+                     evidence.type === "video" ? "evidence-videos" :
+                     evidence.type === "audio" ? "evidence-audio" :
+                     evidence.type === "document" ? "evidence-documents" :
+                     "evidence-other";
+      const result = await generateSignedUrl(bucket, evidence.file_path);
+      if (result.success && result.url) {
+        setSignedUrl(result.url);
+      }
+    } catch (err) {
+      console.warn("Failed to generate signed URL:", err);
+    } finally {
+      setSignedUrlLoading(false);
+    }
+  }, [evidence]);
+
   const handleDownload = useCallback(async () => {
     if (evidence && user?.id) {
       await logEvidenceDownloaded(evidence.id, user.id);
       const events = await getCustodyChain(evidence.id);
       setCustodyEvents(events);
+      
+      // Use signed URL for secure download
+      if (signedUrl) {
+        try {
+          await triggerFileDownload(signedUrl, evidence.name);
+          toast.success(`Downloading ${evidence.name} via secure signed URL`);
+          return;
+        } catch (err) {
+          console.warn("Signed URL download failed, falling back:", err);
+        }
+      }
     }
     toast.success(`Downloading ${evidence?.name}`);
-  }, [evidence, user]);
+  }, [evidence, user, signedUrl]);
 
   if (!evidence) return null;
 

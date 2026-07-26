@@ -322,6 +322,49 @@ export interface EvidenceVersion {
   created_at: string;
 }
 
+// ─── Storage / Media Security Types ─────────────────────
+
+export interface StorageFile {
+  id: string;
+  evidence_id: string;
+  bucket_name: string;
+  file_path: string;
+  original_name: string;
+  mime_type: string;
+  file_size: number;
+  sha256_hash: string;
+  is_signed_url: boolean;
+  signed_url: string | null;
+  signed_url_expires_at: string | null;
+  created_at: string;
+}
+
+export interface UploadConfig {
+  maxFileSize: number;
+  allowedMimeTypes: string[];
+  generateSignedUrl: boolean;
+  computeHash: boolean;
+  offlineQueue: boolean;
+}
+
+export interface UploadResult {
+  success: boolean;
+  url?: string;
+  signedUrl?: string | null;
+  bucket?: string;
+  filePath?: string;
+  sha256Hash?: string;
+  isOffline?: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface SignedUrlRequest {
+  bucket: string;
+  filePath: string;
+  expiresIn?: number;
+}
+
 export interface SyncQueueItem {
   id: string;
   table_name: string;

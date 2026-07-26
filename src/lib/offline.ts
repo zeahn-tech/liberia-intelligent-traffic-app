@@ -1,7 +1,7 @@
 import { openDB, type IDBPDatabase } from "idb";
 
 const DB_NAME = "trafficwatch-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export type OfflineStore =
   | "incidents"
@@ -136,6 +136,19 @@ function getDB(): Promise<IDBPDatabase> {
         // User profile cache
         if (!db.objectStoreNames.contains("user_profile")) {
           db.createObjectStore("user_profile", { keyPath: "id" });
+        }
+
+        // Offline upload queue (for storage files queued when offline)
+        if (!db.objectStoreNames.contains("offline_uploads")) {
+          const uploads = db.createObjectStore("offline_uploads", { keyPath: "id" });
+          uploads.createIndex("queuedAt", "queuedAt", { unique: false });
+        }
+
+        // Storage files cache (for signed URL tracking)
+        if (!db.objectStoreNames.contains("storage_files")) {
+          const sf = db.createObjectStore("storage_files", { keyPath: "id" });
+          sf.createIndex("evidence_id", "evidence_id");
+          sf.createIndex("sha256_hash", "sha256_hash");
         }
       },
     });
