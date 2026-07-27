@@ -26,9 +26,11 @@ const CitizenReportsList = lazy(() => import("./pages/CitizenReportsList.tsx"));
 const CitizenReportDetail = lazy(() => import("./pages/CitizenReportDetail.tsx"));
 const CitizenSafetyNotices = lazy(() => import("./pages/CitizenSafetyNotices.tsx"));
 const ReviewCitizenReports = lazy(() => import("./pages/ReviewCitizenReports.tsx"));
-const OfficerDashboard = lazy(() => import("./pages/OfficerDashboard.tsx"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+
+// Eager import for OfficerDashboard (Vite HMR cache issue workaround)
+import OfficerDashboard from "./pages/OfficerDashboard.tsx";
 
 // PWA registration handled by vite-plugin-pwa
 // Simple loading fallback for route transitions
