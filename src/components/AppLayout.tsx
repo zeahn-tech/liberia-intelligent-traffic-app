@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
   { label: "Evidence", path: "/evidence", icon: Upload },
   { label: "Citizen Reports", path: "/review/citizen-reports", icon: MessageSquare },
   { label: "Audit Log", path: "/audit", icon: ScrollText },
+  { label: "Security", path: "/security", icon: Shield },
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
