@@ -27,6 +27,7 @@ const CitizenReportDetail = lazy(() => import("./pages/CitizenReportDetail.tsx")
 const CitizenSafetyNotices = lazy(() => import("./pages/CitizenSafetyNotices.tsx"));
 const ReviewCitizenReports = lazy(() => import("./pages/ReviewCitizenReports.tsx"));
 const OfficerDashboard = lazy(() => import("./pages/OfficerDashboard.tsx"));
+const CommandCenter = lazy(() => import("./pages/CommandCenter.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // PWA registration handled by vite-plugin-pwa
@@ -218,6 +219,16 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
                     <CitizenSafetyNotices />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Command Center (senior leadership) */}
+              <Route
+                path="/command-center"
+                element={
+                  <RequireAuth requireRole="regional_commander" fallbackPath="/dashboard" showForbidden>
+                    <CommandCenter />
                   </RequireAuth>
                 }
               />
