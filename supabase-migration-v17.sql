@@ -355,22 +355,25 @@ CREATE POLICY "Users can update own notification preferences"
 ALTER TABLE IF EXISTS public.report_history ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
--- 6. INPUT VALIDATION FUNCTION (server-side)
+-- 6. INPUT SANITIZATION FUNCTION (server-side)
+-- Uses simple string replacement to avoid regex escaping issues
 -- =====================================================
 CREATE OR REPLACE FUNCTION public.sanitize_input(p_input TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 IMMUTABLE
 AS $$
+DECLARE
+  v_result TEXT;
 BEGIN
-  -- Strip common XSS vectors
-  RETURN regexp_replace(
-    regexp_replace(
-      regexp_replace(p_input, '<script[^>]*>.*?</script>', '', 'gi'),
-      '<[^>]*on\\w+\\s*=\\s*[\"\\'][^\"\\']*[\"\\']', '', 'gi'
-    ),
-    '<iframe[^>]*>.*?</iframe>', '', 'gi'
-  );
+  v_result := p_input;
+  -- Strip script tags and content
+  v_result := regexp_replace(v_result, '<script[^>]*>.*?</script>', '', 'gi');
+  -- Strip iframe tags and content
+  v_result := regexp_replace(v_result, '<iframe[^>]*>.*?</iframe>', '', 'gi');
+  -- Strip event handler attributes (onclick, onload, etc.)
+  v_result := regexp_replace(v_result, ' on[a-z]+\s*=\s*"[^"]*"', '', 'gi');
+  RETURN v_result;
 END;
 $$;
 
@@ -400,7 +403,7 @@ DECLARE
   v_name_check BOOLEAN;
 BEGIN
   -- Check file name for dangerous patterns
-  v_name_check := p_original_name !~ '\.(exe|bat|cmd|com|msi|scr|vbs|ps1|sh|php|asp|aspx|jsp|cgi|pl|py)$';
+  v_name_check := p_original_name !~ '(\.exe|\.bat|\.cmd|\.com|\.msi|\.scr|\.vbs|\.ps1|\.sh|\.php|\.asp|\.aspx|\.jsp|\.cgi|\.pl|\.py)$';
 
   IF NOT v_name_check THEN
     RETURN jsonb_build_object('valid', false, 'error', 'File extension not allowed for security reasons');
