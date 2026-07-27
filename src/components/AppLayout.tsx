@@ -25,6 +25,7 @@ import {
   X,
   Search,
   Command,
+  ScrollText,
 } from "lucide-react";
 import { usePermission } from "@/lib/permissions";
 import { useState, useEffect } from "react";
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
   { label: "Incident Map", path: "/incidents?view=map", icon: MapPin },
   { label: "Evidence", path: "/evidence", icon: Upload },
   { label: "Citizen Reports", path: "/review/citizen-reports", icon: MessageSquare },
+  { label: "Audit Log", path: "/audit", icon: ScrollText },
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 

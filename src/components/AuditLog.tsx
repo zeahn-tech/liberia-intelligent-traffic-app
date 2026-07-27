@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Shield,
   Clock,
@@ -17,90 +25,101 @@ import {
   ArrowRight,
   AlertTriangle,
   Lock,
+  Search,
+  X,
+  LogIn,
+  LogOut,
+  FilePlus,
+  Edit,
+  Trash2,
+  UserPlus,
+  ArrowUpCircle,
+  FileDown,
+  AlertCircle,
+  UserX,
+  UserCheck,
+  Settings,
+  Database,
+  ShieldOff,
+  File,
 } from "lucide-react";
-import { toast } from "sonner";
+import {
+  AUDIT_ACTION_LABELS,
+  AUDIT_ACTION_ICONS,
+  AUDIT_ACTION_COLORS,
+  SEVERITY_COLORS,
+  type AuditSeverity,
+} from "@/lib/audit";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
-// ===== Types =====
+// ─── Types ──────────────────────────────────────────────
 
-type AuditEventType =
-  | "evidence_uploaded" | "evidence_viewed" | "evidence_downloaded"
-  | "evidence_analyzed" | "evidence_transferred" | "evidence_reviewed"
-  | "evidence_verified" | "evidence_exported" | "evidence_archived"
-  | "hash_verified" | "officer_notes_added"
-  | "incident_created" | "incident_updated" | "incident_status_changed"
-  | "incident_assigned" | "incident_escalated"
-  | "anpr_scanned" | "ai_analysis_completed";
-
-interface AuditEvent {
+export interface AuditEvent {
   id: string;
-  type: AuditEventType;
+  type: string;
   description: string;
   performedBy: string;
   performedByName: string;
-  targetType: "evidence" | "incident" | "anpr" | "system";
+  targetType: "evidence" | "incident" | "anpr" | "system" | "user" | "ai_analysis";
   targetId: string;
+  severity?: AuditSeverity;
   details?: Record<string, unknown>;
   timestamp: string;
 }
 
 interface AuditLogProps {
-  /** Events to display */
   events: AuditEvent[];
-  /** Title for the audit log card */
   title?: string;
-  /** Description */
   description?: string;
-  /** Maximum height before scroll */
   maxHeight?: string;
-  /** Min role required to view (default: traffic_officer) */
-  minRole?: "officer" | "supervisor" | "admin" | "investigator" | string;
+  compact?: boolean;
+  showSearch?: boolean;
+  showSeverity?: boolean;
+  emptyMessage?: string;
 }
 
-// ===== Event Display =====
+// ─── Helper functions ──────────────────────────────────
 
-const EVENT_ICONS: Record<string, React.ElementType> = {
-  evidence_uploaded: Upload,
-  evidence_viewed: Eye,
-  evidence_downloaded: Download,
-  evidence_analyzed: Brain,
-  evidence_transferred: ArrowRight,
-  evidence_reviewed: FileText,
-  evidence_verified: CheckCircle2,
-  evidence_exported: Download,
-  evidence_archived: Activity,
-  hash_verified: Hash,
-  officer_notes_added: FileText,
-  incident_created: FileText,
-  incident_updated: Activity,
-  incident_status_changed: Activity,
-  incident_assigned: User,
-  incident_escalated: AlertTriangle,
-  anpr_scanned: Shield,
-  ai_analysis_completed: Brain,
-};
+function getActionLabel(type: string): string {
+  return AUDIT_ACTION_LABELS[type] || type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
-const EVENT_COLORS: Record<string, string> = {
-  evidence_uploaded: "bg-emerald-500",
-  evidence_viewed: "bg-blue-500",
-  evidence_downloaded: "bg-purple-500",
-  evidence_analyzed: "bg-indigo-500",
-  evidence_transferred: "bg-amber-500",
-  evidence_reviewed: "bg-teal-500",
-  evidence_verified: "bg-green-500",
-  evidence_archived: "bg-secondary",
-  hash_verified: "bg-cyan-500",
-  officer_notes_added: "bg-amber-500",
-  incident_created: "bg-primary",
-  incident_status_changed: "bg-warning",
-  incident_assigned: "bg-blue-500",
-  incident_escalated: "bg-orange-500",
-  anpr_scanned: "bg-slate-500",
-  ai_analysis_completed: "bg-indigo-500",
-};
+function getIconForType(type: string): React.ElementType {
+  const iconName = AUDIT_ACTION_ICONS[type] || "";
+  const iconMap: Record<string, React.ElementType> = {
+    "log-in": LogIn,
+    "log-out": LogOut,
+    "alert-triangle": AlertTriangle,
+    lock: Lock,
+    shield: Shield,
+    "shield-off": ShieldOff,
+    "file-plus": FilePlus,
+    edit: Edit,
+    "trash-2": Trash2,
+    "user-plus": UserPlus,
+    "arrow-up-circle": ArrowUpCircle,
+    upload: Upload,
+    eye: Eye,
+    download: Download,
+    "file-down": FileDown,
+    "arrow-right": ArrowRight,
+    hash: Hash,
+    brain: Brain,
+    "alert-circle": AlertCircle,
+    "check-circle": CheckCircle2,
+    "user-x": UserX,
+    "user-check": UserCheck,
+    settings: Settings,
+    database: Database,
+    "file-text": FileText,
+    activity: Activity,
+  };
+  return iconMap[iconName] || Activity;
+}
 
-function getActionLabel(type: AuditEventType): string {
-  return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+function getColorForType(type: string): string {
+  return AUDIT_ACTION_COLORS[type] || "bg-secondary";
 }
 
 function formatTimestamp(ts: string): string {
@@ -109,7 +128,6 @@ function formatTimestamp(ts: string): string {
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
     const diffMin = Math.floor(diffMs / 60000);
-
     if (diffMin < 1) return "Just now";
     if (diffMin < 60) return `${diffMin}m ago`;
     if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`;
@@ -119,54 +137,66 @@ function formatTimestamp(ts: string): string {
   }
 }
 
-// ===== Component =====
+function getSeverityBadge(severity?: AuditSeverity) {
+  if (!severity || severity === "info") return null;
+  const colors = SEVERITY_COLORS[severity];
+  return (
+    <Badge className={`clay-pill text-[9px] px-1.5 py-0 h-4 ${colors}`}>
+      {severity}
+    </Badge>
+  );
+}
+
+// ─── Component ──────────────────────────────────────────
 
 export function AuditLog({
   events,
   title = "Audit Trail",
   description = "Complete record of all actions taken",
   maxHeight = "400px",
-  minRole = "officer",
+  compact = false,
+  showSearch = false,
+  showSeverity = true,
+  emptyMessage = "No audit events recorded yet",
 }: AuditLogProps) {
-  const { user, hasRole } = useAuth();
-  const [authorized, setAuthorized] = useState(false);
+  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  useEffect(() => {
-    setAuthorized(hasRole(minRole as any));
-  }, [user, hasRole, minRole]);
+  // Get unique action types for the filter dropdown
+  const actionTypes = useMemo(() => {
+    const types = new Set(events.map((e) => e.type));
+    return Array.from(types).sort();
+  }, [events]);
 
-  const filteredEvents = events.sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-
-  if (!authorized) {
-    return (
-      <Card className="border-border/50 !rounded-2xl">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Shield className="w-4 h-4 text-muted-foreground" />
-            {title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Lock className="w-8 h-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">
-              You do not have the required permissions to view the audit trail.
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Required role: {minRole}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+  // Filter events
+  const filteredEvents = useMemo(() => {
+    let result = events.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (e) =>
+          e.description.toLowerCase().includes(q) ||
+          e.performedByName.toLowerCase().includes(q) ||
+          e.targetId.toLowerCase().includes(q) ||
+          getActionLabel(e.type).toLowerCase().includes(q)
+      );
+    }
+
+    if (typeFilter !== "all") {
+      result = result.filter((e) => e.type === typeFilter);
+    }
+
+    return result;
+  }, [events, searchQuery, typeFilter]);
 
   return (
     <Card className="border-border/50 !rounded-2xl">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary" />
@@ -174,56 +204,130 @@ export function AuditLog({
             </CardTitle>
             <CardDescription>{description} — {filteredEvents.length} events</CardDescription>
           </div>
-          <Badge variant="outline" className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+          <Badge variant="outline" className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shrink-0">
             <Shield className="w-2.5 h-2.5 mr-0.5" />
-            Authorized Access
+            Authorized
           </Badge>
         </div>
+
+        {/* Search & filter */}
+        {(showSearch || actionTypes.length > 5) && (
+          <div className="flex items-center gap-2 mt-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search audit events..."
+                className="clay-inset pl-8 h-8 text-xs rounded-xl"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="w-3 h-3 text-muted-foreground" />
+                </button>
+              )}
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[140px] h-8 text-xs rounded-xl">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {actionTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {getActionLabel(type)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </CardHeader>
+
       <CardContent>
         {filteredEvents.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-center">
             <Activity className="w-8 h-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No audit events recorded yet</p>
+            <p className="text-sm text-muted-foreground">
+              {searchQuery ? "No matching audit events found" : emptyMessage}
+            </p>
           </div>
         ) : (
           <div className="relative" style={{ maxHeight, overflowY: "auto" }}>
+            {/* Timeline line */}
             <div className="absolute left-4 top-0 bottom-0 w-px bg-border/50" />
+
             <div className="space-y-3">
               {filteredEvents.map((event) => {
-                const Icon = EVENT_ICONS[event.type] || Activity;
-                const dotColor = EVENT_COLORS[event.type] || "bg-secondary";
+                const Icon = getIconForType(event.type);
+                const dotColor = getColorForType(event.type);
+                const severityBadge = showSeverity ? getSeverityBadge(event.severity as AuditSeverity) : null;
+
                 return (
-                  <div key={event.id} className="relative pl-10">
-                    <div className={`absolute left-2.5 top-1.5 w-3 h-3 rounded-full ${dotColor} border-2 border-card flex items-center justify-center`}>
+                  <div key={event.id} className="relative pl-10 group">
+                    {/* Timeline dot */}
+                    <div
+                      className={`absolute left-2.5 top-1.5 w-3 h-3 rounded-full ${dotColor} border-2 border-card flex items-center justify-center transition-transform group-hover:scale-125`}
+                    >
                       <div className="w-1 h-1 rounded-full bg-card" />
                     </div>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
+
+                    <div className="flex items-start justify-between gap-2 p-2 rounded-xl hover:bg-secondary/30 transition-colors -mx-2">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
+                          <div className={`w-5 h-5 rounded-md ${dotColor}/10 flex items-center justify-center`}>
+                            <Icon className={`w-3 h-3 ${dotColor.replace("bg-", "text-")}`} />
+                          </div>
                           <p className="text-sm font-medium">{getActionLabel(event.type)}</p>
+                          {severityBadge}
                           <span className="text-[10px] font-mono text-muted-foreground">
-                            {event.targetId}
+                            {event.targetId.length > 16
+                              ? event.targetId.substring(0, 16) + "..."
+                              : event.targetId}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+
+                        <p className={`text-xs text-muted-foreground mt-0.5 ${compact ? "line-clamp-1" : ""}`}>
                           {event.description}
                         </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <User className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[10px] text-muted-foreground">
-                            {event.performedByName}
-                          </span>
-                          {event.details && Object.keys(event.details).length > 0 && (
+
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3 text-muted-foreground" />
                             <span className="text-[10px] text-muted-foreground">
-                              · {Object.entries(event.details).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                              {event.performedByName}
                             </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">
+                              {formatTimestamp(event.timestamp)}
+                            </span>
+                          </div>
+                          {event.targetType && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5">
+                              {event.targetType}
+                            </Badge>
                           )}
                         </div>
+
+                        {/* Details expansion */}
+                        {event.details && Object.keys(event.details).length > 0 && !compact && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {Object.entries(event.details).map(([k, v]) => (
+                              <span
+                                key={k}
+                                className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/50 text-muted-foreground"
+                              >
+                                {k}: {String(v)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0 whitespace-nowrap">
-                        {formatTimestamp(event.timestamp)}
-                      </span>
                     </div>
                   </div>
                 );
@@ -236,48 +340,67 @@ export function AuditLog({
   );
 }
 
-// ===== Mock Data Generator =====
+// ─── Mock Data Generator ───────────────────────────────
 
-export function generateMockAuditEvents(incidentId: string, count: number = 8): AuditEvent[] {
+export function generateMockAuditEvents(incidentId: string, count: number = 10): AuditEvent[] {
   const base = Date.now() - count * 3600000;
-  const officers = ["Sgt. John Kollie", "Ofc. James Tarplah", "TrafficWatch AI", "System Auto-Verify"];
+  const officers = ["Sgt. John Kollie", "Ofc. James Tarplah", "TrafficWatch AI", "System"];
 
-  const eventTypes: AuditEventType[] = [
-    "incident_created", "evidence_uploaded", "evidence_uploaded",
-    "ai_analysis_completed", "hash_verified", "evidence_viewed",
-    "incident_status_changed", "incident_assigned",
+  const eventTypes = [
+    "incident_created",
+    "evidence_uploaded",
+    "evidence_uploaded",
+    "ai_analysis_completed",
+    "ai_analysis_reviewed",
+    "evidence_viewed",
+    "incident_status_changed",
+    "incident_assigned",
+    "evidence_hash_verified",
+    "report_generated",
+    "evidence_downloaded",
+    "incident_escalated",
   ];
 
   return Array.from({ length: count }, (_, i) => {
     const type = eventTypes[i % eventTypes.length];
     const officerName = officers[i % officers.length];
+    const severities: (AuditSeverity | undefined)[] = [
+      undefined, undefined, undefined, undefined,
+      "info", "warning", "error",
+    ];
     return {
-      id: `audit-${incidentId}-${i}`,
+      id: `audit-${incidentId}-${i}-${Date.now()}`,
       type,
       description: generateDescription(type, incidentId),
       performedBy: `ofc-${(i % 3) + 1}`,
       performedByName: officerName,
-      targetType: (type.startsWith("evidence") ? "evidence" : "incident") as "evidence" | "incident",
+      targetType: (type.startsWith("evidence") ? "evidence" :
+                   type.startsWith("ai") ? "ai_analysis" :
+                   type.startsWith("incident") || type === "report_generated" ? "incident" :
+                   "system") as AuditEvent["targetType"],
       targetId: type.startsWith("evidence") ? `EV-${String(i + 1).padStart(3, "0")}` : incidentId,
+      severity: severities[i % severities.length],
+      details: i % 3 === 0 ? { details: `Additional context for event ${i + 1}` } : undefined,
       timestamp: new Date(base + i * 3600000).toISOString(),
     };
   });
 }
 
-function generateDescription(type: AuditEventType, incidentId: string): string {
+function generateDescription(type: string, incidentId: string): string {
   switch (type) {
-    case "incident_created": return `Incident ${incidentId} was created and submitted`;
-    case "evidence_uploaded": return `New evidence uploaded to ${incidentId}`;
-    case "ai_analysis_completed": return `AI analysis completed for evidence on ${incidentId}`;
-    case "hash_verified": return `SHA-256 hash verification passed for evidence`;
+    case "incident_created": return `Incident ${incidentId} was created and submitted for review`;
+    case "evidence_uploaded": return `New photographic evidence uploaded to ${incidentId}`;
     case "evidence_viewed": return `Evidence reviewed in case ${incidentId}`;
-    case "incident_status_changed": return `Status updated on ${incidentId}`;
-    case "incident_assigned": return `${incidentId} assigned to investigator`;
-    case "evidence_downloaded": return `Evidence downloaded from ${incidentId}`;
-    case "evidence_analyzed": return `AI vision analysis run on evidence`;
-    case "evidence_transferred": return `Evidence transferred between officers`;
-    case "officer_notes_added": return `Officer notes added to evidence`;
-    case "incident_escalated": return `${incidentId} escalated to supervisor`;
+    case "evidence_downloaded": return `Evidence file downloaded from ${incidentId}`;
+    case "evidence_hash_verified": return `SHA-256 hash verification passed for evidence file`;
+    case "ai_analysis_completed": return `AI vision analysis completed for evidence on ${incidentId}`;
+    case "ai_analysis_reviewed": return `AI analysis findings confirmed by investigating officer`;
+    case "incident_status_changed": return `Incident status updated on ${incidentId}`;
+    case "incident_assigned": return `${incidentId} assigned to investigator for review`;
+    case "incident_escalated": return `${incidentId} escalated to supervisor — requires immediate attention`;
+    case "report_generated": return `Official PDF report generated for ${incidentId}`;
+    case "user_login": return `User logged in successfully`;
+    case "user_logout": return `User logged out of the system`;
     default: return `Action performed on ${incidentId}`;
   }
 }
