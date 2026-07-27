@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,13 @@ import {
   Download,
   Calendar,
   WifiOff,
+  Globe,
 } from "lucide-react";
 import { IncidentMap } from "@/components/IncidentMap";
 import type { MapPoint, MapLayerType } from "@/components/IncidentMap";
+import { GeoFilter } from "@/components/GeoFilter";
+import { geoFilterFromParams } from "@/lib/geography";
+import type { GeoFilterState } from "@/supabase/types";
 
 export default function Incidents() {
   const navigate = useNavigate();
@@ -36,6 +40,7 @@ export default function Incidents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+  const [geoFilter, setGeoFilter] = useState<GeoFilterState>(geoFilterFromParams(searchParams));
 
   const incidents = [
     {
@@ -222,6 +227,13 @@ export default function Incidents() {
             </Button>
           </div>
         </div>
+
+        {/* Geographic Filter */}
+        <GeoFilter
+          value={geoFilter}
+          onChange={setGeoFilter}
+          compact={false}
+        />
 
         {/* Filters */}
         <Card className="clay-card border-border/50 !rounded-2xl">

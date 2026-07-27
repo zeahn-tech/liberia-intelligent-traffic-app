@@ -365,6 +365,102 @@ export interface SignedUrlRequest {
   expiresIn?: number;
 }
 
+// ─── Liberia Geographic Types ───────────────────────
+
+export interface LiberiaCounty {
+  id: string;
+  code: string;
+  name: string;
+  capital: string;
+  population: number | null;
+  area_km2: number | null;
+  center_lat: number | null;
+  center_lng: number | null;
+  police_region: string;
+  boundary_geojson: any;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface LiberiaDistrict {
+  id: string;
+  county_code: string;
+  name: string;
+  center_lat: number | null;
+  center_lng: number | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface PoliceRegion {
+  id: string;
+  name: string;
+  headquarters: string;
+  commander: string | null;
+  contact_phone: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface PoliceStation {
+  id: string;
+  name: string;
+  county_code: string;
+  address: string | null;
+  latitude: number;
+  longitude: number;
+  phone: string | null;
+  type: "station" | "substation" | "post" | "hq";
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface MajorRoad {
+  id: string;
+  name: string;
+  road_number: string | null;
+  road_type: "highway" | "primary" | "secondary" | "tertiary" | null;
+  from_location: string | null;
+  to_location: string | null;
+  length_km: number | null;
+  counties: string[];
+  route_geojson: any;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Checkpoint {
+  id: string;
+  name: string;
+  county_code: string;
+  road_name: string | null;
+  latitude: number;
+  longitude: number;
+  is_permanent: boolean;
+  hours: string | null;
+  unit: string | null;
+  phone: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CountyIncidentCount {
+  county_code: string;
+  county_name: string;
+  incident_count: number;
+}
+
+export interface GeoFilterState {
+  county_code: string;
+  district_id: string;
+  police_region: string;
+  road_name: string;
+  checkpoint_id: string;
+  police_station_id: string;
+  date_from: string;
+  date_to: string;
+}
+
 export interface SyncQueueItem {
   id: string;
   table_name: string;
