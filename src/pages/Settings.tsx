@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import {
   User,
@@ -38,14 +39,63 @@ import {
   EyeOff,
   Loader2,
   LockKeyhole,
+  BellRing,
+  BellOff,
+  Mail,
+  MessageSquare,
+  Volume2,
+  VolumeX,
+  Moon as MoonIcon,
+  ArrowUpDown,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 import { checkPasswordStrength } from "@/supabase/auth";
 import type { UserSession } from "@/supabase/auth";
 import { ROLE_LABELS, getRoleColor } from "@/lib/permissions";
+
+import {
+  getNotificationPreferences,
+  updateNotificationPreference,
+  requestPushPermission,
+  isPushAvailable,
+  type NotificationPreference,
+  type NotificationPriority,
+  type NotificationType,
+} from "@/lib/notifications";
+
+// ─── Constants ────────────────────────────────────────
+
+const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
+  case_assigned: "Case Assigned",
+  case_updated: "Case Updated",
+  evidence_added: "Evidence Added",
+  ai_analysis_complete: "AI Analysis Complete",
+  anpr_pending: "ANPR Pending Review",
+  citizen_report: "Citizen Report Submitted",
+  report_reviewed: "Report Reviewed",
+  comment_added: "Comment Added",
+  escalated: "Case Escalated",
+  status_changed: "Status Changed",
+  system_alert: "System Alert",
+  task_assigned: "Task Assigned",
+  wanted_vehicle: "Wanted Vehicle Alert",
+  stolen_vehicle: "Stolen Vehicle Alert",
+  major_accident: "Major Accident Alert",
+  road_closure: "Road Closure",
+};
+
+const NOTIFICATION_TYPE_GROUPS: Record<string, NotificationType[]> = {
+  "Case Management": ["case_assigned", "case_updated", "status_changed", "escalated", "task_assigned"],
+  "Evidence & AI": ["evidence_added", "ai_analysis_complete", "anpr_pending"],
+  "Citizen Reports": ["citizen_report", "report_reviewed", "comment_added"],
+  "Emergency Alerts": ["wanted_vehicle", "stolen_vehicle", "major_accident", "road_closure"],
+  "System": ["system_alert"],
+};
 
 // ─── Password Strength Bar ─────────────────────────────
 
@@ -130,6 +180,70 @@ function SessionCard({ session, onRevoke, isRevoking }: {
   );
 }
 
+// ─── Notification Preference Row ──────────────────────
+
+function NotificationPreferenceRow({
+  pref,
+  onUpdate,
+}: {
+  pref: NotificationPreference;
+  onUpdate: (id: string, updates: Partial<{
+    channel_in_app: boolean;
+    channel_push: boolean;
+    channel_email: boolean;
+    channel_sms: boolean;
+    min_priority: NotificationPriority;
+    quiet_hours_start: string;
+    quiet_hours_end: string;
+    digest_frequency: "none" | "hourly" | "daily" | "weekly";
+    is_paused: boolean;
+    paused_until: string;
+  }>) => void;
+}) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">{NOTIFICATION_TYPE_LABELS[pref.notification_type] || pref.notification_type}</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">{pref.notification_type.replace(/_/g, " ")}</p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col items-center gap-0.5">
+          <Bell className={`w-3 h-3 ${pref.channel_in_app ? "text-primary" : "text-muted-foreground/40"}`} />
+          <Switch
+            checked={pref.channel_in_app}
+            onCheckedChange={(checked) => onUpdate(pref.id, { channel_in_app: checked })}
+            className="scale-75"
+          />
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <SmartphoneIcon className={`w-3 h-3 ${pref.channel_push ? "text-primary" : "text-muted-foreground/40"}`} />
+          <Switch
+            checked={pref.channel_push}
+            onCheckedChange={(checked) => onUpdate(pref.id, { channel_push: checked })}
+            className="scale-75"
+          />
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <Mail className={`w-3 h-3 ${pref.channel_email ? "text-primary" : "text-muted-foreground/40"}`} />
+          <Switch
+            checked={pref.channel_email}
+            onCheckedChange={(checked) => onUpdate(pref.id, { channel_email: checked })}
+            className="scale-75"
+          />
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <MessageSquare className={`w-3 h-3 ${pref.channel_sms ? "text-primary" : "text-muted-foreground/40"}`} />
+          <Switch
+            checked={pref.channel_sms}
+            onCheckedChange={(checked) => onUpdate(pref.id, { channel_sms: checked })}
+            className="scale-75"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Settings Page ─────────────────────────────────────
 
 export default function Settings() {
@@ -176,11 +290,57 @@ export default function Settings() {
   const [codesCopied, setCodesCopied] = useState(false);
   const [mfaDisabling, setMfaDisabling] = useState(false);
 
+  // Notification preferences
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreference[]>([]);
+  const [notifPrefsLoading, setNotifPrefsLoading] = useState(false);
+  const [pushAvailable, setPushAvailable] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [quietHoursStart, setQuietHoursStart] = useState("22:00");
+  const [quietHoursEnd, setQuietHoursEnd] = useState("07:00");
+  const [globalPriority, setGlobalPriority] = useState<NotificationPriority>("normal");
+  const [globalPaused, setGlobalPaused] = useState(false);
+
+  // Appearance
+  const [darkMode, setDarkMode] = useState(
+    document.documentElement.classList.contains("dark")
+  );
+
   // Load sessions on mount
   useEffect(() => {
     getActiveSessions();
     getAccountStatus();
   }, [getActiveSessions, getAccountStatus]);
+
+  // Load notification preferences
+  useEffect(() => {
+    if (!user?.id) return;
+    loadNotificationPrefs();
+    checkPushStatus();
+  }, [user?.id]);
+
+  const loadNotificationPrefs = async () => {
+    if (!user?.id) return;
+    setNotifPrefsLoading(true);
+    const prefs = await getNotificationPreferences(user.id);
+    setNotifPrefs(prefs);
+
+    // Check global quiet hours from first preference
+    if (prefs.length > 0) {
+      const first = prefs.find((p) => p.quiet_hours_start);
+      if (first) {
+        if (first.quiet_hours_start) setQuietHoursStart(first.quiet_hours_start);
+        if (first.quiet_hours_end) setQuietHoursEnd(first.quiet_hours_end);
+      }
+      setGlobalPaused(prefs.some((p) => p.is_paused));
+    }
+  };
+
+  const checkPushStatus = async () => {
+    const avail = await isPushAvailable();
+    setPushAvailable(avail);
+    setPushEnabled(avail);
+  };
 
   const handleSave = () => {
     setSaved(true);
@@ -190,6 +350,88 @@ export default function Settings() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  // ─── Notification Preferences ───────────────────────
+
+  const handleUpdateNotifPref = async (
+    id: string,
+    updates: Partial<{
+      channel_in_app: boolean;
+      channel_push: boolean;
+      channel_email: boolean;
+      channel_sms: boolean;
+      min_priority: NotificationPriority;
+      quiet_hours_start: string;
+      quiet_hours_end: string;
+      digest_frequency: "none" | "hourly" | "daily" | "weekly";
+      is_paused: boolean;
+      paused_until: string;
+    }>
+  ) => {
+    const success = await updateNotificationPreference(id, updates);
+    if (success) {
+      setNotifPrefs((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
+      );
+    } else {
+      toast.error("Failed to update notification preference");
+    }
+  };
+
+  const handleToggleGlobalPause = async () => {
+    const newPaused = !globalPaused;
+    setGlobalPaused(newPaused);
+    for (const pref of notifPrefs) {
+      await updateNotificationPreference(pref.id, { is_paused: newPaused });
+    }
+    toast.success(newPaused ? "All notifications paused" : "Notifications resumed");
+  };
+
+  const handleApplyQuietHours = async () => {
+    for (const pref of notifPrefs) {
+      await updateNotificationPreference(pref.id, {
+        quiet_hours_start: quietHoursStart,
+        quiet_hours_end: quietHoursEnd,
+      });
+    }
+    setNotifPrefs((prev) =>
+      prev.map((p) => ({
+        ...p,
+        quiet_hours_start: quietHoursStart,
+        quiet_hours_end: quietHoursEnd,
+      }))
+    );
+    toast.success("Quiet hours updated for all notification types");
+  };
+
+  const handleApplyGlobalPriority = async () => {
+    for (const pref of notifPrefs) {
+      await updateNotificationPreference(pref.id, { min_priority: globalPriority });
+    }
+    setNotifPrefs((prev) =>
+      prev.map((p) => ({ ...p, min_priority: globalPriority }))
+    );
+    toast.success(`Minimum priority set to ${globalPriority}`);
+  };
+
+  const handleToggleChannel = async (channel: "in_app" | "push" | "email" | "sms", enable: boolean) => {
+    const channelKey = `channel_${channel}` as keyof NotificationPreference;
+    for (const pref of notifPrefs) {
+      await updateNotificationPreference(pref.id, { [channelKey]: enable } as any);
+    }
+    setNotifPrefs((prev) =>
+      prev.map((p) => ({ ...p, [channelKey]: enable }))
+    );
+    toast.success(`${channel === "in_app" ? "In-app" : channel.charAt(0).toUpperCase() + channel.slice(1)} notifications ${enable ? "enabled" : "disabled"} for all types`);
+  };
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    const success = await requestPushPermission();
+    setPushEnabled(success);
+    setPushAvailable(success);
+    setPushLoading(false);
   };
 
   // ─── Password Change ─────────────────────────────────
@@ -252,8 +494,6 @@ export default function Settings() {
   const handleVerifyMFA = async () => {
     try {
       await verifyMFAChallenge(mfaMethodId, mfaVerifyCode);
-
-      // Generate recovery codes
       const codes = await generateRecoveryCodes();
       setRecoveryCodes(codes);
       setMfaStep("codes");
@@ -278,6 +518,15 @@ export default function Settings() {
     }
   };
 
+  // ─── Dark Mode ───────────────────────────────────────
+
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    document.documentElement.classList.toggle("dark", newMode);
+    localStorage.setItem("theme", newMode ? "dark" : "light");
+  };
+
   // ─── Format helpers ──────────────────────────────────
 
   const actionLabels: Record<string, string> = {
@@ -292,18 +541,29 @@ export default function Settings() {
     login_failed: "Failed Sign In",
   };
 
+  // ─── Notification group toggle handlers ──────────────
+
+  const getChannelCount = (channel: "in_app" | "push" | "email" | "sms") => {
+    const key = `channel_${channel}` as keyof NotificationPreference;
+    return notifPrefs.filter((p) => p[key]).length;
+  };
+
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Settings</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage your account, security, and preferences
+            Manage your account, security, notifications, and preferences
           </p>
         </div>
 
-        <Tabs defaultValue="profile">
-          <TabsList className="grid grid-cols-5 rounded-xl p-1 bg-secondary">
+        <Tabs defaultValue="notifications">
+          <TabsList className="grid grid-cols-6 rounded-xl p-1 bg-secondary">
+            <TabsTrigger value="notifications" className="rounded-lg text-xs">
+              <Bell className="w-3.5 h-3.5 mr-1" />
+              Notifications
+            </TabsTrigger>
             <TabsTrigger value="profile" className="rounded-lg text-xs">
               <User className="w-3.5 h-3.5 mr-1" />
               Profile
@@ -318,13 +578,263 @@ export default function Settings() {
             </TabsTrigger>
             <TabsTrigger value="preferences" className="rounded-lg text-xs">
               <Palette className="w-3.5 h-3.5 mr-1" />
-              Preferences
+              Appearance
             </TabsTrigger>
             <TabsTrigger value="activity" className="rounded-lg text-xs">
               <History className="w-3.5 h-3.5 mr-1" />
               Activity
             </TabsTrigger>
           </TabsList>
+
+          {/* ════════════════ Notifications Tab ═══════════ */}
+          <TabsContent value="notifications" className="space-y-4 mt-4">
+            {/* Global Controls */}
+            <Card className="clay-card border-border/50 !rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BellRing className="w-4 h-4 text-primary" />
+                  Notification Preferences
+                </CardTitle>
+                <CardDescription>
+                  Control how and when you receive notifications across all channels
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Global toggle */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
+                  <div className="flex items-center gap-3">
+                    {globalPaused ? (
+                      <BellOff className="w-4 h-4 text-destructive" />
+                    ) : (
+                      <BellRing className="w-4 h-4 text-primary" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">
+                        {globalPaused ? "All Notifications Paused" : "Notifications Active"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {globalPaused ? "You won't receive any notifications" : "You will receive notifications based on your preferences"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={globalPaused ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-xl ${globalPaused ? "clay-btn" : ""}`}
+                    onClick={handleToggleGlobalPause}
+                  >
+                    {globalPaused ? (
+                      <><BellRing className="w-3.5 h-3.5 mr-1" /> Resume</>
+                    ) : (
+                      <><BellOff className="w-3.5 h-3.5 mr-1" /> Pause All</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Channel toggle bar */}
+                <div className="grid grid-cols-4 gap-2">
+                  <div className={`flex flex-col items-center gap-2 p-3 rounded-xl ${getChannelCount("in_app") === notifPrefs.length ? "bg-primary/10 border border-primary/20" : "bg-secondary/30"} transition-colors`}>
+                    <Bell className="w-4 h-4 text-primary" />
+                    <p className="text-[10px] font-medium">In-App</p>
+                    <p className="text-[9px] text-muted-foreground">{getChannelCount("in_app")}/{notifPrefs.length}</p>
+                    <Switch
+                      checked={getChannelCount("in_app") > 0}
+                      onCheckedChange={(checked) => handleToggleChannel("in_app", checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                  <div className={`flex flex-col items-center gap-2 p-3 rounded-xl ${getChannelCount("push") === notifPrefs.length ? "bg-primary/10 border border-primary/20" : "bg-secondary/30"} transition-colors`}>
+                    <SmartphoneIcon className="w-4 h-4 text-primary" />
+                    <p className="text-[10px] font-medium">Push</p>
+                    <p className="text-[9px] text-muted-foreground">{getChannelCount("push")}/{notifPrefs.length}</p>
+                    <Switch
+                      checked={getChannelCount("push") > 0}
+                      onCheckedChange={(checked) => handleToggleChannel("push", checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                  <div className={`flex flex-col items-center gap-2 p-3 rounded-xl ${getChannelCount("email") === notifPrefs.length ? "bg-primary/10 border border-primary/20" : "bg-secondary/30"} transition-colors`}>
+                    <Mail className="w-4 h-4 text-primary" />
+                    <p className="text-[10px] font-medium">Email</p>
+                    <p className="text-[9px] text-muted-foreground">{getChannelCount("email")}/{notifPrefs.length}</p>
+                    <Switch
+                      checked={getChannelCount("email") > 0}
+                      onCheckedChange={(checked) => handleToggleChannel("email", checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                  <div className={`flex flex-col items-center gap-2 p-3 rounded-xl ${getChannelCount("sms") === notifPrefs.length ? "bg-primary/10 border border-primary/20" : "bg-secondary/30"} transition-colors`}>
+                    <MessageSquare className="w-4 h-4 text-primary" />
+                    <p className="text-[10px] font-medium">SMS</p>
+                    <p className="text-[9px] text-muted-foreground">{getChannelCount("sms")}/{notifPrefs.length}</p>
+                    <Switch
+                      checked={getChannelCount("sms") > 0}
+                      onCheckedChange={(checked) => handleToggleChannel("sms", checked)}
+                      className="scale-75"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Push setup */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
+                  <div className="flex items-center gap-3">
+                    <Smartphone className={`w-4 h-4 ${pushEnabled ? "text-primary" : "text-muted-foreground"}`} />
+                    <div>
+                      <p className="text-sm font-medium">Push Notifications</p>
+                      <p className="text-xs text-muted-foreground">
+                        {pushEnabled
+                          ? "Push notifications are active on this device"
+                          : "Enable push notifications to receive alerts instantly"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={pushEnabled ? "outline" : "default"}
+                    size="sm"
+                    className={`rounded-xl ${!pushEnabled ? "clay-btn" : ""}`}
+                    onClick={handleEnablePush}
+                    disabled={pushLoading}
+                  >
+                    {pushLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : pushEnabled ? (
+                      <><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Active</>
+                    ) : (
+                      <><BellRing className="w-3.5 h-3.5 mr-1" /> Enable</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Quiet hours */}
+                <div className="p-3 rounded-xl bg-secondary/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MoonIcon className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm font-medium">Quiet Hours</p>
+                    <p className="text-[10px] text-muted-foreground ml-1">(Only in-app during this period)</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Label className="text-[10px]">Start</Label>
+                      <Input
+                        type="time"
+                        value={quietHoursStart}
+                        onChange={(e) => setQuietHoursStart(e.target.value)}
+                        className="clay-inset mt-1"
+                      />
+                    </div>
+                    <ArrowUpDown className="w-3 h-3 text-muted-foreground mt-5" />
+                    <div className="flex-1">
+                      <Label className="text-[10px]">End</Label>
+                      <Input
+                        type="time"
+                        value={quietHoursEnd}
+                        onChange={(e) => setQuietHoursEnd(e.target.value)}
+                        className="clay-inset mt-1"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl mt-5"
+                      onClick={handleApplyQuietHours}
+                    >
+                      <Save className="w-3 h-3 mr-1" />
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Priority threshold */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    <div>
+                      <p className="text-sm font-medium">Minimum Priority</p>
+                      <p className="text-xs text-muted-foreground">Only notify for this level or above</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={globalPriority} onValueChange={(v) => setGlobalPriority(v as NotificationPriority)}>
+                      <SelectTrigger className="w-[110px] h-8 rounded-xl text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low" className="text-xs">Low & Above</SelectItem>
+                        <SelectItem value="normal" className="text-xs">Normal & Above</SelectItem>
+                        <SelectItem value="high" className="text-xs">High & Above</SelectItem>
+                        <SelectItem value="urgent" className="text-xs">Urgent Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl"
+                      onClick={handleApplyGlobalPriority}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Per-Type Preferences */}
+            <Card className="clay-card border-border/50 !rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-base">Notification Types</CardTitle>
+                <CardDescription>
+                  Configure channels per notification type
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {notifPrefsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : notifPrefs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No notification preferences found</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl mt-3"
+                      onClick={loadNotificationPrefs}
+                    >
+                      Reload
+                    </Button>
+                  </div>
+                ) : (
+                  Object.entries(NOTIFICATION_TYPE_GROUPS).map(([groupName, types]) => (
+                    <div key={groupName}>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{groupName}</h4>
+                        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+                          <Bell className="w-2.5 h-2.5" />
+                          <SmartphoneIcon className="w-2.5 h-2.5" />
+                          <Mail className="w-2.5 h-2.5" />
+                          <MessageSquare className="w-2.5 h-2.5" />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        {notifPrefs
+                          .filter((p) => types.includes(p.notification_type))
+                          .map((pref) => (
+                            <NotificationPreferenceRow
+                              key={pref.id}
+                              pref={pref}
+                              onUpdate={handleUpdateNotifPref}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* ════════════════ Profile Tab ════════════════ */}
           <TabsContent value="profile" className="space-y-4 mt-4">
@@ -473,7 +983,7 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {/* MFA / Two-Factor Auth */}
+            {/* MFA */}
             <Card className="clay-card border-border/50 !rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -512,11 +1022,7 @@ export default function Settings() {
                         onClick={handleDisableMFA}
                         disabled={mfaDisabling}
                       >
-                        {mfaDisabling ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Shield className="w-4 h-4 mr-2" />
-                        )}
+                        {mfaDisabling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Shield className="w-4 h-4 mr-2" />}
                         Disable Two-Factor Auth
                       </Button>
                     ) : (
@@ -560,11 +1066,7 @@ export default function Settings() {
                         maxLength={6}
                       />
                     </div>
-                    <Button
-                      className="w-full clay-btn rounded-xl"
-                      onClick={handleVerifyMFA}
-                      disabled={mfaVerifyCode.length !== 6}
-                    >
+                    <Button className="w-full clay-btn rounded-xl" onClick={handleVerifyMFA} disabled={mfaVerifyCode.length !== 6}>
                       <ShieldCheck className="w-4 h-4 mr-2" />
                       Verify & Enable
                     </Button>
@@ -581,21 +1083,10 @@ export default function Settings() {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {recoveryCodes.map((code, i) => (
-                        <code key={i} className="text-xs bg-secondary/50 px-3 py-1.5 rounded font-mono text-center">
-                          {code}
-                        </code>
+                        <code key={i} className="text-xs bg-secondary/50 px-3 py-1.5 rounded font-mono text-center">{code}</code>
                       ))}
                     </div>
-                    <Button
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => {
-                        navigator.clipboard.writeText(recoveryCodes.join("\n"));
-                        setCodesCopied(true);
-                        setTimeout(() => setCodesCopied(false), 2000);
-                        toast.success("Recovery codes copied");
-                      }}
-                    >
+                    <Button variant="outline" className="rounded-xl" onClick={() => { navigator.clipboard.writeText(recoveryCodes.join("\n")); setCodesCopied(true); setTimeout(() => setCodesCopied(false), 2000); toast.success("Recovery codes copied"); }}>
                       <Copy className="w-4 h-4 mr-2" />
                       {codesCopied ? "Copied!" : "Copy Recovery Codes"}
                     </Button>
@@ -615,34 +1106,22 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck className={`w-4 h-4 ${accountStatus?.isActive ? "text-success" : "text-destructive"}`} />
-                    <div>
-                      <p className="text-sm font-medium">Account Status</p>
-                    </div>
-                  </div>
+                  <ShieldCheck className={`w-4 h-4 ${accountStatus?.isActive ? "text-success" : "text-destructive"}`} />
+                  <span className="text-sm font-medium flex-1 ml-3">Account Status</span>
                   <Badge variant="outline" className={`clay-pill text-[10px] ${accountStatus?.isActive ? "text-success bg-success/10 border-success/20" : "text-destructive bg-destructive/10 border-destructive/20"}`}>
                     {accountStatus?.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">MFA</p>
-                    </div>
-                  </div>
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium flex-1 ml-3">MFA</span>
                   <Badge variant="outline" className={`clay-pill text-[10px] ${accountStatus?.mfaEnabled ? "text-success bg-success/10" : "text-muted-foreground"}`}>
                     {accountStatus?.mfaEnabled ? "Enabled" : "Not Set Up"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <Monitor className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Active Sessions</p>
-                    </div>
-                  </div>
+                  <Monitor className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium flex-1 ml-3">Active Sessions</span>
                   <span className="text-sm font-medium">{accountStatus?.activeSessions || 0}</span>
                 </div>
               </CardContent>
@@ -658,16 +1137,9 @@ export default function Settings() {
                     <Monitor className="w-4 h-4 text-primary" />
                     Active Sessions
                   </CardTitle>
-                  <CardDescription>
-                    Devices and browsers where you're currently signed in
-                  </CardDescription>
+                  <CardDescription>Devices and browsers where you're currently signed in</CardDescription>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-xl"
-                  onClick={() => getActiveSessions()}
-                >
+                <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => getActiveSessions()}>
                   <Download className="w-3.5 h-3.5" />
                 </Button>
               </CardHeader>
@@ -676,27 +1148,15 @@ export default function Settings() {
                   <p className="text-sm text-muted-foreground text-center py-4">No active sessions found</p>
                 ) : (
                   sessions.map((session) => (
-                    <SessionCard
-                      key={session.id}
-                      session={session}
-                      onRevoke={handleRevokeSession}
-                      isRevoking={revokingId === session.id}
-                    />
+                    <SessionCard key={session.id} session={session} onRevoke={handleRevokeSession} isRevoking={revokingId === session.id} />
                   ))
                 )}
                 {sessions.length > 1 && (
                   <div className="pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                      onClick={async () => {
-                        const otherSessions = sessions.filter((s) => !s.isCurrent);
-                        for (const s of otherSessions) {
-                          await handleRevokeSession(s.id);
-                        }
-                      }}
-                    >
+                    <Button variant="outline" size="sm" className="rounded-xl text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={async () => {
+                      const otherSessions = sessions.filter((s) => !s.isCurrent);
+                      for (const s of otherSessions) await handleRevokeSession(s.id);
+                    }}>
                       <XCircle className="w-3.5 h-3.5 mr-1" />
                       Revoke All Other Sessions
                     </Button>
@@ -706,49 +1166,28 @@ export default function Settings() {
             </Card>
           </TabsContent>
 
-          {/* ════════════════ Preferences Tab ════════════ */}
+          {/* ════════════════ Appearance Tab ═══════════════ */}
           <TabsContent value="preferences" className="space-y-4 mt-4">
             <Card className="clay-card border-border/50 !rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-base">Appearance & Notifications</CardTitle>
+                <CardTitle className="text-base">Appearance</CardTitle>
+                <CardDescription>Customize your visual experience</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
                   <div className="flex items-center gap-3">
-                    <Moon className="w-4 h-4 text-muted-foreground" />
+                    {darkMode ? <Moon className="w-4 h-4 text-primary" /> : <Sun className="w-4 h-4 text-amber-500" />}
                     <div>
                       <p className="text-sm font-medium">Dark Mode</p>
-                      <p className="text-xs text-muted-foreground">Use dark color theme</p>
+                      <p className="text-xs text-muted-foreground">{darkMode ? "Dark theme active" : "Light theme active"}</p>
                     </div>
                   </div>
-                  <Switch />
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <Bell className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Push Notifications</p>
-                      <p className="text-xs text-muted-foreground">Receive alerts for new incidents</p>
-                    </div>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Install App</p>
-                      <p className="text-xs text-muted-foreground">Add TrafficWatch to your home screen</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" className="rounded-xl">
-                    Install
-                  </Button>
+                  <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Offline */}
+            {/* Offline Data Management */}
             <Card className="clay-card border-border/50 !rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-base">Offline Data Management</CardTitle>
@@ -756,26 +1195,16 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <Database className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Cached Incidents</p>
-                      <p className="text-xs text-muted-foreground">247 incidents available offline</p>
-                    </div>
-                  </div>
+                  <Database className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium flex-1 ml-3">Cached Incidents</span>
                   <Button variant="outline" size="sm" className="rounded-xl">
                     <Download className="w-4 h-4 mr-1" />
                     Sync All
                   </Button>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
-                  <div className="flex items-center gap-3">
-                    <Wifi className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Auto-Sync</p>
-                      <p className="text-xs text-muted-foreground">Automatically sync when online</p>
-                    </div>
-                  </div>
+                  <Wifi className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium flex-1 ml-3">Auto-Sync</span>
                   <Switch defaultChecked />
                 </div>
                 <div className="border-t border-border/50 pt-4">
@@ -797,16 +1226,9 @@ export default function Settings() {
                     <History className="w-4 h-4 text-primary" />
                     Account Activity
                   </CardTitle>
-                  <CardDescription>
-                    Recent security events and account changes
-                  </CardDescription>
+                  <CardDescription>Recent security events and account changes</CardDescription>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-xl"
-                  onClick={() => getAuthAuditEvents(20)}
-                >
+                <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => getAuthAuditEvents(20)}>
                   <Download className="w-3.5 h-3.5" />
                 </Button>
               </CardHeader>
@@ -815,12 +1237,7 @@ export default function Settings() {
                   <div className="text-center py-6">
                     <History className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">No activity recorded yet</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl mt-3"
-                      onClick={() => getAuthAuditEvents(20)}
-                    >
+                    <Button variant="outline" size="sm" className="rounded-xl mt-3" onClick={() => getAuthAuditEvents(20)}>
                       Load Activity
                     </Button>
                   </div>

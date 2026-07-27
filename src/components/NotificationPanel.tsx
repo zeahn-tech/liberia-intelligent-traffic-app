@@ -26,11 +26,18 @@ import {
   Loader2,
   ChevronRight,
   Inbox,
+  Settings,
+  Smartphone,
+  Mail,
+  MessageCircle as MessageCircle2,
+  BellRing,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+
+import { createNotification } from "@/lib/notifications";
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -224,16 +231,27 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
               </Badge>
             )}
           </div>
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 text-[10px] rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={markAllAsRead}
+              className="h-6 w-6 p-0 rounded-lg text-muted-foreground hover:text-foreground"
+              onClick={() => { setOpen(false); navigate('/settings'); }}
+              title="Notification Settings"
             >
-              Mark all read
+              <Settings className="w-3 h-3" />
             </Button>
-          )}
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[10px] rounded-lg text-muted-foreground hover:text-foreground"
+                onClick={markAllAsRead}
+              >
+                Mark all read
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Notifications list */}
