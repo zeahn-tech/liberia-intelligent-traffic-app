@@ -111,7 +111,7 @@ BEGIN
       '[]'::jsonb
     ),
     'logs', COALESCE(
-      (SELECT jsonb_agg(row_to_json(il)::jsonb) FROM public.incident_logs il WHERE il.incident_id = p_incident_id ORDER BY il.created_at DESC LIMIT 50),
+      (SELECT jsonb_agg(sub) FROM (SELECT row_to_json(il)::jsonb AS data FROM public.incident_logs il WHERE il.incident_id = p_incident_id ORDER BY il.created_at DESC LIMIT 50) sub),
       '[]'::jsonb
     ),
     'officer', (
