@@ -160,6 +160,23 @@ export {
 } from "./audit-service";
 export type { AuditLogRecord, AuditFilter } from "./audit-service";
 
+// ─── Camera Service ────────────────────────────────────
+export {
+  listCameras,
+  getCamera,
+  registerCamera,
+  updateCamera,
+  deleteCamera,
+  recordCameraEvent,
+  listCameraEvents,
+  getPendingCameraAlerts,
+  acknowledgeCameraAlert,
+  getCameraStats,
+  getCamerasNearLocation,
+  getCamerasPendingAnalysis,
+} from "./cameras-service";
+export type { CameraFilter } from "./cameras-service";
+
 // ─── System Service ─────────────────────────────────────
 export {
   getSetting,
