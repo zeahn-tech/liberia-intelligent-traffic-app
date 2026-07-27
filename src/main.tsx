@@ -27,6 +27,7 @@ const CitizenReportDetail = lazy(() => import("./pages/CitizenReportDetail.tsx")
 const CitizenSafetyNotices = lazy(() => import("./pages/CitizenSafetyNotices.tsx"));
 const ReviewCitizenReports = lazy(() => import("./pages/ReviewCitizenReports.tsx"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter.tsx"));
+const SearchResults = lazy(() => import("./pages/SearchResults.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // Eager import for OfficerDashboard (Vite HMR cache issue workaround)
@@ -231,6 +232,16 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <RequireAuth requireRole="regional_commander" fallbackPath="/dashboard" showForbidden>
                     <CommandCenter />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Search Results */}
+              <Route
+                path="/search"
+                element={
+                  <RequireAuth>
+                    <SearchResults />
                   </RequireAuth>
                 }
               />

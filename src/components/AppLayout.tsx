@@ -3,6 +3,7 @@ import { useNetwork } from "@/hooks/use-network";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import {
   Bell,
   Brain,
@@ -22,9 +23,11 @@ import {
   Wifi,
   WifiOff,
   X,
+  Search,
+  Command,
 } from "lucide-react";
 import { usePermission } from "@/lib/permissions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 
 interface NavItem {
@@ -52,6 +55,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Keyboard shortcut: Cmd+K / Ctrl+K for global search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -191,7 +207,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </h2>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Offline indicator */}
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${online ? "bg-success" : "bg-destructive"}`} />
@@ -204,6 +220,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </Badge>
                 )}
               </div>
+
+              {/* Search */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-xl text-muted-foreground hover:text-foreground hidden sm:flex items-center gap-2"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span className="text-xs">Search</span>
+                <kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono text-muted-foreground hidden md:inline-flex items-center gap-0.5">
+                  <Command className="w-2.5 h-2.5" />K
+                </kbd>
+              </Button>
+
+              {/* Mobile search icon */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-xl sm:hidden"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="w-4 h-4" />
+              </Button>
 
               {/* Notifications */}
               <NotificationPanel />
@@ -225,6 +265,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Global Search Dialog */}
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }
