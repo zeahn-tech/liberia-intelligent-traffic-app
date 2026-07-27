@@ -20,6 +20,12 @@ const IncidentDetail = lazy(() => import("./pages/IncidentDetail.tsx"));
 const ReportIncident = lazy(() => import("./pages/ReportIncident.tsx"));
 const Evidence = lazy(() => import("./pages/Evidence.tsx"));
 const Settings = lazy(() => import("./pages/Settings.tsx"));
+const CitizenDashboard = lazy(() => import("./pages/CitizenDashboard.tsx"));
+const CitizenReportIncident = lazy(() => import("./pages/CitizenReportIncident.tsx"));
+const CitizenReportsList = lazy(() => import("./pages/CitizenReportsList.tsx"));
+const CitizenReportDetail = lazy(() => import("./pages/CitizenReportDetail.tsx"));
+const CitizenSafetyNotices = lazy(() => import("./pages/CitizenSafetyNotices.tsx"));
+const ReviewCitizenReports = lazy(() => import("./pages/ReviewCitizenReports.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // PWA registration handled by vite-plugin-pwa
@@ -161,6 +167,58 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <RequireAuth>
                     <Settings />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Citizen Portal Routes */}
+              <Route
+                path="/citizen"
+                element={
+                  <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
+                    <CitizenDashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/citizen/report"
+                element={
+                  <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
+                    <CitizenReportIncident />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/citizen/reports"
+                element={
+                  <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
+                    <CitizenReportsList />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/citizen/reports/:id"
+                element={
+                  <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
+                    <CitizenReportDetail />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/citizen/safety"
+                element={
+                  <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
+                    <CitizenSafetyNotices />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Police Review Routes */}
+              <Route
+                path="/review/citizen-reports"
+                element={
+                  <RequireAuth requirePermission="review_ai_analysis" fallbackPath="/dashboard" showForbidden>
+                    <ReviewCitizenReports />
                   </RequireAuth>
                 }
               />
