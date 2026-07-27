@@ -26,6 +26,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { IncidentMap } from "@/components/IncidentMap";
+import type { MapPoint, MapLayerType } from "@/components/IncidentMap";
 
 export default function Incidents() {
   const navigate = useNavigate();
@@ -295,8 +296,11 @@ export default function Incidents() {
           <Card className="clay-card border-border/50 !rounded-2xl overflow-hidden">
             <CardContent className="p-0">
               <IncidentMap
-                markers={mapMarkers}
                 height="500px"
+                showControls={true}
+                showSearch={true}
+                showLayerToggle={true}
+                showGeolocation={true}
                 onMarkerClick={(id) => navigate(`/incidents/${id}`)}
               />
             </CardContent>

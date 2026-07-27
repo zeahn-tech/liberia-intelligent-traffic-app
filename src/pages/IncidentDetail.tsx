@@ -369,17 +369,13 @@ export default function IncidentDetail() {
                   </CardHeader>
                   <CardContent className="p-0">
                     <IncidentMap
-                      markers={[{
-                        id: incident.id,
-                        lat: incident.lat,
-                        lng: incident.lng,
-                        title: incident.type,
-                        severity: incident.severity as any,
-                      }]}
-                      center={[incident.lat, incident.lng]}
                       zoom={15}
                       height="250px"
                       interactive={false}
+                      showControls={false}
+                      showSearch={false}
+                      showLayerToggle={false}
+                      showGeolocation={false}
                     />
                   </CardContent>
                 </Card>

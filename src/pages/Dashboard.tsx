@@ -16,7 +16,10 @@ import {
   Plus,
   ExternalLink,
   Activity,
+  Navigation,
 } from "lucide-react";
+import { IncidentMap } from "@/components/IncidentMap";
+import type { MapPoint, MapLayerType } from "@/components/IncidentMap";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 
@@ -222,45 +225,15 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="bg-gradient-to-br from-primary/5 to-accent/5 h-[300px] flex items-center justify-center relative overflow-hidden">
-                  {/* Mock map with incident markers */}
-                  <div className="absolute inset-0">
-                    {/* Grid lines */}
-                    <div className="absolute inset-0 opacity-[0.03]"
-                      style={{
-                        backgroundImage: `
-                          linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px),
-                          linear-gradient(90deg, rgba(0,0,0,0.3) 1px, transparent 1px)
-                        `,
-                        backgroundSize: '40px 40px'
-                      }}
-                    />
-                  </div>
-                  {/* Map placeholder with markers */}
-                  <div className="relative z-10 text-center space-y-4">
-                    <div className="flex flex-wrap justify-center gap-4">
-                      {[
-                        { label: "Monrovia", count: 28, color: "bg-destructive" },
-                        { label: "Paynesville", count: 15, color: "bg-warning" },
-                        { label: "Ganta", count: 8, color: "bg-success" },
-                        { label: "Buchanan", count: 6, color: "bg-info" },
-                      ].map((marker) => (
-                        <div key={marker.label} className="clay-card bg-card/90 p-3 rounded-xl text-center min-w-[100px]">
-                          <div className="flex items-center justify-center gap-1.5 mb-1">
-                            <MapPin className="w-3.5 h-3.5 text-primary" />
-                            <span className="text-xs font-medium">{marker.label}</span>
-                          </div>
-                          <p className="text-lg font-bold">{marker.count}</p>
-                          <div className={`w-2 h-2 rounded-full ${marker.color} mx-auto mt-1`} />
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Interactive map with real-time incident markers
-                    </p>
-                  </div>
-                </div>
+              <CardContent className="p-0 h-[300px]">
+                <IncidentMap
+                  height="300px"
+                  showControls={true}
+                  showSearch={true}
+                  showLayerToggle={false}
+                  showGeolocation={true}
+                  onMarkerClick={(id) => navigate(`/incidents/${id}`)}
+                />
               </CardContent>
             </Card>
           </motion.div>
