@@ -609,14 +609,16 @@ export default function IncidentDetail() {
                     <FileSpreadsheet className="w-4 h-4 mr-2" />
                     Generate Report
                   </Button>
-                  <Button className="w-full rounded-xl" variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export PDF
-                  </Button>
-                  <Button variant="ghost" className="w-full rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Report
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button className="w-full rounded-xl" variant="outline" size="sm" onClick={() => setShowReport(true)}>
+                      <Download className="w-4 h-4 mr-1" />
+                      Export PDF
+                    </Button>
+                    <Button className="w-full rounded-xl" variant="outline" size="sm" onClick={() => setShowReport(true)}>
+                      <FileText className="w-4 h-4 mr-1" />
+                      Export CSV
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
