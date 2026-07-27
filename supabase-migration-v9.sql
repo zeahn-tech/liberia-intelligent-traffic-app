@@ -21,7 +21,7 @@ DECLARE
   v_badge_number TEXT;
   v_station TEXT;
   v_phone TEXT;
-  v_role user_role;
+  v_role public.user_role;
 BEGIN
   -- Extract metadata from raw_user_meta_data (set via options.data in signUp)
   v_full_name   := COALESCE(NEW.raw_user_meta_data ->> 'full_name', '');
@@ -29,8 +29,8 @@ BEGIN
   v_station     := COALESCE(NEW.raw_user_meta_data ->> 'station', '');
   v_phone       := COALESCE(NEW.raw_user_meta_data ->> 'phone', '');
   v_role        := COALESCE(
-    (NEW.raw_user_meta_data ->> 'role')::user_role,
-    'traffic_officer'::user_role
+    (NEW.raw_user_meta_data ->> 'role')::public.user_role,
+    'traffic_officer'::public.user_role
   );
 
   INSERT INTO public.profiles (
