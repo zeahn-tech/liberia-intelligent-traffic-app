@@ -1,7 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+// Try Vite env vars first, then fall back to values from Freebuff Keys/API keys tab
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://yleytyqcrivnohpijtdp.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_4HWhY7qDet1CuyRHT5wTmA_XeHe1QsS";
 
 let _supabase: SupabaseClient | null = null;
 let _initError: string | null = null;
