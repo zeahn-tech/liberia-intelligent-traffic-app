@@ -171,29 +171,24 @@ export async function signUpWithEmail(
     options: {
       data: {
         full_name: profile.full_name || "",
+        badge_number: profile.badge_number || "",
+        station: profile.station || "",
+        phone: profile.phone || null,
         role: profile.role || "traffic_officer",
       },
+      // Redirect to dashboard after email confirmation (if confirm email is on)
+      emailRedirectTo: `${window.location.origin}/dashboard`,
     },
   });
   if (authError) throw authError;
 
-  if (authData.user) {
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: authData.user.id,
-      email,
-      full_name: profile.full_name || "",
-      role: profile.role || "traffic_officer",
-      badge_number: profile.badge_number || "",
-      station: profile.station || "",
-      phone: profile.phone || null,
-      avatar_url: null,
-      is_active: true,
-      password_changed_at: new Date().toISOString(),
-      last_login_at: new Date().toISOString(),
-      login_count: 1,
-      mfa_enabled: false,
-    });
-    if (profileError) throw profileError;
+  // Profile is auto-created by a database trigger on auth.users insert.
+  // The trigger reads user_metadata from raw_user_meta_data.
+  // If the trigger hasn't run yet (e.g. on a fresh project), we fall back
+  // to creating the profile here.
+  if (authData.user && !authData.user?.identities?.length) {
+    // If user already existed (not new), profile should already exist
+    return authData;
   }
 
   return authData;
