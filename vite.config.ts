@@ -130,7 +130,7 @@ export default defineConfig({
       },
       // Dev options
       devOptions: {
-        enabled: false,
+        enabled: true,
         type: "module",
         navigateFallback: "/offline.html",
       },
@@ -199,6 +199,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    hmr: false,
+    hmr: {
+      overlay: false,
+    },
   },
 });
