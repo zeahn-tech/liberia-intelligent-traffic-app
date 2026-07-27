@@ -48,6 +48,12 @@ import {
   Moon as MoonIcon,
   ArrowUpDown,
   AlertTriangle,
+  Lock,
+  Eye as EyeIcon,
+  FileJson,
+  RefreshCw,
+  UserX,
+  ScrollText,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -67,6 +73,34 @@ import {
   type NotificationPriority,
   type NotificationType,
 } from "@/lib/notifications";
+
+import {
+  getRetentionPolicies,
+  updateRetentionPolicy,
+  getDataClassifications,
+  getPrivacySummary,
+  getConsentRecords,
+  setConsent,
+  submitDataSubjectRequest,
+  getDataSubjectRequests,
+  requestDataErasure,
+  exportPersonalData,
+  applyRetentionPolicy,
+  maskEmail,
+  maskName,
+  maskPhone,
+  maskPlate,
+  DATA_CATEGORY_LABELS,
+  ARCHIVAL_STRATEGY_LABELS,
+  CONSENT_TYPE_LABELS,
+  REQUEST_TYPE_LABELS,
+  type RetentionPolicy,
+  type DataClassificationRecord,
+  type PrivacySummary,
+  type ConsentRecord,
+  type DataSubjectRequest,
+  type DataCategory,
+} from "@/lib/privacy";
 
 // ─── Constants ────────────────────────────────────────
 
@@ -556,10 +590,8 @@ export default function Settings() {
           <p className="text-sm text-muted-foreground mt-1">
             Manage your account, security, notifications, and preferences
           </p>
-        </div>
-
-        <Tabs defaultValue="notifications">
-          <TabsList className="grid grid-cols-6 rounded-xl p-1 bg-secondary">
+        </div>          <Tabs defaultValue="notifications">
+          <TabsList className="grid grid-cols-7 rounded-xl p-1 bg-secondary">
             <TabsTrigger value="notifications" className="rounded-lg text-xs">
               <Bell className="w-3.5 h-3.5 mr-1" />
               Notifications
@@ -583,6 +615,10 @@ export default function Settings() {
             <TabsTrigger value="activity" className="rounded-lg text-xs">
               <History className="w-3.5 h-3.5 mr-1" />
               Activity
+            </TabsTrigger>
+            <TabsTrigger value="privacy" className="rounded-lg text-xs">
+              <Lock className="w-3.5 h-3.5 mr-1" />
+              Privacy
             </TabsTrigger>
           </TabsList>
 
@@ -1217,6 +1253,11 @@ export default function Settings() {
             </Card>
           </TabsContent>
 
+          {/* ════════════════ Privacy Tab ═════════════════ */}
+          <TabsContent value="privacy" className="space-y-4 mt-4">
+            <PrivacyTabContent />
+          </TabsContent>
+
           {/* ════════════════ Activity Tab ════════════════ */}
           <TabsContent value="activity" className="space-y-4 mt-4">
             <Card className="clay-card border-border/50 !rounded-2xl">
@@ -1274,5 +1315,440 @@ export default function Settings() {
         </Tabs>
       </div>
     </AppLayout>
+  );
+}
+
+// ─── Privacy Tab Content ────────────────────────────────
+
+function PrivacyTabContent() {
+  const { user } = useAuth();
+  const [retentionPolicies, setRetentionPolicies] = useState<RetentionPolicy[]>([]);
+  const [dataClassifications, setDataClassifications] = useState<DataClassificationRecord[]>([]);
+  const [privacySummary, setPrivacySummary] = useState<PrivacySummary | null>(null);
+  const [consents, setConsents] = useState<ConsentRecord[]>([]);
+  const [dataRequests, setDataRequests] = useState<DataSubjectRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [erasureRequesting, setErasureRequesting] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [activePrivacyTab, setActivePrivacyTab] = useState("overview");
+
+  useEffect(() => {
+    loadPrivacyData();
+  }, []);
+
+  const loadPrivacyData = async () => {
+    setLoading(true);
+    const [policies, classifications, summary, dsrs] = await Promise.all([
+      getRetentionPolicies(),
+      getDataClassifications(),
+      getPrivacySummary(),
+      getDataSubjectRequests(),
+    ]);
+    setRetentionPolicies(policies);
+    setDataClassifications(classifications);
+    setPrivacySummary(summary);
+    setDataRequests(dsrs);
+
+    if (user?.id) {
+      const consentRecords = await getConsentRecords(user.id);
+      setConsents(consentRecords);
+    }
+    setLoading(false);
+  };
+
+  const handleUpdatePolicy = async (policyId: string, field: string, value: any) => {
+    const success = await updateRetentionPolicy(policyId, { [field]: value });
+    if (success) {
+      setRetentionPolicies((prev) =>
+        prev.map((p) => (p.id === policyId ? { ...p, [field]: value } : p))
+      );
+      toast.success("Retention policy updated");
+    } else {
+      toast.error("Failed to update retention policy");
+    }
+  };
+
+  const handleApplyPolicy = async (category: DataCategory) => {
+    const result = await applyRetentionPolicy(category);
+    if (result) {
+      toast.success(`Applied retention policy for ${DATA_CATEGORY_LABELS[category]}: ${JSON.stringify(result)}`);
+      loadPrivacyData();
+    } else {
+      toast.error("Failed to apply retention policy");
+    }
+  };
+
+  const handleConsentToggle = async (consentType: string, granted: boolean) => {
+    if (!user?.id) return;
+    const success = await setConsent(user.id, consentType, granted);
+    if (success) {
+      toast.success(`${granted ? "Granted" : "Revoked"} consent for ${CONSENT_TYPE_LABELS[consentType] || consentType}`);
+      loadPrivacyData();
+    }
+  };
+
+  const handleRequestErasure = async () => {
+    setErasureRequesting(true);
+    const result = await requestDataErasure();
+    if (result.success) {
+      toast.success("Data erasure request submitted — an administrator will review it");
+      loadPrivacyData();
+    } else {
+      toast.error("Failed to submit erasure request");
+    }
+    setErasureRequesting(false);
+  };
+
+  const handleExportData = async () => {
+    setExportLoading(true);
+    const data = await exportPersonalData();
+    if (data) {
+      // Create a downloadable JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `personal-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Personal data exported — check your downloads");
+    } else {
+      toast.error("Failed to export personal data");
+    }
+    setExportLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Privacy Summary Cards */}
+      {privacySummary && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="p-3 rounded-xl bg-secondary/30 text-center">
+            <p className="text-lg font-bold">{privacySummary.total_pii_columns}</p>
+            <p className="text-[10px] text-muted-foreground">PII Columns Tracked</p>
+          </div>
+          <div className="p-3 rounded-xl bg-secondary/30 text-center">
+            <p className="text-lg font-bold">{privacySummary.total_retention_policies}</p>
+            <p className="text-[10px] text-muted-foreground">Retention Policies</p>
+          </div>
+          <div className="p-3 rounded-xl bg-secondary/30 text-center">
+            <p className="text-lg font-bold">{privacySummary.active_consents}</p>
+            <p className="text-[10px] text-muted-foreground">Active Consents</p>
+          </div>
+          <div className="p-3 rounded-xl bg-secondary/30 text-center">
+            <p className="text-lg font-bold">{privacySummary.pending_data_requests}</p>
+            <p className="text-[10px] text-muted-foreground">Pending Requests</p>
+          </div>
+          <div className="p-3 rounded-xl bg-secondary/30 text-center">
+            <p className="text-lg font-bold">{privacySummary.pii_access_events_30d}</p>
+            <p className="text-[10px] text-muted-foreground">PII Access (30d)</p>
+          </div>
+          <div className="p-3 rounded-xl bg-secondary/30 text-center">
+            <p className="text-lg font-bold">{privacySummary.auto_purge_enabled}</p>
+            <p className="text-[10px] text-muted-foreground">Auto-Purge Policies</p>
+          </div>
+        </div>
+      )}
+
+      {/* Inner Tabs */}
+      <Tabs value={activePrivacyTab} onValueChange={setActivePrivacyTab}>
+        <TabsList className="rounded-xl p-1 bg-secondary">
+          <TabsTrigger value="overview" className="rounded-lg text-xs">
+            <EyeIcon className="w-3.5 h-3.5 mr-1" />
+            Data Classification
+          </TabsTrigger>
+          <TabsTrigger value="retention" className="rounded-lg text-xs">
+            <Database className="w-3.5 h-3.5 mr-1" />
+            Retention Policies
+          </TabsTrigger>
+          <TabsTrigger value="consent" className="rounded-lg text-xs">
+            <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+            Consent
+          </TabsTrigger>
+          <TabsTrigger value="rights" className="rounded-lg text-xs">
+            <UserX className="w-3.5 h-3.5 mr-1" />
+            Data Rights
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Data Classification */}
+        <TabsContent value="overview" className="mt-4 space-y-3">
+          <Card className="clay-card border-border/50 !rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <EyeIcon className="w-4 h-4 text-primary" />
+                Data Classification Registry
+              </CardTitle>
+              <CardDescription>
+                All database columns containing personal or sensitive data are classified and tracked
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dataClassifications.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No data classification records found. Run the v18 migration to seed default classifications.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {dataClassifications.map((dc) => (
+                    <div key={dc.id} className="flex items-center justify-between p-2 rounded-lg bg-secondary/20 text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <code className="text-[11px] bg-background px-1.5 py-0.5 rounded font-mono">{dc.table_name}</code>
+                        <span className="text-muted-foreground">.</span>
+                        <code className="text-[11px] font-mono">{dc.column_name}</code>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {dc.masking_rule && (
+                          <Badge variant="outline" className="clay-pill text-[9px] bg-blue-500/5 border-blue-500/20 text-blue-500">
+                            {dc.masking_rule}
+                          </Badge>
+                        )}
+                        <Badge className={`clay-pill text-[9px] px-2 py-0 h-5 ${
+                          dc.classification === "pii" ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300" :
+                          dc.classification === "sensitive_pii" ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300" :
+                          dc.classification === "confidential" ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300" :
+                          "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300"
+                        }`}>
+                          {dc.classification.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Retention Policies */}
+        <TabsContent value="retention" className="mt-4 space-y-3">
+          <Card className="clay-card border-border/50 !rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Database className="w-4 h-4 text-primary" />
+                Data Retention Policies
+              </CardTitle>
+              <CardDescription>
+                Configure how long each data category is retained and what happens when it expires
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {retentionPolicies.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">Load policies from database</p>
+              ) : (
+                <div className="space-y-3">
+                  {retentionPolicies.map((policy) => (
+                    <div key={policy.id} className="p-3 rounded-xl bg-secondary/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {DATA_CATEGORY_LABELS[policy.data_category] || policy.data_category}
+                          </span>
+                        </div>
+                        <Badge variant="outline" className={`clay-pill text-[9px] ${policy.auto_purge_enabled ? "bg-success/10 text-success border-success/20" : "text-muted-foreground"}`}>
+                          {policy.auto_purge_enabled ? "Auto-Purge" : "Manual"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-muted-foreground">{policy.retention_days} days</span>
+                          <Input
+                            type="number"
+                            className="w-20 h-7 text-xs clay-inset"
+                            value={policy.retention_days}
+                            onChange={(e) => handleUpdatePolicy(policy.id, "retention_days", parseInt(e.target.value) || 365)}
+                            min={1}
+                          />
+                        </div>
+                        <span className="text-muted-foreground">→</span>
+                        <span className="text-muted-foreground">{ARCHIVAL_STRATEGY_LABELS[policy.archival_strategy]}</span>
+                        <div className="flex items-center gap-1 ml-auto">
+                          <label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Switch
+                              checked={policy.auto_purge_enabled}
+                              onCheckedChange={(v) => handleUpdatePolicy(policy.id, "auto_purge_enabled", v)}
+                              className="scale-75"
+                            />
+                            Auto
+                          </label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 rounded-lg text-[10px] px-2"
+                            onClick={() => handleApplyPolicy(policy.data_category)}
+                          >
+                            <RefreshCw className="w-2.5 h-2.5 mr-1" />
+                            Apply Now
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Consent Management */}
+        <TabsContent value="consent" className="mt-4 space-y-3">
+          <Card className="clay-card border-border/50 !rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" />
+                Data Processing Consent
+              </CardTitle>
+              <CardDescription>
+                Control how your personal data may be processed and shared
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Object.entries(CONSENT_TYPE_LABELS).map(([type, label]) => {
+                const activeConsent = consents.find(
+                  (c) => c.consent_type === type && c.revoked_at === null
+                );
+                const isGranted = activeConsent?.granted ?? false;
+                return (
+                  <div key={type} className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
+                    <div>
+                      <p className="text-sm font-medium">{label}</p>
+                      <p className="text-[10px] text-muted-foreground capitalize">{type.replace(/_/g, " ")}</p>
+                    </div>
+                    <Switch
+                      checked={isGranted}
+                      onCheckedChange={(checked) => handleConsentToggle(type, checked)}
+                    />
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Data Rights */}
+        <TabsContent value="rights" className="mt-4 space-y-3">
+          <Card className="clay-card border-border/50 !rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <UserX className="w-4 h-4 text-primary" />
+                Your Data Rights
+              </CardTitle>
+              <CardDescription>
+                Exercise your rights under applicable data protection laws
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Export Data */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <FileJson className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Export My Data</p>
+                    <p className="text-xs text-muted-foreground">
+                      Download all your personal data (JSON format)
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl"
+                  onClick={handleExportData}
+                  disabled={exportLoading}
+                >
+                  {exportLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <><Download className="w-3.5 h-3.5 mr-1" /> Export</>
+                  )}
+                </Button>
+              </div>
+
+              {/* Request Erasure */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-destructive/5 border border-destructive/10">
+                <div className="flex items-center gap-3">
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                  <div>
+                    <p className="text-sm font-medium">Delete My Data (Right to Erasure)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Submit a request to have your personal data permanently removed
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10"
+                  onClick={handleRequestErasure}
+                  disabled={erasureRequesting}
+                >
+                  {erasureRequesting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <><UserX className="w-3.5 h-3.5 mr-1" /> Request Deletion</>
+                  )}
+                </Button>
+              </div>
+
+              {/* Previous Requests */}
+              {dataRequests.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Previous Requests
+                  </h4>
+                  <div className="space-y-2">
+                    {dataRequests.map((req) => (
+                      <div key={req.id} className="flex items-center justify-between p-2 rounded-lg bg-secondary/20">
+                        <div>
+                          <p className="text-xs font-medium">
+                            {REQUEST_TYPE_LABELS[req.request_type] || req.request_type}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(req.requested_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge className={`clay-pill text-[9px] ${
+                          req.status === "completed" ? "bg-success/10 text-success" :
+                          req.status === "pending" ? "bg-amber-500/10 text-amber-500" :
+                          req.status === "rejected" ? "bg-destructive/10 text-destructive" :
+                          "bg-secondary/50 text-muted-foreground"
+                        }`}>
+                          {req.status.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Privacy Impact Notice */}
+          <Card className="clay-card border-border/50 !rounded-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Shield className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p className="font-medium text-foreground">Privacy by Design</p>
+                  <p>TrafficWatch AI implements data minimization, purpose limitation, and storage limitation by default.</p>
+                  <p>All PII columns are classified and masked appropriately. Retention policies are configurable and auditable.</p>
+                  <p>Chain-of-custody and audit logging ensure all data access is traceable to authorized personnel only.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
