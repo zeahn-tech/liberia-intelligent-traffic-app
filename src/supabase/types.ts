@@ -83,7 +83,7 @@ export interface Database {
       incident_status: "draft" | "submitted" | "under_review" | "assigned" | "investigating" | "escalated" | "confirmed" | "resolved" | "closed" | "rejected" | "archived";
       violation_severity: "minor" | "moderate" | "serious" | "critical";
       evidence_type: "photo" | "video" | "document" | "audio" | "other";
-      user_role: "officer" | "supervisor" | "admin" | "investigator";
+      user_role: "system_administrator" | "national_commissioner" | "regional_commander" | "traffic_commander" | "police_supervisor" | "traffic_officer" | "investigator" | "evidence_officer" | "system_auditor" | "citizen";
       analysis_status: "pending" | "queued" | "processing" | "completed" | "failed";
       ai_provider: "vly" | "gemini" | "openai" | "custom";
       stolen_status: "active" | "recovered" | "closed";
@@ -95,12 +95,19 @@ export interface Profile {
   id: string;
   email: string;
   full_name: string;
-  role: "officer" | "supervisor" | "admin" | "investigator";
+  role: string;
   badge_number: string;
   station: string;
   phone: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  mfa_enabled: boolean;
+  password_changed_at: string | null;
+  last_login_at: string | null;
+  login_count: number;
+  department: string | null;
+  division: string | null;
+  reporting_officer_id: string | null;
   created_at: string;
   updated_at: string;
 }

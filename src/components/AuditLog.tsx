@@ -53,8 +53,8 @@ interface AuditLogProps {
   description?: string;
   /** Maximum height before scroll */
   maxHeight?: string;
-  /** Min role required to view (default: officer) */
-  minRole?: "officer" | "supervisor" | "admin" | "investigator";
+  /** Min role required to view (default: traffic_officer) */
+  minRole?: "officer" | "supervisor" | "admin" | "investigator" | string;
 }
 
 // ===== Event Display =====
@@ -132,7 +132,7 @@ export function AuditLog({
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    setAuthorized(hasRole(minRole));
+    setAuthorized(hasRole(minRole as any));
   }, [user, hasRole, minRole]);
 
   const filteredEvents = events.sort(
