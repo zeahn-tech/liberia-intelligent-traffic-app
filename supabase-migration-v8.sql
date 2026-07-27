@@ -214,9 +214,14 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS division TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS reporting_officer_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
 
 -- =====================================================
--- 8. UPDATED get_current_user_role (with MFA check)
+-- 8. DROP existing function first (body changed)
 -- =====================================================
-CREATE OR REPLACE FUNCTION public.get_current_user_role()
+DROP FUNCTION IF EXISTS public.get_current_user_role() CASCADE;
+
+-- =====================================================
+-- 9. UPDATED get_current_user_role (with lock check)
+-- =====================================================
+CREATE FUNCTION public.get_current_user_role()
 RETURNS user_role
 LANGUAGE plpgsql
 STABLE
