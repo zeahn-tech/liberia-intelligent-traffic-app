@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Bell,
+  Brain,
   Car,
   ChevronLeft,
   ChevronRight,
@@ -11,6 +12,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  MessageSquare,
   Plus,
   Settings,
   Shield,
@@ -20,6 +22,7 @@ import {
   WifiOff,
   X,
 } from "lucide-react";
+import { usePermission } from "@/lib/permissions";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 
@@ -36,12 +39,14 @@ const navItems: NavItem[] = [
   { label: "New Report", path: "/incidents/new", icon: Plus },
   { label: "Incident Map", path: "/incidents?view=map", icon: MapPin },
   { label: "Evidence", path: "/evidence", icon: Upload },
+  { label: "Citizen Reports", path: "/review/citizen-reports", icon: MessageSquare },
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { online } = useNetwork();
+  const { role, can } = usePermission();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);

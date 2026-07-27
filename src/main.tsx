@@ -26,6 +26,7 @@ const CitizenReportsList = lazy(() => import("./pages/CitizenReportsList.tsx"));
 const CitizenReportDetail = lazy(() => import("./pages/CitizenReportDetail.tsx"));
 const CitizenSafetyNotices = lazy(() => import("./pages/CitizenSafetyNotices.tsx"));
 const ReviewCitizenReports = lazy(() => import("./pages/ReviewCitizenReports.tsx"));
+const OfficerDashboard = lazy(() => import("./pages/OfficerDashboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // PWA registration handled by vite-plugin-pwa
@@ -120,13 +121,21 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/" element={<Landing />} />
               <Route
                 path="/auth"
-                element={<AuthPage redirectAfterAuth="/dashboard" />}
+                element={<AuthPage redirectAfterAuth="/officer" />}
               />
               <Route
                 path="/dashboard"
                 element={
                   <RequireAuth>
                     <Dashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/officer"
+                element={
+                  <RequireAuth>
+                    <OfficerDashboard />
                   </RequireAuth>
                 }
               />
