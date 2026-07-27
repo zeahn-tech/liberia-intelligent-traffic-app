@@ -664,6 +664,15 @@ export function IncidentMap({
 
         {/* Congestion heat circles */}
         <CongestionLayer points={incidents} visible={activeLayers.has("congestion")} />
+
+        {/* Geolocation button inside the map context */}
+        {showGeolocation && (
+          <div className="leaflet-top leaflet-left" style={{ marginTop: "52px" }}>
+            <div className="leaflet-control leaflet-bar">
+              <GeolocateButton />
+            </div>
+          </div>
+        )}
       </MapContainer>
 
       {/* ── Top-left controls ── */}
@@ -711,8 +720,6 @@ export function IncidentMap({
             </div>
           )}
 
-          {/* Geolocation */}
-          {showGeolocation && <GeolocateButton />}
         </div>
       )}
 
