@@ -9,7 +9,10 @@
 -- =====================================================
 -- 1. CREATE ENHANCED ROLE ENUM
 -- =====================================================
--- First update the user_role enum to include all 10 roles
+-- Drop the default first so the column type can be changed
+ALTER TABLE public.profiles ALTER COLUMN role DROP DEFAULT;
+
+-- Rename old enum, create new one with 10 roles
 ALTER TYPE user_role RENAME TO user_role_old;
 
 CREATE TYPE user_role AS ENUM (
@@ -25,6 +28,7 @@ CREATE TYPE user_role AS ENUM (
   'citizen'
 );
 
+-- Alter the column type with a USING clause to map old values to new ones
 ALTER TABLE public.profiles 
   ALTER COLUMN role TYPE user_role 
   USING (
@@ -37,7 +41,10 @@ ALTER TABLE public.profiles
     END
   );
 
-DROP TYPE user_role_old;
+-- Set the new default value
+ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'traffic_officer'::user_role;
+
+DROP TYPE IF EXISTS user_role_old;
 
 -- =====================================================
 -- 2. PERMISSIONS MATRIX TABLE
