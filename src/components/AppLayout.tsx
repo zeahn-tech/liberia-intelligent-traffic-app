@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNetwork } from "@/hooks/use-network";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NotificationPanel } from "@/components/NotificationPanel";
 import {
   Bell,
   Brain,
@@ -204,16 +205,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 )}
               </div>
 
-              {/* Quick actions */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-xl relative"
-                onClick={() => navigate("/incidents")}
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
-              </Button>
+              {/* Notifications */}
+              <NotificationPanel />
 
               <Button
                 className="clay-btn rounded-xl hidden sm:flex"

@@ -87,6 +87,27 @@ interface RecentEvidence {
   mime_type: string;
 }
 
+interface OfficerTask {
+  id: string;
+  title: string;
+  description: string | null;
+  task_type: string;
+  priority: string;
+  status: string;
+  reference_type: string | null;
+  reference_id: string | null;
+  due_at: string | null;
+  created_at: string;
+}
+
+interface LocalDraft {
+  id: string;
+  type: "incident" | "evidence" | "note";
+  title: string;
+  preview: string;
+  updatedAt: string;
+}
+
 // ─── Theme colors ──────────────────────────────────────
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -275,6 +296,9 @@ export default function OfficerDashboard() {
   const [loading, setLoading] = useState(true);
   const [dashboardTab, setDashboardTab] = useState("cases");
   const [showUploader, setShowUploader] = useState(false);
+  const [tasks, setTasks] = useState<OfficerTask[]>([]);
+  const [drafts, setDrafts] = useState<LocalDraft[]>([]);
+  const [hasDrafts, setHasDrafts] = useState(false);
 
   // Calculate today's stats from assigned incidents
   const todayStr = new Date().toISOString().split("T")[0];
@@ -340,10 +364,40 @@ export default function OfficerDashboard() {
       { id: "ev-5", incident_id: "INC-004", name: "officer_notes.pdf", type: "document", uploaded_at: "2026-07-26T17:30:00Z", officer_name: "Sgt. Kollie", mime_type: "application/pdf" },
     ]);
 
+    // Load tasks
+    try {
+      const { data: taskData } = await supabase
+        .from("officer_tasks")
+        .select("*")
+        .eq("officer_id", user?.id)
+        .in("status", ["pending", "in_progress"])
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (taskData) setTasks(taskData as OfficerTask[]);
+    } catch { /* silent */ }
+
     // Check sync queue
     try {
       const queue = await getPendingSyncQueue();
       setSyncQueueCount(queue.length);
+    } catch { /* silent */ }
+
+    // Check local drafts
+    try {
+      const { getAllDrafts } = await import("@/lib/offline");
+      const localDrafts = await getAllDrafts();
+      if (localDrafts.length > 0) {
+        setDrafts(
+          localDrafts.map((d: any) => ({
+            id: d.id,
+            type: d.type,
+            title: d.data?.title || d.data?.violationType || d.type,
+            preview: d.data?.description || "No description",
+            updatedAt: d.updatedAt,
+          }))
+        );
+        setHasDrafts(true);
+      }
     } catch { /* silent */ }
 
     setLoading(false);
@@ -531,6 +585,15 @@ export default function OfficerDashboard() {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="tasks" className="rounded-lg data-[state=active]:bg-card data-[state=active]:clay-card text-xs sm:text-sm">
+              <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
+              My Tasks
+              {tasks.length > 0 && (
+                <Badge className="ml-1.5 bg-primary text-primary-foreground text-[9px] px-1.5 py-0 h-3.5">
+                  {tasks.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="evidence" className="rounded-lg data-[state=active]:bg-card data-[state=active]:clay-card text-xs sm:text-sm">
               <Camera className="w-3.5 h-3.5 mr-1.5" />
               Recent Evidence
@@ -616,6 +679,128 @@ export default function OfficerDashboard() {
                 />
               ))}
             </div>
+          </TabsContent>
+
+          {/* ─── Tab: Tasks ─── */}
+          <TabsContent value="tasks" className="mt-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {tasks.length === 0
+                  ? "No pending tasks"
+                  : `${tasks.length} task${tasks.length !== 1 ? "s" : ""}`
+                }
+              </p>
+              {hasDrafts && (
+                <Badge variant="outline" className="clay-pill text-[10px] px-2 py-0 h-5 bg-amber-500/10 text-amber-500 border-amber-500/20">
+                  {drafts.length} draft{drafts.length !== 1 ? "s" : ""} offline
+                </Badge>
+              )}
+            </div>
+
+            {loading ? (
+              <Card className="clay-card !rounded-2xl border-border/50">
+                <CardContent className="p-12 text-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" />
+                </CardContent>
+              </Card>
+            ) : tasks.length === 0 && !hasDrafts ? (
+              <Card className="clay-card !rounded-2xl border-border/50">
+                <CardContent className="p-10 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                    <CheckSquare className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="font-semibold mt-4">No Pending Tasks</h3>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
+                    You're all caught up! No pending tasks or drafts require your attention.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {/* Drafts section */}
+                {hasDrafts && (
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Offline Drafts</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {drafts.slice(0, 3).map((draft) => (
+                        <div
+                          key={draft.id}
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10 cursor-pointer hover:bg-amber-500/10 transition-colors"
+                          onClick={() => navigate("/incidents/new")}
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                            <FileText className="w-3.5 h-3.5 text-amber-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{draft.title || draft.type}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{draft.preview}</p>
+                          </div>
+                          <span className="text-[9px] text-muted-foreground shrink-0">
+                            {new Date(draft.updatedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tasks */}
+                {tasks.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                        Assignments
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {tasks.map((task) => {
+                        const priorityDot = {
+                          urgent: "bg-red-500",
+                          high: "bg-amber-500",
+                          normal: "bg-blue-500",
+                          low: "bg-gray-400",
+                        }[task.priority] || "bg-blue-500";
+
+                        return (
+                          <div
+                            key={task.id}
+                            className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer"
+                            onClick={() => {
+                              if (task.reference_type === "incident" && task.reference_id)
+                                navigate(`/incidents/${task.reference_id}`);
+                              else if (task.reference_type === "citizen_report")
+                                navigate("/review/citizen-reports");
+                            }}
+                          >
+                            <div className={`w-2 h-2 rounded-full ${priorityDot} shrink-0`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{task.title}</p>
+                              {task.description && (
+                                <p className="text-[10px] text-muted-foreground truncate">{task.description}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {task.due_at && (
+                                <span className="text-[9px] text-muted-foreground">
+                                  Due {new Date(task.due_at).toLocaleDateString()}
+                                </span>
+                              )}
+                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 h-3.5">
+                                {task.task_type.replace(/_/g, " ")}
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           {/* ─── Tab: Recent Evidence ─── */}
