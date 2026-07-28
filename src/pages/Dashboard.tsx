@@ -14,7 +14,7 @@
 // - Quick actions
 // ============================================================
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { useNavigate } from "react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -208,28 +208,7 @@ const mockAlerts = [
 // HELPER COMPONENTS
 // ═══════════════════════════════════════════════════════════
 
-const SEVERITY_COLORS: Record<string, string> = {
-  critical: "bg-red-500/10 text-red-500 border-red-500/20",
-  serious: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  high: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  moderate: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  minor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  low: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-secondary text-muted-foreground",
-  submitted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  under_review: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  assigned: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  investigating: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
-  escalated: "bg-red-500/10 text-red-500 border-red-500/20",
-  confirmed: "bg-green-500/10 text-green-500 border-green-500/20",
-  resolved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  closed: "bg-secondary text-muted-foreground",
-};
-
-function KpiCard({
+const KpiCard = memo(function KpiCard({
   title,
   value,
   change,
@@ -312,9 +291,30 @@ function KpiCard({
       </Card>
     </motion.div>
   );
-}
+});
 
-function ChartCard({
+const SEVERITY_COLORS: Record<string, string> = {
+  critical: "bg-red-500/10 text-red-500 border-red-500/20",
+  serious: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  high: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  moderate: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  minor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  low: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-secondary text-muted-foreground",
+  submitted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  under_review: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  assigned: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  investigating: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  escalated: "bg-red-500/10 text-red-500 border-red-500/20",
+  confirmed: "bg-green-500/10 text-green-500 border-green-500/20",
+  resolved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  closed: "bg-secondary text-muted-foreground",
+};
+
+const ChartCard = memo(function ChartCard({
   title,
   subtitle,
   children,
@@ -341,9 +341,9 @@ function ChartCard({
       </CardContent>
     </Card>
   );
-}
+});
 
-function RiskBadge({ risk }: { risk: string }) {
+const RiskBadge = memo(function RiskBadge({ risk }: { risk: string }) {
   const colors: Record<string, string> = {
     high: "bg-red-500/10 text-red-500 border-red-500/20",
     medium: "bg-amber-500/10 text-amber-500 border-amber-500/20",
@@ -355,9 +355,9 @@ function RiskBadge({ risk }: { risk: string }) {
       {risk}
     </Badge>
   );
-}
+});
 
-function StatusBadge({ status }: { status: string }) {
+const StatusBadge = memo(function StatusBadge({ status }: { status: string }) {
   return (
     <Badge
       variant="outline"
@@ -366,9 +366,9 @@ function StatusBadge({ status }: { status: string }) {
       {status.replace(/_/g, " ")}
     </Badge>
   );
-}
+});
 
-function ChartTooltipContent({ active, payload, label }: any) {
+const ChartTooltipContent = memo(function ChartTooltipContent({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-background border border-border/60 rounded-xl p-3 shadow-xl text-xs space-y-1 backdrop-blur-sm">
@@ -382,7 +382,7 @@ function ChartTooltipContent({ active, payload, label }: any) {
       ))}
     </div>
   );
-}
+});
 
 // ═══════════════════════════════════════════════════════════
 // MAIN DASHBOARD
@@ -438,6 +438,15 @@ export default function Dashboard() {
   const handleCaseClick = useCallback((caseId: string) => {
     navigate(`/incidents/${caseId}`);
   }, [navigate]);
+
+  // Memoize system services data to avoid recreating array on each render
+  const systemServices = useMemo(() => [
+    { label: "Database", status: "operational", color: "bg-emerald-500" },
+    { label: "AI Engine", status: "operational", color: "bg-emerald-500" },
+    { label: "ANPR Service", status: "operational", color: "bg-emerald-500" },
+    { label: "Storage API", status: "degraded", color: "bg-amber-500" },
+    { label: "WebSocket", status: "operational", color: "bg-emerald-500" },
+  ], []);
 
   // Responsive grid adjustments
   const kpiGridCols = responsive.isMobile
@@ -588,13 +597,7 @@ export default function Dashboard() {
                     </h3>
                   </div>
                   <div className="space-y-2.5">
-                    {[
-                      { label: "Database", status: "operational", color: "bg-emerald-500" },
-                      { label: "AI Engine", status: "operational", color: "bg-emerald-500" },
-                      { label: "ANPR Service", status: "operational", color: "bg-emerald-500" },
-                      { label: "Storage API", status: "degraded", color: "bg-amber-500" },
-                      { label: "WebSocket", status: "operational", color: "bg-emerald-500" },
-                    ].map((service) => (
+                    {systemServices.map((service) => (
                       <div key={service.label} className="flex items-center justify-between">
                         <span className="text-[10px] text-muted-foreground">{service.label}</span>
                         <div className="flex items-center gap-1.5">
