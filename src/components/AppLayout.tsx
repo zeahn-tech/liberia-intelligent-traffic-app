@@ -1,66 +1,63 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useNetwork } from "@/hooks/use-network";
 import { useRealtimeContext } from "@/lib/realtime-context";
+import { usePermission } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import {
+  getAccessibleNavGroups,
+  getAccessibleMobileItems,
+  getAccessibleQuickActions,
+} from "@/lib/navigation";
+import {
   Bell,
-  Brain,
-  Car,
   ChevronLeft,
   ChevronRight,
-  LayoutDashboard,
   LogOut,
-  MapPin,
   Menu,
-  MessageSquare,
   Plus,
-  Settings,
   Shield,
-  Upload,
-  Users,
-  Wifi,
-  WifiOff,
-  X,
   Search,
   Command,
-  ScrollText,
+  X,
+  Activity,
+  Wifi,
+  WifiOff,
+  ChevronDown,
 } from "lucide-react";
-import { usePermission } from "@/lib/permissions";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router";
-
-interface NavItem {
-  label: string;
-  path: string;
-  icon: React.ElementType;
-  badge?: string;
-}
-
-const navItems: NavItem[] = [
-  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Incidents", path: "/incidents", icon: Car, badge: "38" },
-  { label: "New Report", path: "/incidents/new", icon: Plus },
-  { label: "Incident Map", path: "/incidents?view=map", icon: MapPin },
-  { label: "Evidence", path: "/evidence", icon: Upload },
-  { label: "Citizen Reports", path: "/review/citizen-reports", icon: MessageSquare },
-  { label: "Audit Log", path: "/audit", icon: ScrollText },
-  { label: "Security", path: "/security", icon: Shield },
-  { label: "Settings", path: "/settings", icon: Settings },
-];
+import { motion, AnimatePresence } from "framer-motion";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { online } = useNetwork();
-  const { notificationCount, acknowledgeNotifications } = useRealtimeContext();
-  const { role, can } = usePermission();
+  const { notificationCount } = useRealtimeContext();
+  const { role, can: hasPermission, hasRole } = usePermission();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  // Compute accessible nav items based on user role
+  const accessibleGroups = useMemo(
+    () => getAccessibleNavGroups(role, hasPermission, hasRole),
+    [role, hasPermission, hasRole]
+  );
+
+  const accessibleMobileItems = useMemo(
+    () => getAccessibleMobileItems(role, hasPermission, hasRole),
+    [role, hasPermission, hasRole]
+  );
+
+  const accessibleQuickActions = useMemo(
+    () => getAccessibleQuickActions(role, hasPermission, hasRole),
+    [role, hasPermission, hasRole]
+  );
 
   // Responsive: close sidebar on mobile by default
   useEffect(() => {
@@ -91,143 +88,235 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return location.pathname === basePath || location.pathname.startsWith(basePath + "/");
   };
 
+  const isActiveGroup = (items: { path: string }[]) =>
+    items.some((item) => isActive(item.path));
+
+  const badgeColors: Record<string, string> = {
+    default: "bg-primary/10 text-primary border-primary/20",
+    destructive: "bg-destructive/10 text-destructive border-destructive/20",
+    warning: "bg-warning/10 text-warning border-warning/20",
+    success: "bg-success/10 text-success border-success/20",
+    info: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* ===== Mobile overlay ===== */}      {/* ===== Mobile bottom navigation bar ===== */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 safe-area-bottom mobile-only lg:hidden mobile-bottom-nav">
-        <div className="flex items-center justify-around px-2 py-1">
-          {navItems.slice(0, 5).map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl transition-all touch-target ${
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <div className="relative">
-                  <Icon className="w-5 h-5" />
-                  {item.path === "/incidents" && notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-destructive" />
-                  )}
-                </div>
-                <span className={`text-[9px] font-medium ${active ? "font-semibold" : ""}`}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      {/* ===== Mobile bottom navigation bar ===== */}
+      {accessibleMobileItems.length > 0 && (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 safe-area-bottom mobile-only lg:hidden mobile-bottom-nav">
+          <div className="flex items-center justify-around px-2 py-1">
+            {accessibleMobileItems.slice(0, 5).map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl transition-all touch-target ${
+                    active
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <div className="relative">
+                    <Icon className="w-5 h-5" />
+                    {(notificationCount > 0 && item.label === "Notifications") && (
+                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
+                        {notificationCount > 99 ? "99+" : notificationCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[9px] font-medium ${active ? "font-semibold" : ""}`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       {/* ===== Mobile overlay ===== */}
       {mobileSidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-        )}
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
 
       {/* ===== Sidebar ===== */}
       <aside className={`
-        fixed top-0 left-0 z-50 h-full bg-card border-r border-border/50
+        fixed top-0 left-0 z-50 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border
         transition-all duration-300 ease-in-out
         ${sidebarOpen || mobileSidebarOpen ? "w-[260px]" : "w-0 lg:w-[72px]"}
         ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         overflow-hidden
       `}>
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-border/50">
+          {/* ===== Logo / Header ===== */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
             <div
               className="flex items-center gap-3 cursor-pointer min-w-0"
               onClick={() => navigate("/dashboard")}
             >
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0 shadow-sm">
                 <Shield className="w-4 h-4 text-primary-foreground" />
               </div>
               {(sidebarOpen || mobileSidebarOpen) && (
                 <div className="truncate">
-                  <p className="text-sm font-bold truncate">TrafficWatch</p>
-                  <p className="text-[10px] text-muted-foreground truncate">AI Platform</p>
+                  <p className="text-sm font-bold truncate text-sidebar-foreground">TrafficWatch</p>
+                  <p className="text-[10px] text-sidebar-foreground/60 truncate">AI Platform</p>
                 </div>
               )}
             </div>
             <button
-              className="hidden lg:flex p-1.5 rounded-lg hover:bg-secondary transition-colors"
+              className="hidden lg:flex p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </button>
             <button
-              className="lg:hidden p-1.5 rounded-lg hover:bg-secondary transition-colors"
+              className="lg:hidden p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60"
               onClick={() => setMobileSidebarOpen(false)}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+          {/* ===== Navigation (scrollable) ===== */}
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-3">
+            {accessibleGroups.map((group) => {
+              const groupActive = isActiveGroup(group.items);
+              const isExpanded = expandedGroups[group.label] ?? groupActive;
+
               return (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setMobileSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    active
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
+                <div key={group.label} className="px-3 mb-2">
+                  {/* Group header (only show when sidebar is expanded) */}
                   {(sidebarOpen || mobileSidebarOpen) && (
-                    <span className="truncate flex-1 text-left">{item.label}</span>
+                    <button
+                      onClick={() =>
+                        setExpandedGroups((prev) => ({
+                          ...prev,
+                          [group.label]: !prev[group.label],
+                        }))
+                      }
+                      className="flex items-center justify-between w-full px-2 py-1.5 mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40 hover:text-sidebar-foreground/60 transition-colors"
+                    >
+                      <span>{group.label}</span>
+                      <ChevronDown
+                        className={`w-3 h-3 transition-transform ${
+                          isExpanded ? "rotate-0" : "-rotate-90"
+                        }`}
+                      />
+                    </button>
                   )}
-                  {(sidebarOpen || mobileSidebarOpen) && item.badge && (
-                    <Badge className={`clay-pill text-[10px] px-1.5 py-0 h-4 ${
-                      active ? "bg-primary-foreground/20 text-primary-foreground" : ""
-                    }`}>
-                      {item.badge}
-                    </Badge>
-                  )}
-                </button>
+
+                  {/* Collapsible group items */}
+                  <AnimatePresence initial={false}>
+                    {(isExpanded || !(sidebarOpen || mobileSidebarOpen)) && (
+                      <motion.div
+                        initial={false}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-0.5 overflow-hidden"
+                      >
+                        {group.items.map((item) => {
+                          const Icon = item.icon;
+                          const active = isActive(item.path);
+                          return (
+                            <button
+                              key={item.path}
+                              onClick={() => {
+                                navigate(item.path);
+                                setMobileSidebarOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                active
+                                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                              } ${!sidebarOpen && !mobileSidebarOpen ? "justify-center px-2" : ""}`}
+                              title={!sidebarOpen && !mobileSidebarOpen ? item.label : undefined}
+                            >
+                              <Icon className="w-4 h-4 shrink-0" />
+                              {(sidebarOpen || mobileSidebarOpen) && (
+                                <span className="truncate flex-1 text-left">{item.label}</span>
+                              )}
+                              {(sidebarOpen || mobileSidebarOpen) && item.badge && (
+                                <Badge
+                                  className={`badge-pill text-[9px] px-1.5 py-0 h-4 ${
+                                    badgeColors[item.badgeVariant || "default"]
+                                  }`}
+                                >
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               );
             })}
           </nav>
 
-          {/* User section */}
-          <div className="border-t border-border/50 p-3 space-y-2">
-            <div className={`flex items-center gap-3 px-3 py-2 rounded-xl ${sidebarOpen || mobileSidebarOpen ? "" : "justify-center"}`}>
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Shield className="w-4 h-4 text-primary" />
+          {/* ===== User Section ===== */}
+          <div className="border-t border-sidebar-border p-3 space-y-2">
+            {/* Quick Actions */}
+            {accessibleQuickActions.length > 0 && (sidebarOpen || mobileSidebarOpen) && (
+              <div className="mb-2 space-y-1">
+                {accessibleQuickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.path}
+                      onClick={() => navigate(action.path)}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-all"
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate flex-1 text-left">{action.label}</span>
+                      {action.badge && (
+                        <span className="w-4 h-4 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-primary-foreground">
+                          {action.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* User Info */}
+            <div className={`flex items-center gap-3 px-3 py-2 rounded-lg ${
+              sidebarOpen || mobileSidebarOpen ? "" : "justify-center"
+            }`}>
+              <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center shrink-0">
+                <Shield className="w-4 h-4 text-sidebar-accent-foreground" />
               </div>
               {(sidebarOpen || mobileSidebarOpen) && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">
+                  <p className="text-xs font-medium truncate text-sidebar-foreground">
                     {user?.profile?.full_name || "Officer"}
                   </p>
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    {user?.profile?.badge_number || "N/A"}
+                  <p className="text-[10px] text-sidebar-foreground/50 truncate">
+                    {user?.profile?.badge_number || ""}
+                    {user?.profile?.station ? ` · ${user.profile.station}` : ""}
                   </p>
                 </div>
               )}
             </div>
+
+            {/* Sign Out */}
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all"
             >
               <LogOut className="w-4 h-4 shrink-0" />
-              {(sidebarOpen || mobileSidebarOpen) && <span className="truncate">Sign Out</span>}
+              {(sidebarOpen || mobileSidebarOpen) && (
+                <span className="truncate">Sign Out</span>
+              )}
             </button>
           </div>
         </div>
@@ -236,39 +325,32 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* ===== Main Content ===== */}
       <div className={`transition-all duration-300 ${sidebarOpen ? "lg:ml-[260px]" : "lg:ml-[72px]"}`}>
         {/* ===== Top Bar ===== */}
-        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border/50">
+        <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur-xl">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <div className="flex items-center gap-3">
               <button
-                className="lg:hidden p-2 rounded-xl hover:bg-secondary transition-colors"
+                className="lg:hidden p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground"
                 onClick={() => setMobileSidebarOpen(true)}
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <h2 className="text-lg font-semibold hidden sm:block">
+              <h2 className="text-base font-semibold hidden sm:block text-foreground">
                 Traffic Operations
               </h2>
+              <div className="hidden sm:flex items-center gap-1.5 ml-2">
+                <div className={`status-dot ${online ? "active" : "error"}`} />
+                <span className={`text-[10px] font-medium ${online ? "text-success" : "text-destructive"}`}>
+                  {online ? "Online" : "Offline"}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Offline indicator */}
-              <div className="flex items-center gap-1.5">
-                <div className={`w-2 h-2 rounded-full ${online ? "bg-success" : "bg-destructive"}`} />
-                <span className={`text-xs hidden sm:inline ${online ? "text-success" : "text-destructive"}`}>
-                  {online ? "Online" : "Offline"}
-                </span>
-                {!online && (
-                  <Badge variant="outline" className="clay-pill text-[10px] px-1.5 py-0 h-4 bg-destructive/10 text-destructive border-destructive/20">
-                    Queued
-                  </Badge>
-                )}
-              </div>
-
               {/* Search */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="rounded-xl text-muted-foreground hover:text-foreground hidden sm:flex items-center gap-2"
+                className="rounded-lg text-muted-foreground hover:text-foreground hidden sm:flex items-center gap-2"
                 onClick={() => setSearchOpen(true)}
               >
                 <Search className="w-3.5 h-3.5" />
@@ -278,11 +360,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </kbd>
               </Button>
 
-              {/* Mobile search icon */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-xl sm:hidden"
+                className="rounded-lg sm:hidden"
                 onClick={() => setSearchOpen(true)}
               >
                 <Search className="w-4 h-4" />
@@ -291,8 +372,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {/* Notifications */}
               <NotificationPanel />
 
+              {/* New Incident (desktop) */}
               <Button
-                className="clay-btn rounded-xl hidden sm:flex"
+                className="rounded-lg hidden sm:flex shadow-sm"
                 size="sm"
                 onClick={() => navigate("/incidents/new")}
               >
