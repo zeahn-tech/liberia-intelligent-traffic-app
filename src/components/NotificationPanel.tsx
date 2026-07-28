@@ -229,7 +229,7 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[380px] sm:w-[420px] p-0 rounded-2xl shadow-xl border-border/50 max-h-[500px] flex flex-col"
+        className="w-[85vw] sm:w-[380px] md:w-[420px] p-0 rounded-2xl shadow-xl border-border/50 max-h-[70vh] sm:max-h-[500px] flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">

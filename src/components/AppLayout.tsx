@@ -62,6 +62,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // Responsive: close sidebar on mobile by default
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
   // Keyboard shortcut: Cmd+K / Ctrl+K for global search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,13 +93,44 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ===== Mobile overlay ===== */}      {/* ===== Mobile bottom navigation bar ===== */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 safe-area-bottom mobile-only lg:hidden mobile-bottom-nav">
+        <div className="flex items-center justify-around px-2 py-1">
+          {navItems.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-xl transition-all touch-target ${
+                  active
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <div className="relative">
+                  <Icon className="w-5 h-5" />
+                  {item.path === "/incidents" && notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-destructive" />
+                  )}
+                </div>
+                <span className={`text-[9px] font-medium ${active ? "font-semibold" : ""}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
       {/* ===== Mobile overlay ===== */}
       {mobileSidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      )}
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
 
       {/* ===== Sidebar ===== */}
       <aside className={`
@@ -266,7 +304,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* ===== Page Content ===== */}
-        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-20 lg:pb-8">
           {children}
         </main>
       </div>
