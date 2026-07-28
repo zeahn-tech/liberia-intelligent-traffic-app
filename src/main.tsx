@@ -29,6 +29,14 @@ const CitizenSafetyNotices = lazy(() => import("./pages/CitizenSafetyNotices.tsx
 const ReviewCitizenReports = lazy(() => import("./pages/ReviewCitizenReports.tsx"));
 const CommandCenter = lazy(() => import("./pages/CommandCenter.tsx"));
 const SearchResults = lazy(() => import("./pages/SearchResults.tsx"));
+const AIDetection = lazy(() => import("./pages/AIDetection.tsx"));
+const Vehicles = lazy(() => import("./pages/Vehicles.tsx"));
+const LicensePlates = lazy(() => import("./pages/LicensePlates.tsx"));
+const Reports = lazy(() => import("./pages/Reports.tsx"));
+const Analytics = lazy(() => import("./pages/Analytics.tsx"));
+const Notifications = lazy(() => import("./pages/Notifications.tsx"));
+const Users = lazy(() => import("./pages/Users.tsx"));
+const EvidenceUploadPage = lazy(() => import("./pages/EvidenceUploadPage.tsx"));
 const AuditDashboard = lazy(() => import("./pages/AuditDashboard.tsx"));
 const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
@@ -277,6 +285,87 @@ createRoot(document.getElementById("root")!).render(
                   </RequireAuth>
                 }
               />
+
+              {/* AI Detection */}
+              <Route
+                path="/ai-detection"
+                element={
+                  <RequireAuth requirePermission="run_ai_analysis" fallbackPath="/dashboard" showForbidden>
+                    <AIDetection />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Vehicles */}
+              <Route
+                path="/vehicles"
+                element={
+                  <RequireAuth requirePermission="view_all_incidents" fallbackPath="/dashboard" showForbidden>
+                    <Vehicles />
+                  </RequireAuth>
+                }
+              />
+
+              {/* License Plates */}
+              <Route
+                path="/license-plates"
+                element={
+                  <RequireAuth requirePermission="run_ai_analysis" fallbackPath="/dashboard" showForbidden>
+                    <LicensePlates />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Reports */}
+              <Route
+                path="/reports"
+                element={
+                  <RequireAuth requirePermission="view_reports" fallbackPath="/dashboard" showForbidden>
+                    <Reports />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Analytics */}
+              <Route
+                path="/analytics"
+                element={
+                  <RequireAuth requirePermission="view_analytics" fallbackPath="/dashboard" showForbidden>
+                    <Analytics />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Notifications */}
+              <Route
+                path="/notifications"
+                element={
+                  <RequireAuth>
+                    <Notifications />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Users */}
+              <Route
+                path="/users"
+                element={
+                  <RequireAuth requirePermission="view_users" fallbackPath="/dashboard" showForbidden>
+                    <Users />
+                  </RequireAuth>
+                }
+              />
+
+              {/* Evidence Upload */}
+              <Route
+                path="/evidence/upload"
+                element={
+                  <RequireAuth requirePermission="access_evidence" fallbackPath="/dashboard" showForbidden>
+                    <EvidenceUploadPage />
+                  </RequireAuth>
+                }
+              />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
