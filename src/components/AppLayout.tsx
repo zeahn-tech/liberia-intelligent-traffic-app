@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useNetwork } from "@/hooks/use-network";
+import { useRealtimeContext } from "@/lib/realtime-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
@@ -53,6 +54,7 @@ const navItems: NavItem[] = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { online } = useNetwork();
+  const { notificationCount, acknowledgeNotifications } = useRealtimeContext();
   const { role, can } = usePermission();
   const navigate = useNavigate();
   const location = useLocation();

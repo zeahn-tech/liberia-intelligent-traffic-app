@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ import {
   BellRing,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
+import { useRealtimeContext } from "@/lib/realtime-context";
 import { supabase } from "@/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -117,14 +119,22 @@ function formatTimeAgo(dateStr: string): string {
 export function NotificationPanel({ enableLive = true }: NotificationPanelProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const {
+    unreadCount,
+    latestNotification,
+    loading,
+    ready,
+    clearLatest,
+    refreshCount,
+  } = useRealtimeNotifications();
+  const { acknowledgeNotifications } = useRealtimeContext();
   const [notifications, setNotifications] = useState<OfficerNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [open, setOpen] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     if (!user?.id) return;
-    setLoading(true);
+    setFetching(true);
     try {
       const { data, error } = await supabase
         .from("officer_notifications")
@@ -136,12 +146,11 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
 
       if (!error && data) {
         setNotifications(data as OfficerNotification[]);
-        setUnreadCount(data.filter((n: OfficerNotification) => !n.is_read).length);
       }
     } catch (err) {
       console.debug("Load notifications:", err);
     } finally {
-      setLoading(false);
+      setFetching(false);
     }
   }, [user?.id]);
 
@@ -150,12 +159,12 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
     if (open) loadNotifications();
   }, [open, loadNotifications]);
 
-  // Poll every 30 seconds if panel is open
+  // Refresh notification list when a new real-time notification arrives
   useEffect(() => {
-    if (!open || !enableLive) return;
-    const interval = setInterval(loadNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [open, enableLive, loadNotifications]);
+    if (latestNotification) {
+      loadNotifications();
+    }
+  }, [latestNotification, loadNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -163,7 +172,7 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      refreshCount();
     } catch { /* silent */ }
   };
 
@@ -177,8 +186,9 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
         )
       );
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
+      acknowledgeNotifications();
       toast.success("All notifications marked as read");
+      refreshCount();
     } catch { /* silent */ }
   };
 
@@ -256,7 +266,7 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
 
         {/* Notifications list */}
         <div className="flex-1 overflow-y-auto max-h-[380px]">
-          {loading ? (
+          {fetching && notifications.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
