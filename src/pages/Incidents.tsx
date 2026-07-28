@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,8 @@ export default function Incidents() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [geoFilter, setGeoFilter] = useState<GeoFilterState>(geoFilterFromParams(searchParams));
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const incidents = [
     {
@@ -155,6 +157,8 @@ export default function Incidents() {
     title: `${inc.type} - ${inc.plate}`,
     severity: inc.severity as any,
   }));
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredIncidents.length / itemsPerPage)), [filteredIncidents.length, itemsPerPage]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -399,16 +403,28 @@ export default function Incidents() {
           </Card>
         )}
 
-        {/* Pagination (placeholder) */}
+        {/* Pagination */}
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
             Showing {filteredIncidents.length} of {incidents.length} incidents
           </p>
           <div className="flex gap-1">
-            <Button variant="outline" size="sm" className="rounded-xl" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              disabled={currentPage <= 1 || filteredIncidents.length === 0}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm" className="rounded-xl" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              disabled={currentPage >= totalPages || filteredIncidents.length === 0}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
               Next
             </Button>
           </div>

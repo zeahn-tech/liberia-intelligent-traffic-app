@@ -1,10 +1,19 @@
+import { useState, useCallback } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, CheckCheck, AlertTriangle, Info, AlertCircle, BellOff } from "lucide-react";
+import { Bell, CheckCheck, BellOff } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Notifications() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const markAllRead = useCallback(() => {
+    setUnreadCount(0);
+    toast.success("All notifications marked as read");
+  }, []);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -16,12 +25,18 @@ export default function Notifications() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Notifications</h1>
-                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">0 unread</Badge>
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">{unreadCount} unread</Badge>
               </div>
               <p className="text-sm text-muted-foreground">System alerts and updates</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            disabled={unreadCount === 0}
+            onClick={markAllRead}
+          >
             <CheckCheck className="w-4 h-4 mr-1.5" />
             Mark All Read
           </Button>
