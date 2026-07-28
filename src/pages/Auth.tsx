@@ -479,9 +479,14 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               </div>
             </div>
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
-                <BadgeAlert className="w-4 h-4 shrink-0" />
-                {error}
+              <div
+                className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm"
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+              >
+                <BadgeAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
+                <span>{error}</span>
               </div>
             )}
           </CardContent>
@@ -490,13 +495,14 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               type="submit"
               className="w-full clay-btn rounded-xl h-11"
               disabled={isSubmitting}
+              aria-label={isSubmitting ? "Signing in..." : "Sign in to your account"}
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
               ) : (
-                <LogIn className="w-4 h-4 mr-2" />
+                <LogIn className="w-4 h-4 mr-2" aria-hidden="true" />
               )}
-              Sign In
+              {isSubmitting ? "Signing In..." : "Sign In"}
             </Button>
           </CardFooter>
         </form>
@@ -627,9 +633,14 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             </Select>
           </div>
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm">
-              <BadgeAlert className="w-4 h-4 shrink-0" />
-              {error}
+            <div
+              className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-sm"
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
+              <BadgeAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
             </div>
           )}
         </CardContent>
@@ -638,13 +649,14 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             type="submit"
             className="w-full clay-btn rounded-xl h-11"
             disabled={isSubmitting}
+            aria-label={isSubmitting ? "Creating account..." : "Create your TrafficWatch AI account"}
           >
             {isSubmitting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
             ) : (
-              <UserPlus className="w-4 h-4 mr-2" />
+              <UserPlus className="w-4 h-4 mr-2" aria-hidden="true" />
             )}
-            Create Account
+            {isSubmitting ? "Creating Account..." : "Create Account"}
           </Button>
           <p className="text-xs text-muted-foreground text-center">
             By signing up, you agree to the terms of service and privacy policy.
@@ -669,8 +681,15 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       <nav className="sticky top-0 z-50 clay-card bg-card/80 backdrop-blur-xl border-b border-border/50 mx-0 rounded-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => navigate("/")}
+              role="button"
+              tabIndex={0}
+              aria-label="Go to home page"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate("/"); } }}
+            >
+              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center" aria-hidden="true">
                 <Shield className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-semibold text-sm">TrafficWatch AI</span>
@@ -680,8 +699,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               size="sm"
               className="rounded-xl"
               onClick={() => navigate("/")}
+              aria-label="Go back to home page"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ArrowLeft className="w-4 h-4 mr-1" aria-hidden="true" />
               Back
             </Button>
           </div>

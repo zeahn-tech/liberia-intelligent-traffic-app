@@ -213,19 +213,25 @@ export function NotificationPanel({ enableLive = true }: NotificationPanelProps)
           variant="ghost"
           size="icon"
           className="rounded-xl relative"
+          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
         >
           {unreadCount > 0 ? (
             <>
-              <Bell className="w-4 h-4" />
-              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
+              <Bell className="w-4 h-4" aria-hidden="true" />
+              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground" aria-hidden="true">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             </>
           ) : (
-            <BellOff className="w-4 h-4 text-muted-foreground" />
+            <BellOff className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
           )}
         </Button>
       </PopoverTrigger>
+
+      {/* Live region for screen reader updates */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {unreadCount > 0 ? `You have ${unreadCount} unread notifications` : "No unread notifications"}
+      </div>
       <PopoverContent
         align="end"
         sideOffset={8}

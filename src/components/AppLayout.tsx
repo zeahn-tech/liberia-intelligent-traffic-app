@@ -101,9 +101,21 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Skip-to-content link for keyboard users */}
+      <a
+        href="#main-content"
+        className="skip-to-content focus:top-4 focus:left-4"
+      >
+        Skip to main content
+      </a>
+
       {/* ===== Mobile bottom navigation bar ===== */}
       {accessibleMobileItems.length > 0 && (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 safe-area-bottom mobile-only lg:hidden mobile-bottom-nav">
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/50 safe-area-bottom mobile-only lg:hidden mobile-bottom-nav"
+          aria-label="Mobile navigation"
+          role="navigation"
+        >
           <div className="flex items-center justify-around px-2 py-1">
             {accessibleMobileItems.slice(0, 5).map((item) => {
               const Icon = item.icon;
@@ -117,11 +129,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
+                  aria-label={`${item.label}${active ? " (current page)" : ""}`}
+                  aria-current={active ? "page" : undefined}
                 >
                   <div className="relative">
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-5 h-5" aria-hidden="true" />
                     {(notificationCount > 0 && item.label === "Notifications") && (
-                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">
+                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground" aria-label={`${notificationCount} unread notifications`}>
                         {notificationCount > 99 ? "99+" : notificationCount}
                       </span>
                     )}
@@ -145,21 +159,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* ===== Sidebar ===== */}
-      <aside className={`
-        fixed top-0 left-0 z-50 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border
-        transition-all duration-300 ease-in-out
-        ${sidebarOpen || mobileSidebarOpen ? "w-[260px]" : "w-0 lg:w-[72px]"}
-        ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-        overflow-hidden
-      `}>
+      <aside
+        className={`
+          fixed top-0 left-0 z-50 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border
+          transition-all duration-300 ease-in-out
+          ${sidebarOpen || mobileSidebarOpen ? "w-[260px]" : "w-0 lg:w-[72px]"}
+          ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          overflow-hidden
+        `}
+        aria-label="Main navigation"
+        role="navigation"
+      >
         <div className="flex flex-col h-full">
           {/* ===== Logo / Header ===== */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-sidebar-border" role="banner">
             <div
               className="flex items-center gap-3 cursor-pointer min-w-0"
               onClick={() => navigate("/dashboard")}
+              role="button"
+              tabIndex={0}
+              aria-label="Go to dashboard"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate("/dashboard"); } }}
             >
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0 shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0 shadow-sm" aria-hidden="true">
                 <Shield className="w-4 h-4 text-primary-foreground" />
               </div>
               {(sidebarOpen || mobileSidebarOpen) && (
@@ -172,19 +194,21 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               className="hidden lg:flex p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             >
-              {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              {sidebarOpen ? <ChevronLeft className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
             </button>
             <button
               className="lg:hidden p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60"
               onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Close navigation menu"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
           {/* ===== Navigation (scrollable) ===== */}
-          <nav className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-3">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide py-3" role="menubar" aria-label="Navigation groups">
             {accessibleGroups.map((group) => {
               const groupActive = isActiveGroup(group.items);
               const isExpanded = expandedGroups[group.label] ?? groupActive;
@@ -237,8 +261,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                                   : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                               } ${!sidebarOpen && !mobileSidebarOpen ? "justify-center px-2" : ""}`}
                               title={!sidebarOpen && !mobileSidebarOpen ? item.label : undefined}
+                              aria-label={item.label}
+                              aria-current={active ? "page" : undefined}
+                              role="menuitem"
                             >
-                              <Icon className="w-4 h-4 shrink-0" />
+                              <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                               {(sidebarOpen || mobileSidebarOpen) && (
                                 <span className="truncate flex-1 text-left">{item.label}</span>
                               )}
@@ -260,7 +287,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
               );
             })}
-          </nav>
+          </div>
 
           {/* ===== User Section ===== */}
           <div className="border-t border-sidebar-border p-3 space-y-2">
@@ -312,27 +339,32 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               onClick={handleSignOut}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all"
+              aria-label="Sign out of TrafficWatch AI"
             >
-              <LogOut className="w-4 h-4 shrink-0" />
+              <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" />
               {(sidebarOpen || mobileSidebarOpen) && (
                 <span className="truncate">Sign Out</span>
               )}
             </button>
           </div>
         </div>
-      </aside>
-
-      {/* ===== Main Content ===== */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? "lg:ml-[260px]" : "lg:ml-[72px]"}`}>
+      </aside>        {/* ===== Main Content ===== */}
+      <div
+        className={`transition-all duration-300 ${sidebarOpen ? "lg:ml-[260px]" : "lg:ml-[72px]"}`}
+        id="main-content"
+        role="main"
+      >
         {/* ===== Top Bar ===== */}
-        <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur-xl" role="banner">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <div className="flex items-center gap-3">
               <button
                 className="lg:hidden p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground"
                 onClick={() => setMobileSidebarOpen(true)}
+                aria-label="Open navigation menu"
+                aria-expanded={mobileSidebarOpen}
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5" aria-hidden="true" />
               </button>
               <h2 className="text-base font-semibold hidden sm:block text-foreground">
                 Traffic Operations
@@ -352,10 +384,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 size="sm"
                 className="rounded-lg text-muted-foreground hover:text-foreground hidden sm:flex items-center gap-2"
                 onClick={() => setSearchOpen(true)}
+                aria-label="Search incidents, plates, evidence (Cmd+K)"
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-3.5 h-3.5" aria-hidden="true" />
                 <span className="text-xs">Search</span>
-                <kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono text-muted-foreground hidden md:inline-flex items-center gap-0.5">
+                <kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono text-muted-foreground hidden md:inline-flex items-center gap-0.5" aria-hidden="true">
                   <Command className="w-2.5 h-2.5" />K
                 </kbd>
               </Button>
@@ -365,8 +398,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 size="icon"
                 className="rounded-lg sm:hidden"
                 onClick={() => setSearchOpen(true)}
+                aria-label="Open search"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-4 h-4" aria-hidden="true" />
               </Button>
 
               {/* Notifications */}
@@ -377,8 +411,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 className="rounded-lg hidden sm:flex shadow-sm"
                 size="sm"
                 onClick={() => navigate("/incidents/new")}
+                aria-label="Create new incident report"
               >
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
                 New Incident
               </Button>
             </div>

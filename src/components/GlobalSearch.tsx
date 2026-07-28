@@ -277,12 +277,17 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
   }, [open, onOpenChange]);
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      aria-label="Global search"
+    >
       <CommandInput
         placeholder="Search incidents, plates, people, evidence..."
         value={query}
         onValueChange={setQuery}
         autoFocus
+        aria-label="Search query"
       />
 
       <CommandList className="max-h-[400px]">
@@ -301,8 +306,9 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center justify-center py-6">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <div className="flex items-center justify-center py-6" role="status" aria-live="polite">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
+            <span className="sr-only">Searching...</span>
           </div>
         )}
 
@@ -359,8 +365,9 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
               <CommandItem
                 onSelect={handleSearchClick}
                 className="text-center text-xs text-primary justify-center gap-2 py-3"
+                aria-label={`View all ${total} search results`}
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-3.5 h-3.5" aria-hidden="true" />
                 View all {total} results
               </CommandItem>
             )}
@@ -442,12 +449,13 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
         {/* Footer hint */}
         <div className="border-t border-border/50 px-3 py-2 text-[10px] text-muted-foreground flex items-center justify-between">
           <span>Search across incidents, plates, evidence & more</span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" aria-hidden="true">
             <kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono">ESC</kbd>
             <span>close</span>
             <kbd className="px-1 py-0.5 rounded bg-secondary text-[9px] font-mono ml-2">↑↓</kbd>
             <span>navigate</span>
           </span>
+          <span className="sr-only">Press Escape to close, use arrow keys to navigate results</span>
         </div>
       </CommandList>
     </CommandDialog>
