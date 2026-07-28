@@ -1,14 +1,20 @@
-/* ===== TRAFFICWATCH AI — CLAYMORPHISM THEME ===== */
+/* ============================================================
+   TRAFFICWATCH AI — PREMIUM GOVERNMENT-GRADE THEME
+   Professional Blue · White · Black · Controlled Red Accents
+   ============================================================ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
 
-/* ===== CLAYMORPHISM DESIGN TOKENS ===== */
+/* ===== DESIGN TOKENS ===== */
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -41,118 +47,131 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-safe: var(--safe);
-  --color-warning: var(--warning);
   --color-info: var(--info);
+  --color-warning: var(--warning);
   --color-success: var(--success);
+  --color-danger: var(--danger);
   --font-family: var(--font-sans);
-  --clay-shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05), inset 0 -2px 0 rgb(0 0 0 / 0.02);
-  --clay-shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04), inset 0 -3px 0 rgb(0 0 0 / 0.02);
-  --clay-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04), inset 0 -4px 0 rgb(0 0 0 / 0.02);
-  --clay-shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.12), inset 0 -4px 0 rgb(0 0 0 / 0.02);
-  --clay-inset: inset 0 2px 4px rgb(0 0 0 / 0.04);
-  --clay-inset-sm: inset 0 1px 2px rgb(0 0 0 / 0.03);
+
+  /* Premium shadow system */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --shadow-dropdown: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 8px -6px rgb(0 0 0 / 0.04);
+  --shadow-modal: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+  --shadow-btn: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-btn-hover: 0 2px 6px -1px rgb(0 0 0 / 0.08);
+  --shadow-inset: inset 0 1px 2px 0 rgb(0 0 0 / 0.04);
 }
 
-/* ===== COSMETIC / SEMANTIC TOKENS ===== */
+/* ===== LIGHT MODE (default) ===== */
 :root {
-  --radius: 1rem;
-  --font-sans: "Inter", "SF Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 0.75rem;
+  --font-sans: "Inter", "SF Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Base — soft matte off-white/pastel */
-  --background: oklch(0.97 0.01 85);
-  --foreground: oklch(0.22 0.02 260);
+  /* Background — clean white */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0.02 260);
 
-  /* Card — raised clay surface */
-  --card: oklch(0.99 0.005 85);
-  --card-foreground: oklch(0.22 0.02 260);
+  /* Card — white with subtle separation */
+  --card: oklch(0.995 0 0);
+  --card-foreground: oklch(0.15 0.02 260);
 
-  /* Popover */
-  --popover: oklch(0.99 0.005 85);
-  --popover-foreground: oklch(0.22 0.02 260);
+  /* Popover — white with elevation */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 260);
 
-  /* Primary — deep navy blue (police authority) */
-  --primary: oklch(0.28 0.06 260);
-  --primary-foreground: oklch(0.96 0.01 85);
+  /* Primary — professional medium blue (NOT too dark) */
+  --primary: oklch(0.52 0.12 260);
+  --primary-foreground: oklch(0.98 0 0);
 
-  /* Secondary — warm clay beige */
-  --secondary: oklch(0.93 0.015 80);
-  --secondary-foreground: oklch(0.28 0.02 260);
+  /* Secondary — light cool gray */
+  --secondary: oklch(0.95 0.01 260);
+  --secondary-foreground: oklch(0.25 0.02 260);
 
-  /* Muted */
-  --muted: oklch(0.94 0.01 85);
+  /* Muted — very light gray */
+  --muted: oklch(0.96 0.005 260);
   --muted-foreground: oklch(0.55 0.02 260);
 
-  /* Accent — traffic amber */
-  --accent: oklch(0.85 0.12 80);
-  --accent-foreground: oklch(0.28 0.02 260);
+  /* Accent — lighter blue for highlights */
+  --accent: oklch(0.9 0.03 260);
+  --accent-foreground: oklch(0.25 0.02 260);
 
-  /* Destructive — alert red */
-  --destructive: oklch(0.58 0.18 25);
-  --destructive-foreground: oklch(0.96 0.01 85);
+  /* Destructive — controlled red (not overpowering) */
+  --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.98 0 0);
 
-  /* Borders — subtle clay seams */
-  --border: oklch(0.88 0.01 85 / 0.6);
-  --input: oklch(0.88 0.01 85 / 0.6);
-  --ring: oklch(0.28 0.06 260 / 0.3);
+  /* Borders — visible but subtle */
+  --border: oklch(0.88 0.01 260 / 0.65);
+  --input: oklch(0.85 0.01 260 / 0.7);
+  --ring: oklch(0.52 0.12 260 / 0.35);
 
-  /* Chart colors — pastel traffic palette */
-  --chart-1: oklch(0.58 0.18 25);
-  --chart-2: oklch(0.75 0.15 80);
-  --chart-3: oklch(0.55 0.12 200);
-  --chart-4: oklch(0.65 0.1 150);
-  --chart-5: oklch(0.7 0.14 300);
+  /* Chart colors — professional, accessible palette */
+  --chart-1: oklch(0.52 0.12 260);    /* Primary blue */
+  --chart-2: oklch(0.65 0.15 200);    /* Teal */
+  --chart-3: oklch(0.55 0.18 25);     /* Red */
+  --chart-4: oklch(0.7 0.15 85);      /* Amber */
+  --chart-5: oklch(0.6 0.12 150);     /* Green */
 
-  /* Sidebar — slightly deeper clay */
-  --sidebar: oklch(0.95 0.01 85);
-  --sidebar-foreground: oklch(0.22 0.02 260);
-  --sidebar-primary: oklch(0.28 0.06 260);
-  --sidebar-primary-foreground: oklch(0.96 0.01 85);
-  --sidebar-accent: oklch(0.85 0.12 80);
-  --sidebar-accent-foreground: oklch(0.22 0.02 260);
-  --sidebar-border: oklch(0.88 0.01 85 / 0.6);
-  --sidebar-ring: oklch(0.28 0.06 260 / 0.3);
+  /* Sidebar — dark professional navy */
+  --sidebar: oklch(0.18 0.025 260);
+  --sidebar-foreground: oklch(0.88 0.01 260);
+  --sidebar-primary: oklch(0.55 0.12 260);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.28 0.04 260);
+  --sidebar-accent-foreground: oklch(0.88 0.01 260);
+  --sidebar-border: oklch(0.25 0.02 260 / 0.5);
+  --sidebar-ring: oklch(0.55 0.12 260 / 0.3);
 
   /* Semantic status colors */
-  --safe: oklch(0.65 0.12 150);
-  --warning: oklch(0.75 0.15 80);
-  --info: oklch(0.6 0.1 200);
-  --success: oklch(0.6 0.12 145);
+  --info: oklch(0.55 0.1 240);
+  --warning: oklch(0.7 0.15 80);
+  --success: oklch(0.58 0.14 145);
+  --danger: oklch(0.55 0.18 25);
 }
 
-/* ===== DARK MODE — deep clay ===== */
+/* ===== DARK MODE ===== */
 .dark {
-  --background: oklch(0.18 0.01 260);
-  --foreground: oklch(0.93 0.01 85);
-  --card: oklch(0.22 0.015 260);
-  --card-foreground: oklch(0.93 0.01 85);
-  --popover: oklch(0.22 0.015 260);
-  --popover-foreground: oklch(0.93 0.01 85);
-  --primary: oklch(0.55 0.08 260);
-  --primary-foreground: oklch(0.15 0.01 260);
-  --secondary: oklch(0.28 0.02 260);
-  --secondary-foreground: oklch(0.93 0.01 85);
-  --muted: oklch(0.26 0.015 260);
+  --background: oklch(0.13 0.015 260);
+  --foreground: oklch(0.92 0.01 260);
+
+  --card: oklch(0.17 0.015 260);
+  --card-foreground: oklch(0.92 0.01 260);
+
+  --popover: oklch(0.17 0.015 260);
+  --popover-foreground: oklch(0.92 0.01 260);
+
+  --primary: oklch(0.6 0.14 260);
+  --primary-foreground: oklch(0.13 0.015 260);
+
+  --secondary: oklch(0.22 0.015 260);
+  --secondary-foreground: oklch(0.92 0.01 260);
+
+  --muted: oklch(0.2 0.01 260);
   --muted-foreground: oklch(0.6 0.02 260);
-  --accent: oklch(0.4 0.08 80);
-  --accent-foreground: oklch(0.93 0.01 85);
-  --destructive: oklch(0.5 0.16 25);
-  --destructive-foreground: oklch(0.93 0.01 85);
-  --border: oklch(0.3 0.01 260 / 0.6);
-  --input: oklch(0.3 0.01 260 / 0.6);
-  --ring: oklch(0.55 0.08 260 / 0.3);
-  --sidebar: oklch(0.22 0.015 260);
-  --sidebar-foreground: oklch(0.93 0.01 85);
-  --sidebar-primary: oklch(0.55 0.08 260);
-  --sidebar-primary-foreground: oklch(0.15 0.01 260);
-  --sidebar-accent: oklch(0.35 0.06 80);
-  --sidebar-accent-foreground: oklch(0.93 0.01 85);
-  --sidebar-border: oklch(0.3 0.01 260 / 0.6);
-  --sidebar-ring: oklch(0.55 0.08 260 / 0.3);
-  --safe: oklch(0.55 0.1 150);
-  --warning: oklch(0.65 0.12 80);
-  --info: oklch(0.5 0.08 200);
-  --success: oklch(0.5 0.1 145);
+
+  --accent: oklch(0.28 0.04 260);
+  --accent-foreground: oklch(0.92 0.01 260);
+
+  --destructive: oklch(0.52 0.18 25);
+  --destructive-foreground: oklch(0.95 0.01 260);
+
+  --border: oklch(0.28 0.015 260 / 0.6);
+  --input: oklch(0.28 0.015 260 / 0.6);
+  --ring: oklch(0.6 0.14 260 / 0.35);
+
+  --sidebar: oklch(0.1 0.01 260);
+  --sidebar-foreground: oklch(0.88 0.01 260);
+  --sidebar-primary: oklch(0.6 0.14 260);
+  --sidebar-primary-foreground: oklch(0.13 0.015 260);
+  --sidebar-accent: oklch(0.22 0.02 260);
+  --sidebar-accent-foreground: oklch(0.88 0.01 260);
+  --sidebar-border: oklch(0.22 0.015 260 / 0.5);
+  --sidebar-ring: oklch(0.6 0.14 260 / 0.3);
+
+  --safe: oklch(0.5 0.12 145);
+  --warning: oklch(0.6 0.14 80);
+  --info: oklch(0.5 0.1 240);
+  --success: oklch(0.5 0.12 145);
 }
 
 /* ===== BASE STYLES ===== */
@@ -160,104 +179,236 @@
   * {
     @apply border-border;
   }
+
   html {
     font-family: var(--font-family);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-family);
+    line-height: 1.6;
   }
+
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
 
-  /* Claymorphism button base style */
-  .clay-btn {
-    border-radius: var(--radius);
-    box-shadow: var(--clay-shadow-md);
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* ===== Focus states (WCAG compliant) ===== */
+  *:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
-  .clay-btn:hover {
+
+  /* ===== Selection ===== */
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  /* ===== Premium Button Base ===== */
+  .btn-premium {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-btn);
+    transition: all 0.15s ease;
+    font-weight: 600;
+  }
+  .btn-premium:hover {
+    box-shadow: var(--shadow-btn-hover);
     transform: translateY(-1px);
-    box-shadow: var(--clay-shadow-lg);
   }
-  .clay-btn:active {
-    transform: translateY(1px);
-    box-shadow: var(--clay-inset);
-  }
-
-  /* Claymorphism card style */
-  .clay-card {
-    border-radius: calc(var(--radius) + 0.25rem);
-    box-shadow: var(--clay-shadow-md);
-    transition: all 0.25s ease-out;
-  }
-  .clay-card:hover {
-    box-shadow: var(--clay-shadow-lg);
-    transform: translateY(-2px);
+  .btn-premium:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-inset);
   }
 
-  /* Inset clay (for inputs, depressed areas) */
-  .clay-inset {
-    border-radius: calc(var(--radius) - 0.25rem);
-    box-shadow: var(--clay-inset), var(--clay-inset-sm);
+  /* ===== Premium Card Base ===== */
+  .card-premium {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card-premium:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
   }
 
-  /* Pill / badge style */
-  .clay-pill {
+  /* ===== Glassmorphism (used sparingly) ===== */
+  .glass-premium {
+    background: oklch(1 0 0 / 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(0.88 0.01 260 / 0.3);
+    box-shadow: var(--shadow-card);
+  }
+  .dark .glass-premium {
+    background: oklch(0.17 0.015 260 / 0.6);
+    border: 1px solid oklch(0.28 0.015 260 / 0.3);
+  }
+
+  /* ===== Status Badge Pills ===== */
+  .badge-pill {
     border-radius: 9999px;
-    box-shadow: var(--clay-shadow-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.125rem 0.625rem;
+    line-height: 1.4;
   }
 
-  /* Soft glow for AI / active states */
-  .clay-glow {
-    box-shadow: var(--clay-shadow-md), 0 0 20px -5px var(--ring);
+  /* ===== Status Dots ===== */
+  .status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
   }
+  .status-dot.active { background-color: var(--success); }
+  .status-dot.pending { background-color: var(--warning); }
+  .status-dot.error { background-color: var(--destructive); }
+  .status-dot.offline { background-color: var(--muted-foreground); }
 
-  /* Map container fix */
+  /* ===== Map Container ===== */
   .leaflet-container {
-    border-radius: var(--radius);
-    box-shadow: var(--clay-shadow-md);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
     z-index: 0;
+    border: 1px solid var(--border);
+  }
+  .leaflet-popup-content-wrapper {
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-dropdown) !important;
+    padding: 0 !important;
+    border: 1px solid var(--border);
+  }
+  .leaflet-popup-content {
+    margin: 0 !important;
+    min-width: 200px;
+  }
+
+  /* ===== Clean Data Tables ===== */
+  .table-premium {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+  }
+  .table-premium thead th {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    background: var(--muted);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .table-premium tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s ease;
+  }
+  .table-premium tbody tr:last-child {
+    border-bottom: none;
+  }
+  .table-premium tbody tr:hover {
+    background: var(--secondary);
+  }
+  .table-premium tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+  }
+
+  /* ===== KPI Metric Cards ===== */
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.2s ease;
+  }
+  .kpi-card:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  .kpi-card .kpi-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .kpi-card .kpi-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-top: 0.25rem;
+  }
+  .kpi-card .kpi-change {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    margin-top: 0.375rem;
+  }
+  .kpi-card .kpi-change.positive { color: var(--success); }
+  .kpi-card .kpi-change.negative { color: var(--destructive); }
+  .kpi-card .kpi-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== Section Headers ===== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .section-header h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+  }
+  .section-header svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--primary);
   }
 }
 
-/* Leaflet popup styling */
-.leaflet-popup-content-wrapper {
-  border-radius: var(--radius) !important;
-  box-shadow: var(--clay-shadow-md) !important;
-  padding: 0 !important;
-}
-.leaflet-popup-content {
-  margin: 0 !important;
-  min-width: 200px;
-}
-
-/* Scrollbar styling */
+/* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.8 0.01 85 / 0.4);
+  background: oklch(0.75 0.01 260 / 0.35);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.7 0.01 85 / 0.6);
+  background: oklch(0.65 0.01 260 / 0.5);
 }
 
-/* Loading shimmer */
+/* ===== LOADING SHIMMER ===== */
 .shimmer {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    oklch(0.9 0.01 85 / 0.5) 50%,
+    oklch(0.92 0.01 260 / 0.4) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -268,14 +419,17 @@
   100% { background-position: -200% 0; }
 }
 
-/* ===== PRINT STYLES ===== */
+/* ===== PRINT ===== */
 @media print {
   .no-print { display: none !important; }
   .print-only { display: block !important; }
   body { background: white !important; color: black !important; }
+  * { box-shadow: none !important; }
 }
 
-/* ===== RESPONSIVE UTILITIES ===== */
+/* ============================================================
+   RESPONSIVE UTILITIES (preserved from v7.5)
+   ============================================================ */
 
 /* Touch-friendly targets (minimum 44x44px) */
 .touch-target {
@@ -288,18 +442,10 @@
 
 /* Safe area insets (iOS notch, Android status bar) */
 @supports (padding: env(safe-area-inset-bottom)) {
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  .safe-area-left {
-    padding-left: env(safe-area-inset-left);
-  }
-  .safe-area-right {
-    padding-right: env(safe-area-inset-right);
-  }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-top { padding-top: env(safe-area-inset-top); }
+  .safe-area-left { padding-left: env(safe-area-inset-left); }
+  .safe-area-right { padding-right: env(safe-area-inset-right); }
 }
 
 /* Hide scrollbar but keep scrolling */
@@ -307,9 +453,7 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* Responsive container padding */
 .responsive-padding {
@@ -317,7 +461,7 @@
   padding-right: clamp(0.75rem, 4vw, 2rem);
 }
 
-/* Large command-center screen optimizations */
+/* Custom media queries for responsive utilities */
 @custom-media --command-center (min-width: 1920px);
 @custom-media --large-desktop (min-width: 1600px);
 @custom-media --desktop (min-width: 1024px);
@@ -327,33 +471,17 @@
 
 /* Command-center: maximized content area */
 @media (min-width: 1920px) {
-  .cmd-max-w {
-    max-width: 100% !important;
-    padding-left: 3rem;
-    padding-right: 3rem;
-  }
-  .cmd-grid-4 {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-  .cmd-grid-6 {
-    grid-template-columns: repeat(6, 1fr) !important;
-  }
-  .cmd-text-lg {
-    font-size: 1.125rem !important;
-  }
-  .cmd-chart-xl {
-    min-height: 400px !important;
-  }
+  .cmd-max-w { max-width: 100% !important; padding-left: 3rem; padding-right: 3rem; }
+  .cmd-grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
+  .cmd-grid-6 { grid-template-columns: repeat(6, 1fr) !important; }
+  .cmd-text-lg { font-size: 1.125rem !important; }
+  .cmd-chart-xl { min-height: 400px !important; }
 }
 
 /* Large desktop: wider grids */
 @media (min-width: 1600px) and (max-width: 1919px) {
-  .lgd-max-w {
-    max-width: 90rem !important;
-  }
-  .lgd-grid-5 {
-    grid-template-columns: repeat(5, 1fr) !important;
-  }
+  .lgd-max-w { max-width: 90rem !important; }
+  .lgd-grid-5 { grid-template-columns: repeat(5, 1fr) !important; }
 }
 
 /* Mobile: bottom safe area for navigation */
@@ -361,48 +489,66 @@
   .mobile-bottom-nav {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
   }
-  .mobile-full-width {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  .mobile-stack {
-    flex-direction: column !important;
-  }
-  .mobile-hide {
-    display: none !important;
-  }
-  .mobile-show {
-    display: flex !important;
-  }
+  .mobile-full-width { width: 100% !important; max-width: 100% !important; }
+  .mobile-stack { flex-direction: column !important; }
+  .mobile-hide { display: none !important; }
+  .mobile-show { display: flex !important; }
 }
 
 /* Small mobile: extra compact */
 @media (max-width: 380px) {
-  .sm-mobile-compact {
-    padding: 0.5rem !important;
-    gap: 0.5rem !important;
-  }
-  .sm-mobile-text-sm {
-    font-size: 0.75rem !important;
-  }
+  .sm-mobile-compact { padding: 0.5rem !important; gap: 0.5rem !important; }
+  .sm-mobile-text-sm { font-size: 0.75rem !important; }
 }
 
-/* Desktop-only elements */
+/* Desktop-only / Mobile-only elements */
 @media (min-width: 768px) {
-  .desktop-only {
-    display: revert;
-  }
-  .mobile-only {
-    display: none !important;
-  }
+  .desktop-only { display: revert; }
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: revert; }
 }
 
-/* Mobile-only elements */
-@media (max-width: 767px) {
-  .desktop-only {
-    display: none !important;
-  }
-  .mobile-only {
-    display: revert;
-  }
+/* ============================================================
+   BACKWARDS COMPATIBILITY — Old claymorphism classes still work
+   ============================================================ */
+.clay-btn {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-btn);
+  transition: all 0.15s ease;
+  font-weight: 600;
+}
+.clay-btn:hover {
+  box-shadow: var(--shadow-btn-hover);
+  transform: translateY(-1px);
+}
+.clay-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-inset);
+}
+
+.clay-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.clay-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+.clay-pill {
+  border-radius: 9999px;
+}
+
+.clay-glow {
+  box-shadow: var(--shadow-btn-hover), 0 0 20px -5px var(--ring);
+}
+
+.clay-inset {
+  box-shadow: var(--shadow-inset);
 }

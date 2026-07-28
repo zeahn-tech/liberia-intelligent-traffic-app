@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Shield,
-  Car,
+  ShieldCheck,
   Camera,
   MapPin,
   BarChart3,
@@ -15,6 +15,9 @@ import {
   ChevronDown,
   Menu,
   X,
+  Scale,
+  Gavel,
+  ScrollText,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useState } from "react";
@@ -34,42 +37,36 @@ export default function Landing() {
       title: "AI-Powered Detection",
       description:
         "Advanced computer vision detects traffic violations from photos and videos with configurable confidence thresholds.",
-      color: "from-blue-400/30 to-blue-600/30",
     },
     {
       icon: WifiOff,
       title: "Offline-First Operation",
       description:
         "Full functionality without internet. Queue reports, capture evidence, and auto-sync when connectivity returns.",
-      color: "from-amber-400/30 to-amber-600/30",
     },
     {
       icon: MapPin,
       title: "Incident Mapping",
       description:
         "Interactive map views of all incidents with filters by severity, type, date range, and officer assignment.",
-      color: "from-emerald-400/30 to-emerald-600/30",
     },
     {
       icon: Camera,
       title: "Multi-Source Evidence",
       description:
         "Capture and manage photographs, videos, officer notes, and dashcam footage as evidentiary records.",
-      color: "from-purple-400/30 to-purple-600/30",
     },
     {
       icon: BarChart3,
       title: "Real-Time Analytics",
       description:
         "Dashboard with live statistics, trend analysis, hot spot mapping, and automated report generation.",
-      color: "from-rose-400/30 to-rose-600/30",
     },
     {
-      icon: Shield,
+      icon: ShieldCheck,
       title: "Role-Based Access",
       description:
         "Secure hierarchical access for officers, supervisors, investigators, and administrators with full audit trails.",
-      color: "from-cyan-400/30 to-cyan-600/30",
     },
   ];
 
@@ -83,7 +80,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* ===== NAVBAR ===== */}
-      <nav className="sticky top-0 z-50 clay-card bg-card/80 backdrop-blur-xl border-b border-border/50 mx-0 rounded-none">
+      <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl mx-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
@@ -182,14 +179,14 @@ export default function Landing() {
               className="space-y-8"
             >
               {/* Badge */}
-              <Badge variant="outline" className="clay-pill px-4 py-1.5 text-xs font-medium bg-card/80 border-border/50">
-                <Shield className="w-3 h-3 mr-1.5 text-primary" />
+              <Badge className="badge-pill bg-primary/10 text-primary border-primary/20">
+                <Shield className="w-3 h-3 mr-1" />
                 National Police Traffic System
               </Badge>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-foreground">
                 AI-Powered{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                <span className="text-primary">
                   Traffic Enforcement
                 </span>
                 {" "}for Modern Liberia
@@ -203,7 +200,7 @@ export default function Landing() {
               <div className="flex flex-wrap gap-4">
                 <Button
                   size="lg"
-                  className="clay-btn rounded-xl text-base px-8 h-12"
+                  className="text-base px-8 h-12 shadow-sm"
                   onClick={handleGetStarted}
                 >
                   {isAuthenticated ? "Go to Dashboard" : "Get Started"}
@@ -212,9 +209,9 @@ export default function Landing() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-xl text-base px-8 h-12 border-2"
+                  className="text-base px-8 h-12"
                   onClick={() => navigate("/incidents")}
-                >
+>
                   <MapPin className="w-5 h-5 mr-2" />
                   View Incidents
                 </Button>
@@ -244,7 +241,7 @@ export default function Landing() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative"
             >
-              <div className="relative clay-card p-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-border/50">
+              <div className="relative card-premium p-0 overflow-hidden bg-gradient-to-br from-primary/[0.03] via-card to-primary/[0.02]">
                 <div className="p-8 sm:p-10">
                   {/* Mock dashboard preview */}
                   <div className="space-y-4">
@@ -255,9 +252,9 @@ export default function Landing() {
                         { label: "Pending", value: "23", color: "text-warning" },
                         { label: "Resolved", value: "156", color: "text-success" },
                       ].map((stat) => (
-                        <div key={stat.label} className="clay-card bg-card/80 p-3 rounded-xl text-center">
-                          <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-                          <p className="text-xs text-muted-foreground">{stat.label}</p>
+                        <div key={stat.label} className="kpi-card text-center !p-3">
+                          <p className={`kpi-value !text-2xl ${stat.color}`}>{stat.value}</p>
+                          <p className="kpi-label !mt-0">{stat.label}</p>
                         </div>
                       ))}
                     </div>
@@ -269,16 +266,16 @@ export default function Landing() {
                         { type: "Red Light", plate: "LBR-7890", severity: "Serious" },
                         { type: "Illegal Parking", plate: "LBR-1123", severity: "Minor" },
                       ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 clay-card bg-card/60 p-3 rounded-xl">
-                          <div className={`w-2 h-2 rounded-full ${
-                            item.severity === "Serious" ? "bg-destructive" :
-                            item.severity === "Moderate" ? "bg-warning" : "bg-success"
+                        <div key={i} className="flex items-center gap-3 card-premium !p-3">
+                          <div className={`status-dot ${
+                            item.severity === "Serious" ? "error" :
+                            item.severity === "Moderate" ? "pending" : "active"
                           }`} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{item.type}</p>
                             <p className="text-xs text-muted-foreground">{item.plate}</p>
                           </div>
-                          <Badge variant="outline" className="clay-pill text-[10px] px-2 py-0">
+                          <Badge variant="outline" className="badge-pill text-[10px]">
                             {item.severity}
                           </Badge>
                         </div>
@@ -286,9 +283,9 @@ export default function Landing() {
                     </div>
 
                     {/* Bottom bar */}
-                    <div className="flex items-center justify-between clay-card bg-card/60 p-3 rounded-xl">
+                    <div className="flex items-center justify-between card-premium !p-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                        <div className="status-dot active animate-pulse" />
                         <span className="text-xs text-muted-foreground">AI Analysis Active</span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -315,7 +312,7 @@ export default function Landing() {
       </section>
 
       {/* ===== STATS SECTION ===== */}
-      <section className="bg-secondary/50 border-y border-border/50">
+      <section className="border-y border-border/50 bg-muted/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat) => (
@@ -342,12 +339,12 @@ export default function Landing() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <Badge variant="outline" className="clay-pill px-4 py-1.5 mb-4 text-xs bg-card/80">
+          <Badge className="badge-pill bg-primary/10 text-primary border-primary/20 mb-4">
             Platform Features
           </Badge>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
             Everything You Need for{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+            <span className="text-primary">
               Traffic Enforcement
             </span>
           </h2>
@@ -364,12 +361,12 @@ export default function Landing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
-              className="clay-card bg-card p-6 rounded-2xl group cursor-default"
+              className="card-premium p-6 group cursor-default"
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
-                <feature.icon className="w-6 h-6 text-foreground" />
+              <div className="kpi-icon bg-primary/10 text-primary mb-4">
+                <feature.icon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
@@ -377,16 +374,18 @@ export default function Landing() {
       </section>
 
       {/* ===== CTA SECTION ===== */}
-      <section className="bg-gradient-to-br from-primary/5 via-background to-accent/5 border-y border-border/50">
+      <section className="border-y border-border/50 bg-muted/40">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="clay-card bg-card/80 p-10 sm:p-16 rounded-3xl"
+            className="card-premium p-10 sm:p-16"
           >
-            <Shield className="w-12 h-12 text-primary mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <Shield className="w-7 h-7 text-primary" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
               Ready to Modernize Traffic Enforcement?
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -395,7 +394,7 @@ export default function Landing() {
             <div className="flex flex-wrap justify-center gap-4">
               <Button
                 size="lg"
-                className="clay-btn rounded-xl text-base px-10 h-13"
+                className="text-base px-10 h-13 shadow-sm"
                 onClick={handleGetStarted}
               >
                 {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
@@ -404,7 +403,7 @@ export default function Landing() {
               <Button
                 size="lg"
                 variant="outline"
-                className="rounded-xl text-base px-10 h-13 border-2"
+                className="text-base px-10 h-13"
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               >
                 Learn More
