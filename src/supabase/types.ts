@@ -354,6 +354,21 @@ export interface UploadConfig {
   offlineQueue: boolean;
 }
 
+export interface FileMetadata {
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  /** Image dimensions (for image types) */
+  width?: number;
+  height?: number;
+  /** Video/audio duration in seconds (estimated) */
+  duration?: number;
+  /** Extracted capture timestamp */
+  captureTimestamp?: string;
+  /** Whether this is a supported type */
+  isSupported: boolean;
+}
+
 export interface UploadResult {
   success: boolean;
   url?: string;
@@ -364,6 +379,10 @@ export interface UploadResult {
   isOffline?: boolean;
   message?: string;
   error?: string;
+  /** Upload verification status */
+  verificationStatus?: "verified" | "warning" | "unverified";
+  /** Extracted file metadata */
+  metadata?: FileMetadata;
 }
 
 export interface SignedUrlRequest {

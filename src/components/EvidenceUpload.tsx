@@ -16,12 +16,21 @@ import {
   AlertCircle,
   Loader2,
   Lock,
+  WifiOff,
+  RefreshCw,
+  Maximize2,
+  Ruler,
+  Clock,
 } from "lucide-react";
 import {
   validateFile,
   computeSHA256,
   getBucketForMime,
   uploadEvidenceFile,
+  extractFileMetadata,
+  getAllAcceptedMimeTypes,
+  getSizeLimitLabel,
+  type FileMetadata,
 } from "@/lib/storage";
 import type { Evidence } from "@/supabase/types";
 
@@ -65,6 +74,14 @@ export interface FileItem {
   sha256Hash?: string;
   bucket?: string;
   evidenceId?: string;
+  /** Whether the upload was queued for offline sync */
+  isOffline?: boolean;
+  /** Upload verification status */
+  verificationStatus?: "verified" | "warning" | "unverified";
+  /** Extracted file metadata */
+  metadata?: FileMetadata;
+  /** Number of retry attempts */
+  retryCount?: number;
 }
 
 export interface EvidenceUploadProps {
@@ -207,25 +224,30 @@ export function EvidenceUpload({
               f.id === item.id
                 ? {
                     ...f,
-                    status: "completed" as const,
-                    progress: 100,
+                    status: (result.isOffline ? "uploading" : "completed") as any,
+                    progress: result.isOffline ? 90 : 100,
                     bucket: result.bucket,
                     evidenceId: tempEvidenceId,
+                    isOffline: result.isOffline,
+                    verificationStatus: result.verificationStatus,
+                    metadata: result.metadata,
                   }
                 : f,
             ),
           );
-          completed.push({
-            file: item.file,
-            evidenceId: result.filePath || tempEvidenceId,
-            sha256Hash: result.sha256Hash || hash,
-            bucket: result.bucket || validation.bucket,
-          });
+          if (!result.isOffline) {
+            completed.push({
+              file: item.file,
+              evidenceId: result.filePath || tempEvidenceId,
+              sha256Hash: result.sha256Hash || hash,
+              bucket: result.bucket || validation.bucket,
+            });
+          }
         } else {
           setFiles((prev) =>
             prev.map((f) =>
               f.id === item.id
-                ? { ...f, status: "error" as const, error: result.error || "Upload failed", progress: 0 }
+                ? { ...f, status: "error" as const, error: result.error || "Upload failed", progress: 0, retryCount: (f.retryCount || 0) + 1 }
                 : f,
             ),
           );
@@ -234,7 +256,7 @@ export function EvidenceUpload({
         setFiles((prev) =>
           prev.map((f) =>
             f.id === item.id
-              ? { ...f, status: "error" as const, error: err instanceof Error ? err.message : "Upload failed", progress: 0 }
+              ? { ...f, status: "error" as const, error: err instanceof Error ? err.message : "Upload failed", progress: 0, retryCount: (f.retryCount || 0) + 1 }
               : f,
           ),
         );
@@ -332,7 +354,7 @@ export function EvidenceUpload({
                   {/* File info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{item.file.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <span className="text-[10px] text-muted-foreground">
                         {(item.file.size / 1024).toFixed(0)} KB
                       </span>
@@ -346,10 +368,59 @@ export function EvidenceUpload({
                           {item.bucket.replace("evidence-", "")}
                         </Badge>
                       )}
+                      {/* Verification status badge */}
+                      {item.status === "completed" && item.verificationStatus === "verified" && (
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 clay-pill">
+                          <CheckCircle2 className="w-2 h-2 mr-0.5" />
+                          Verified
+                        </Badge>
+                      )}
+                      {item.status === "completed" && item.verificationStatus === "warning" && (
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-amber-500/10 text-amber-500 border-amber-500/20 clay-pill">
+                          <AlertCircle className="w-2 h-2 mr-0.5" />
+                          Unverified
+                        </Badge>
+                      )}
+                      {/* Offline badge */}
+                      {item.isOffline && (
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-amber-500/10 text-amber-500 border-amber-500/20 clay-pill">
+                          <WifiOff className="w-2 h-2 mr-0.5" />
+                          Queued Offline
+                        </Badge>
+                      )}
+                      {/* Image dimensions */}
+                      {item.metadata?.width && item.metadata?.height && (
+                        <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                          <Maximize2 className="w-2 h-2" />
+                          {item.metadata.width}×{item.metadata.height}
+                        </span>
+                      )}
+                      {/* Estimated duration */}
+                      {item.metadata?.duration && (
+                        <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                          <Clock className="w-2 h-2" />
+                          ~{item.metadata.duration > 60
+                            ? `${Math.floor(item.metadata.duration / 60)}m ${item.metadata.duration % 60}s`
+                            : `${item.metadata.duration}s`}
+                        </span>
+                      )}
+                      {/* Retry count badge */}
+                      {item.status === "error" && item.retryCount && item.retryCount > 0 && (
+                        <span className="text-[9px] text-destructive">
+                          Retry {item.retryCount}
+                        </span>
+                      )}
                     </div>
                     {/* Progress bar */}
-                    {(item.status === "validating" || item.status === "uploading") && (
+                    {(item.status === "validating" || item.status === "uploading") && !item.isOffline && (
                       <Progress value={item.progress} className="h-1 mt-1.5" />
+                    )}
+                    {/* Offline queue progress */}
+                    {item.isOffline && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Progress value={90} className="h-1 flex-1 bg-amber-500/20" />
+                        <span className="text-[8px] text-amber-500 font-medium">Queued</span>
+                      </div>
                     )}
                     {/* Error message */}
                     {item.status === "error" && item.error && (

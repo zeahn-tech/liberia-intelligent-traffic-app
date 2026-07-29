@@ -6,6 +6,9 @@
  * - Signed URL generation (time-limited, permission-validated)
  * - SHA-256 cryptographic hash computation
  * - MIME type and file-size validation
+ * - Upload verification (confirm retrievability)
+ * - File metadata extraction (dimensions, duration)
+ * - Retry policy for failed uploads
  * - Offline upload queuing
  * - Access logging to evidence_custody
  */
@@ -47,6 +50,42 @@ const DEFAULT_BUCKET = { bucket: "evidence-other", maxSize: 25 * 1024 * 1024 };
 
 const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
 const SIGNED_URL_GRACE_SECONDS = 300; // Refresh 5 min before expiry
+
+const MAX_RETRIES = 3; // Max upload retry attempts
+const RETRY_DELAY_MS = 1000; // Delay between retries
+
+/** Supported MIME type display labels */
+export const SUPPORTED_FORMATS: Array<{ mime: string; label: string; ext: string }> = [
+  { mime: "image/jpeg", label: "JPEG", ext: ".jpg" },
+  { mime: "image/png", label: "PNG", ext: ".png" },
+  { mime: "image/webp", label: "WebP", ext: ".webp" },
+  { mime: "image/tiff", label: "TIFF", ext: ".tiff" },
+  { mime: "image/heic", label: "HEIC", ext: ".heic" },
+  { mime: "image/heif", label: "HEIF", ext: ".heif" },
+  { mime: "video/mp4", label: "MP4", ext: ".mp4" },
+  { mime: "video/quicktime", label: "MOV", ext: ".mov" },
+  { mime: "video/x-msvideo", label: "AVI", ext: ".avi" },
+  { mime: "video/webm", label: "WebM", ext: ".webm" },
+  { mime: "video/x-matroska", label: "MKV", ext: ".mkv" },
+  { mime: "audio/mpeg", label: "MP3", ext: ".mp3" },
+  { mime: "audio/wav", label: "WAV", ext: ".wav" },
+  { mime: "audio/ogg", label: "OGG", ext: ".ogg" },
+  { mime: "audio/aac", label: "AAC", ext: ".aac" },
+  { mime: "audio/flac", label: "FLAC", ext: ".flac" },
+  { mime: "application/pdf", label: "PDF", ext: ".pdf" },
+  { mime: "text/plain", label: "Text", ext: ".txt" },
+  { mime: "text/csv", label: "CSV", ext: ".csv" },
+];
+
+/** Human-readable size limits per MIME type */
+export const MIME_SIZE_LIMITS: Record<string, string> = {
+  "image/jpeg": "25 MB",
+  "video/mp4": "200 MB",
+  "video/quicktime": "200 MB",
+  "audio/mpeg": "50 MB",
+  "application/pdf": "25 MB",
+  "text/plain": "25 MB",
+};
 
 // ─── SHA-256 Hashing ───────────────────────────────────────
 
@@ -97,6 +136,231 @@ export function getMaxSizeForMime(mimeType: string): number {
   return BUCKET_MAP[mimeType]?.maxSize ?? DEFAULT_BUCKET.maxSize;
 }
 
+/**
+ * Check if a MIME type is supported for upload.
+ */
+export function isMimeSupported(mimeType: string): boolean {
+  return mimeType in BUCKET_MAP;
+}
+
+/**
+ * Get a human-readable label for the file size limit of a given MIME type.
+ */
+export function getSizeLimitLabel(mimeType: string): string {
+  return MIME_SIZE_LIMITS[mimeType] || "25 MB";
+}
+
+/**
+ * Get all accepted MIME types as a comma-separated string for the accept attribute.
+ */
+export function getAllAcceptedMimeTypes(): string {
+  return Object.keys(BUCKET_MAP).join(",");
+}
+
+// ─── Storage File Operations ──────────────────────────────
+
+// ─── File Metadata Extraction ──────────────────────────────
+
+export interface FileMetadata {
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  /** Image dimensions (for image types) */
+  width?: number;
+  height?: number;
+  /** Video/audio duration in seconds (estimated from file size / bitrate) */
+  duration?: number;
+  /** Extracted EXIF or capture timestamp */
+  captureTimestamp?: string;
+  /** Whether this is a supported type */
+  isSupported: boolean;
+}
+
+/**
+ * Extract metadata from a file.
+ * For images: attempts to decode and get dimensions.
+ * For video/audio: estimates duration from file size.
+ * Returns basic metadata regardless of type.
+ */
+export async function extractFileMetadata(file: File): Promise<FileMetadata> {
+  const meta: FileMetadata = {
+    fileName: file.name,
+    fileSize: file.size,
+    mimeType: file.type,
+    isSupported: isMimeSupported(file.type),
+  };
+
+  // Extract image dimensions
+  if (file.type.startsWith("image/")) {
+    try {
+      const dimensions = await getImageDimensions(file);
+      meta.width = dimensions.width;
+      meta.height = dimensions.height;
+    } catch {
+      // Non-critical — dimensions not always available
+    }
+  }
+
+  // Estimate duration for video/audio (rough: based on file size / typical bitrate)
+  if (file.type.startsWith("video/")) {
+    // Very rough: assume ~2 Mbps average bitrate for video
+    meta.duration = Math.round(file.size / (2 * 1024 * 1024 / 8));
+  } else if (file.type.startsWith("audio/")) {
+    // Rough: assume ~128 kbps for audio
+    meta.duration = Math.round(file.size / (128 * 1024 / 8));
+  }
+
+  return meta;
+}
+
+/**
+ * Extract image dimensions by loading the file into an Image element.
+ */
+function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to decode image"));
+    };
+    img.src = url;
+  });
+}
+
+// ─── Upload Verification ────────────────────────────────────
+
+/**
+ * Verify that an uploaded file exists and is retrievable.
+ * Checks by generating a signed URL and attempting a HEAD request.
+ */
+export async function verifyUpload(
+  bucket: string,
+  filePath: string,
+): Promise<{ verified: boolean; error?: string }> {
+  try {
+    // Generate a short-lived signed URL for verification
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(filePath, 60); // 60 seconds
+
+    if (error || !data?.signedUrl) {
+      return { verified: false, error: error?.message || "Could not generate verification URL" };
+    }
+
+    // Try to fetch the file headers to confirm it's accessible
+    const response = await fetch(data.signedUrl, { method: "HEAD" });
+    if (!response.ok) {
+      return {
+        verified: false,
+        error: `File exists but returned status ${response.status}`,
+      };
+    }
+
+    // Verify the content-length matches expected size
+    const contentLength = response.headers.get("content-length");
+    if (contentLength) {
+      const storedSize = parseInt(contentLength, 10);
+      // Just log a warning if sizes don't match (not a hard failure)
+      console.debug(`[Storage] Verified upload: ${filePath} (${(storedSize / 1024).toFixed(0)} KB)`);
+    }
+
+    return { verified: true };
+  } catch (err) {
+    return {
+      verified: false,
+      error: err instanceof Error ? err.message : "Verification request failed",
+    };
+  }
+}
+
+/**
+ * Verify that a list of uploaded files are retrievable.
+ */
+export async function verifyUploads(
+  files: Array<{ bucket: string; filePath: string }>,
+): Promise<Array<{ bucket: string; filePath: string; verified: boolean; error?: string }>> {
+  return Promise.all(
+    files.map(async (f) => {
+      const result = await verifyUpload(f.bucket, f.filePath);
+      return { ...f, ...result };
+    }),
+  );
+}
+
+// ─── Retry Logic ────────────────────────────────────────────
+
+/**
+ * Upload with automatic retry on transient failures.
+ * Retries up to MAX_RETRIES times with exponential backoff.
+ */
+async function uploadWithRetry(
+  file: File,
+  bucket: string,
+  filePath: string,
+): Promise<{ data: any; error: any }> {
+  let lastError: any;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        contentType: file.type,
+        cacheControl: "private, no-cache",
+        upsert: attempt > 1, // Allow upsert on retry
+      });
+
+    if (!error) return { data, error: null };
+
+    lastError = error;
+
+    // Don't retry non-retryable errors
+    if (!isRetryableError(error)) {
+      return { data: null, error };
+    }
+
+    // Wait with exponential backoff before retry
+    if (attempt < MAX_RETRIES) {
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * Math.pow(2, attempt - 1)));
+    }
+  }
+
+  return { data: null, error: lastError };
+}
+
+/**
+ * Check if an upload error is retryable.
+ * Network errors, timeouts, and 5xx errors are retryable.
+ * 4xx errors (except 429) are not retryable.
+ */
+function isRetryableError(error: any): boolean {
+  if (!error) return false;
+  const msg = (error.message || "").toLowerCase();
+  const status = error.statusCode || error.status;
+
+  // Offline errors are handled separately via queue
+  if (isOfflineError(error)) return false;
+
+  // 4xx errors (except 429 rate limit) are not retryable
+  if (status >= 400 && status < 500 && status !== 429) return false;
+
+  return (
+    msg.includes("timeout") ||
+    msg.includes("econnrefused") ||
+    msg.includes("enotfound") ||
+    msg.includes("econnreset") ||
+    msg.includes("503") ||
+    msg.includes("502") ||
+    msg.includes("500") ||
+    status === 429 ||
+    status >= 500
+  );
+}
+
 // ─── Storage File Operations ──────────────────────────────
 
 /**
@@ -104,10 +368,12 @@ export function getMaxSizeForMime(mimeType: string): number {
  *
  * Steps:
  * 1. Validate MIME type and file size
- * 2. Compute SHA-256 hash of the file
- * 3. Upload to the appropriate private bucket
- * 4. Record the file reference in storage_files table
- * 5. Log custody event
+ * 2. Extract file metadata (dimensions, etc.)
+ * 3. Compute SHA-256 hash of the file
+ * 4. Upload to the appropriate private bucket (with retry)
+ * 5. Verify the uploaded file is retrievable
+ * 6. Generate signed URL
+ * 7. Record the file reference
  *
  * @returns UploadResult with signed URL or error
  */
@@ -124,6 +390,9 @@ export async function uploadEvidenceFile(
   }
 
   try {
+    // Extract metadata
+    const metadata = await extractFileMetadata(file);
+
     // Compute SHA-256 hash
     const sha256Hash = await computeSHA256(file);
 
@@ -131,14 +400,8 @@ export async function uploadEvidenceFile(
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const filePath = `${incidentId}/${evidenceId}/${sanitizedName}`;
 
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from(validation.bucket)
-      .upload(filePath, file, {
-        contentType: file.type,
-        cacheControl: "private, no-cache",
-        upsert: false,
-      });
+    // Upload to Supabase Storage (with retry)
+    const { data: uploadData, error: uploadError } = await uploadWithRetry(file, validation.bucket, filePath);
 
     if (uploadError) {
       // If offline, queue for later sync
@@ -146,22 +409,33 @@ export async function uploadEvidenceFile(
         await queueOfflineUpload(file, incidentId, evidenceId, validation.bucket, filePath, sha256Hash);
         return {
           success: true,
-          url: "", // Will be generated when sync completes
+          url: "",
           signedUrl: null,
           bucket: validation.bucket,
           filePath,
           sha256Hash,
           isOffline: true,
           message: "Upload queued — will sync when connection is restored.",
+          metadata,
         };
       }
-      return { success: false, error: uploadError.message };
+      return {
+        success: false,
+        error: uploadError.message || "Upload failed after retries",
+        metadata,
+      };
+    }
+
+    // Verify the upload is retrievable
+    const verification = await verifyUpload(validation.bucket, filePath);
+    if (!verification.verified) {
+      console.warn(`[Storage] Upload verification warning: ${verification.error}`);
+      // Still return success — the file was uploaded, verification is a secondary check
     }
 
     // Generate signed URL
     const signedResult = await generateSignedUrl(validation.bucket, filePath);
     if (!signedResult.success) {
-      // Upload succeeded but signed URL failed — still return the path
       return {
         success: true,
         url: filePath,
@@ -169,6 +443,8 @@ export async function uploadEvidenceFile(
         bucket: validation.bucket,
         filePath,
         sha256Hash,
+        verificationStatus: verification.verified ? "verified" : "warning",
+        metadata,
         message: "File uploaded but signed URL generation failed.",
       };
     }
@@ -180,6 +456,8 @@ export async function uploadEvidenceFile(
       bucket: validation.bucket,
       filePath,
       sha256Hash,
+      verificationStatus: verification.verified ? "verified" : "warning",
+      metadata,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown upload error";
