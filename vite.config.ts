@@ -15,8 +15,6 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: [
         "logo.svg",
-        "logo-192.png",
-        "logo-512.png",
         "favicon.ico",
       ],
       manifest: {
@@ -33,22 +31,10 @@ export default defineConfig({
         id: "/",
         icons: [
           {
-            src: "/logo-192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-          {
-            src: "/logo-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-          {
             src: "/logo.svg",
             sizes: "any",
             type: "image/svg+xml",
-            purpose: "any",
+            purpose: "any maskable",
           },
         ],
         categories: ["police", "traffic", "government", "utilities"],
@@ -61,9 +47,9 @@ export default defineConfig({
             url: "/dashboard",
             icons: [
               {
-                src: "/logo-192.png",
-                sizes: "192x192",
-                type: "image/png",
+                src: "/logo.svg",
+                sizes: "any",
+                type: "image/svg+xml",
               },
             ],
           },
@@ -74,9 +60,9 @@ export default defineConfig({
             url: "/incidents/new",
             icons: [
               {
-                src: "/logo-192.png",
-                sizes: "192x192",
-                type: "image/png",
+                src: "/logo.svg",
+                sizes: "any",
+                type: "image/svg+xml",
               },
             ],
           },

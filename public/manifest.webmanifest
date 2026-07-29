@@ -1,6 +1,6 @@
 {
-  "name": "TrafficWatch Liberia — Liberia Intelligent Traffic App",
-  "short_name": "TrafficWatch Liberia",
+  "name": "TrafficWatch AI — Liberia Intelligent Traffic App",
+  "short_name": "TrafficWatch AI",
   "description": "AI-powered traffic monitoring, incident reporting, evidence management, and analytics platform for national police operations.",
   "start_url": "/",
   "id": "/",
@@ -12,22 +12,10 @@
   "categories": ["police", "traffic", "government", "utilities"],
   "icons": [
     {
-      "src": "/logo-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
       "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -38,9 +26,9 @@
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/logo-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -51,9 +39,9 @@
       "url": "/incidents/new",
       "icons": [
         {
-          "src": "/logo-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
         }
       ]
     }
