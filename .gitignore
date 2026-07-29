@@ -1,4 +1,62 @@
+# ── Dependencies ─────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build Output ─────────────────────────────────────
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# ── Environment ──────────────────────────────────────
+.env
 .env.local
-node_modules
-dist
-src/convex/_generated
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ── IDE & Editor ─────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Logs ─────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+
+# ── TypeScript ──────────────────────────────────────
+*.tsbuildinfo
+.next/
+
+# ── Coverage ─────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── PWA / Service Worker (generated) ─────────────────
+dist/pwa/
+sw.js
+sw.js.map
+workbox-*.js
+workbox-*.js.map
+
+# ── Supabase (local dev) ──────────────────────────────
+supabase/.temp/
+supabase/.branches/
+
+# ── OS Files ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.pem
+
+# ── Misc ─────────────────────────────────────────────
+.eslintcache
+*.tgz
+*.gz

@@ -1,272 +1,414 @@
+# 🛡️ TrafficWatch AI — Liberia Intelligent Traffic App
+
+**AI-powered traffic monitoring, incident reporting, evidence management, and analytics platform for national police operations.**
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![PWA](https://img.shields.io/badge/PWA-ready-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Available Scripts](#available-scripts)
+- [Project Structure](#project-structure)
+- [PWA Features](#pwa-features)
+- [Authentication](#authentication)
+- [Authorization & RBAC](#authorization--rbac)
+- [Deployment](#deployment)
+- [GitHub Actions](#github-actions)
+
+---
+
 ## Overview
 
-This project uses the following tech stack:
-- Vite
-- Typescript
-- React Router v7 (all imports from `react-router` instead of `react-router-dom`)
-- React 19 (for frontend components)
-- Tailwind v4 (for styling)
-- Shadcn UI (for UI components library)
-- Lucide Icons (for icons)
-- Convex (for backend & database)
-- Convex Auth (for authentication)
-- Framer Motion (for animations)
-- Three js (for 3d models)
+TrafficWatch AI is a centralized, progressive web application (PWA) designed for the Liberia National Police to monitor, investigate, document, analyze, and manage traffic violations from anywhere in the country.
 
-All relevant files live in the 'src' directory.
+### Core Capabilities
 
-Use bun for the package manager.
+| Feature | Description |
+|---------|-------------|
+| **Incident Management** | Create, track, assign, escalate, and resolve traffic incidents |
+| **Digital Evidence Center** | Secure upload, storage, and chain-of-custody for photos, videos, audio, and documents |
+| **AI Analysis Pipeline** | Modular AI engine for computer vision, object detection, and traffic violation analysis |
+| **ANPR System** | Automatic Number Plate Recognition with OCR, normalization, and confidence scoring |
+| **Interactive Map** | Real-time incident map with clustering, filters, and county-level boundaries |
+| **Command Dashboard** | Executive overview with KPIs, charts, and live incident feed |
+| **Citizen Portal** | Public reporting portal with anonymous submission option |
+| **Officer Portal** | Dedicated workspace for patrol officers with offline support |
+| **Predictive Analytics** | Trend analysis, hotspot prediction, and incident volume forecasting |
+| **Audit & Security** | Comprehensive audit logging, RBAC, and data privacy controls |
+| **Reports** | Professional PDF/CSV report generation with evidence references |
 
-## Setup
+---
 
-This project is set up already and running on a cloud environment, as well as a convex development in the sandbox.
+## Tech Stack
+
+### Frontend
+- **React 19** — UI framework
+- **TypeScript** — Type safety
+- **Vite 7** — Build tooling
+- **Tailwind CSS v4** — Utility-first styling
+- **shadcn/ui** — Accessible UI primitives
+- **Framer Motion** — Animations
+- **Recharts** — Interactive charts
+- **Leaflet** — Map visualization
+- **Lucide React** — Icons
+
+### Backend & Data
+- **Supabase** — PostgreSQL database, authentication, storage, realtime
+- **Supabase Auth** — Authentication with email OTP and role management
+
+### PWA
+- **vite-plugin-pwa** — PWA manifest, service worker, offline support
+- **Workbox** — Service worker strategies (precaching, runtime caching)
+- **IndexedDB** — Offline data queue
+
+---
+
+## Architecture
+
+### AI Analysis Pipeline
+```
+Evidence Upload → Secure Storage → Media Validation → AI Processing Queue
+→ Computer Vision Analysis → Object Detection → Traffic Violation Analysis
+→ License Plate Detection → OCR → Confidence Evaluation → Officer Review
+→ Confirmed Violation → Case Record
+```
+
+### Camera System (Future)
+```
+Camera → Stream Gateway → Video Processing → AI Computer Vision Engine
+→ Detection Events → TrafficWatch AI → Alerts / Incidents / Evidence
+```
+
+### Data Flow
+```
+Offline-first: IndexedDB → Sync Queue → Supabase (when online)
+Real-time: Supabase Realtime → WebSocket → Live UI updates
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Bun** (recommended) or **Node.js 20+**
+- A **Supabase** project (free tier works)
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/your-org/trafficwatch-ai.git
+cd trafficwatch-ai
+bun install
+```
+
+### 2. Configure Environment
+
+Copy the example env file and fill in your Supabase credentials:
+
+```bash
+cp env-example.txt .env
+```
+
+Required environment variables:
+| Variable | Description | Where to find it |
+|----------|-------------|------------------|
+| `VITE_SUPABASE_URL` | Supabase project URL | Supabase Dashboard → Settings → API → Project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon/public key | Supabase Dashboard → Settings → API → anon public key |
+
+### 3. Database Setup
+
+1. Go to your **Supabase Dashboard** → **SQL Editor**
+2. Run the migration files in order:
+   - `supabase-migration-v2.sql` through `supabase-migration-v21-performance.sql`
+3. Create storage buckets (from SQL Editor storage setup):
+   - `evidence-images` — JPEG, PNG, WebP, TIFF (50 MB max)
+   - `evidence-videos` — MP4, WebM, AVI, MKV (50 MB max)
+   - `evidence-audio` — MP3, WAV, OGG, AAC (50 MB max)
+   - `evidence-documents` — PDF, DOC, XLS, TXT, CSV (25 MB max)
+   - `evidence-other` — Any (50 MB max)
+
+### 4. Start Development
+
+```bash
+bun run dev
+```
+
+The app will be available at `http://localhost:5173`.
+
+---
 
 ## Environment Variables
 
-The project is set up with project specific CONVEX_DEPLOYMENT and VITE_CONVEX_URL environment variables on the client side.
+The app uses Vite's `import.meta.env` pattern. All variables are prefixed with `VITE_`.
 
-The convex server has a separate set of environment variables that are accessible by the convex backend.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_SUPABASE_URL` | ✅ Yes | — | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | ✅ Yes | — | Supabase anon/public key |
 
-Currently, these variables include auth-specific keys: JWKS, JWT_PRIVATE_KEY, and SITE_URL.
+*Note: Only variables actually used by the implementation are listed. If the app does not find these variables, it gracefully falls back to a mock client so the landing page still renders.*
 
+---
 
-# Using Authentication (Important!)
+## Available Scripts
 
-You must follow these conventions when using authentication.
+| Script | Description |
+|--------|-------------|
+| `bun run dev` | Start development server with HMR |
+| `bun run build` | TypeScript typecheck + production build |
+| `bun run preview` | Preview the production build locally |
+| `bun run lint` | Run ESLint across the codebase |
+| `bun run format` | Format code with Prettier |
+| `bun run pwa:build` | Build + preview with PWA optimizations |
+| `bun tsc -b --noEmit` | TypeScript typecheck only |
 
-## Auth is already set up.
+---
 
-All convex authentication functions are already set up. The auth currently uses email OTP and anonymous users, but can support more.
+## Project Structure
 
-The email OTP configuration is defined in `src/convex/auth/emailOtp.ts`. DO NOT MODIFY THIS FILE.
+```
+trafficwatch-ai/
+├── .github/workflows/     # GitHub Actions CI
+├── public/                 # Static assets, manifest, icons
+├── src/
+│   ├── ai/                 # AI analysis pipeline modules
+│   │   ├── anpr/           # Automatic Number Plate Recognition
+│   │   ├── camera/         # Camera stream processing
+│   │   ├── components/     # AI analysis UI components
+│   │   ├── predictive/     # Predictive analytics engine
+│   │   └── providers/      # AI provider abstraction
+│   ├── components/
+│   │   ├── ui/             # shadcn/ui primitives
+│   │   └── ...             # App-specific components
+│   ├── convex/             # Convex backend (auth)
+│   ├── hooks/              # React hooks
+│   ├── lib/                # Utilities, services, helpers
+│   ├── pages/              # Route page components
+│   ├── pwa/                # Service worker & offline fallback
+│   ├── services/           # API service layer
+│   ├── supabase/           # Supabase client, auth, types
+│   └── main.tsx            # App entry point & routing
+├── .env.example            # Environment variable template
+├── .gitignore
+├── index.html
+├── package.json
+├── vite.config.ts          # Vite config with PWA plugin
+└── env-example.txt         # Environment variable template
+```
 
-Also, DO NOT MODIFY THESE AUTH FILES: `src/convex/auth.config.ts` and `src/convex/auth.ts`.
+---
 
-## Using Convex Auth on the backend
+## PWA Features
 
-On the `src/convex/users.ts` file, you can use the `getCurrentUser` function to get the current user's data.
+TrafficWatch AI is a fully installable Progressive Web App:
 
-## Using Convex Auth on the frontend
+| Feature | Status |
+|---------|--------|
+| App manifest | ✅ Configurable via `vite.config.ts` |
+| Service worker | ✅ Workbox precaching + runtime caching |
+| Offline fallback | ✅ Custom offline page |
+| iOS support | ✅ apple-mobile-web-app meta tags |
+| Install prompt | ✅ Elegant in-app prompt (respects dismissals) |
+| Update detection | ✅ Banner when new version available |
+| Push notifications | ✅ Service worker notification handlers |
+| Map tile caching | ✅ 30-day CacheFirst for OSM tiles |
+| API caching | ✅ NetworkFirst with 5s timeout |
+| Offline queue | ✅ IndexedDB sync queue |
+| Auto-sync | ✅ Sync queued data when back online |
 
-The `/auth` page is already set up to use auth. Navigate to `/auth` for all log in / sign up sequences.
+### Installing the PWA
 
-You MUST use this hook to get user data. Never do this yourself without the hook:
+1. Open TrafficWatch AI in Chrome/Edge on desktop or Android
+2. Click the install icon in the address bar, or
+3. Tap the "Install App" button in the in-app prompt
+4. The app will launch in standalone mode with offline support
+
+---
+
+## Authentication
+
+### Auth is already set up
+
+All authentication is handled through **Supabase Auth** with email OTP.
+
+### Using Auth on the Frontend
+
 ```typescript
 import { useAuth } from "@/hooks/use-auth";
 
 const { isLoading, isAuthenticated, user, signIn, signOut } = useAuth();
 ```
 
-## Protected Routes
+### Protected Routes
 
-The starter `/dashboard` route is protected with `RequireAuth`, which sends
-signed-out users to `/auth?returnTo=<current route>`. Extend that page for the
-product's authenticated experience, and reuse `RequireAuth` when adding another
-protected route.
+Use the `RequireAuth` wrapper in `src/main.tsx`:
 
-## Auth Page
-
-The auth page is defined in `src/pages/Auth.tsx`. Send sign-in and sign-up actions
-to `/auth`.
-
-## Authorization
-
-You can perform authorization checks on the frontend and backend.
-
-On the frontend, you can use the `useAuth` hook to get the current user's data and authentication state.
-
-You should also be protecting queries, mutations, and actions at the base level, checking for authorization securely.
-
-## Adding a redirect after auth
-
-The `/auth` route in `src/main.tsx` redirects to `/dashboard` by default. If the
-product's main authenticated route is different, update `redirectAfterAuth` to
-that route. A validated same-origin `returnTo` query parameter takes priority so
-users can resume the protected page they originally requested. Never leave an
-authenticated product redirecting back to the public landing page.
-
-## Complete authenticated products
-
-When the requested product implies accounts, a workspace, a dashboard, or other
-signed-in functionality, the task is not complete with only a landing page and
-auth form. Build the main authenticated experience, protect its route, and verify
-that signing in reaches it.
-
-# Frontend Conventions
-
-You will be using the Vite frontend with React 19, Tailwind v4, and Shadcn UI.
-
-Generally, pages should be in the `src/pages` folder, and components should be in the `src/components` folder.
-
-Shadcn primitives are located in the `src/components/ui` folder and should be used by default.
-
-## Page routing
-
-Your page component should go under the `src/pages` folder.
-
-When adding a page, update the react router configuration in `src/main.tsx` to include the new route you just added.
-
-## Shad CN conventions
-
-Follow these conventions when using Shad CN components, which you should use by default.
-- Remember to use "cursor-pointer" to make the element clickable
-- For title text, use the "tracking-tight font-bold" class to make the text more readable
-- Always make apps MOBILE RESPONSIVE. This is important
-- AVOID NESTED CARDS. Try and not to nest cards, borders, components, etc. Nested cards add clutter and make the app look messy.
-- AVOID SHADOWS. Avoid adding any shadows to components. stick with a thin border without the shadow.
-- Avoid skeletons; instead, use the loader2 component to show a spinning loading state when loading data.
-
-
-## Landing Pages
-
-You must always create good-looking designer-level styles to your application. 
-- Make it well animated and fit a certain "theme", ie neo brutalist, retro, neumorphism, glass morphism, etc
-
-Use known images and emojis from online.
-
-If the user is logged in already, show the get started button to say "Dashboard" or "Profile" instead to take them there.
-
-## Responsiveness and formatting
-
-Make sure pages are wrapped in a container to prevent the width stretching out on wide screens. Always make sure they are centered aligned and not off-center.
-
-Always make sure that your designs are mobile responsive. Verify the formatting to ensure it has correct max and min widths as well as mobile responsiveness.
-
-- Always create sidebars for protected dashboard pages and navigate between pages
-- Always create navbars for landing pages
-- On these bars, the created logo should be clickable and redirect to the index page
-
-## Animating with Framer Motion
-
-You must add animations to components using Framer Motion. It is already installed and configured in the project.
-
-To use it, import the `motion` component from `framer-motion` and use it to wrap the component you want to animate.
-
-
-### Other Items to animate
-- Fade in and Fade Out
-- Slide in and Slide Out animations
-- Rendering animations
-- Button clicks and UI elements
-
-Animate for all components, including on landing page and app pages.
-
-## Three JS Graphics
-
-Your app comes with three js by default. You can use it to create 3D graphics for landing pages, games, etc.
-
-
-## Colors
-
-You can override colors in: `src/index.css`
-
-This uses the oklch color format for tailwind v4.
-
-Always use these color variable names.
-
-Make sure all ui components are set up to be mobile responsive and compatible with both light and dark mode.
-
-Set theme using `dark` or `light` variables at the parent className.
-
-## Styling and Theming
-
-When changing the theme, always change the underlying theme of the shad cn components app-wide under `src/components/ui` and the colors in the index.css file.
-
-Avoid hardcoding in colors unless necessary for a use case, and properly implement themes through the underlying shad cn ui components.
-
-When styling, ensure buttons and clickable items have pointer-click on them (don't by default).
-
-Always follow a set theme style and ensure it is tuned to the user's liking.
-
-## Toasts
-
-You should always use toasts to display results to the user, such as confirmations, results, errors, etc.
-
-Use the shad cn Sonner component as the toaster. For example:
-
+```tsx
+<Route
+  path="/dashboard"
+  element={
+    <RequireAuth>
+      <Dashboard />
+    </RequireAuth>
+  }
+/>
 ```
-import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
-export function SonnerDemo() {
-  return (
-    <Button
-      variant="outline"
-      onClick={() =>
-        toast("Event has been created", {
-          description: "Sunday, December 03, 2023 at 9:00 AM",
-          action: {
-            label: "Undo",
-            onClick: () => console.log("Undo"),
-          },
-        })
-      }
+### Role-Based Access Control
+
+Routes can require specific permissions or minimum roles:
+
+```tsx
+<Route
+  path="/admin"
+  element={
+    <RequireAuth
+      requirePermission="configure_system"
+      fallbackPath="/dashboard"
+      showForbidden
     >
-      Show Toast
-    </Button>
-  )
-}
+      <AdminPanel />
+    </RequireAuth>
+  }
+/>
 ```
 
-Remember to import { toast } from "sonner". Usage: `toast("Event has been created.")`
+---
 
-## Dialogs
+## Authorization & RBAC
 
-Always ensure your larger dialogs have a scroll in its content to ensure that its content fits the screen size. Make sure that the content is not cut off from the screen.
+### Roles
 
-Ideally, instead of using a new page, use a Dialog instead. 
+| Role | Level |
+|------|-------|
+| System Administrator | 100 |
+| National Police Commissioner | 90 |
+| Regional Commander | 70 |
+| Traffic Commander | 60 |
+| Police Supervisor | 50 |
+| Traffic Officer | 40 |
+| Investigator | 30 |
+| Evidence Officer | 20 |
+| System Auditor | 15 |
+| Citizen | 10 |
 
-# Using the Convex backend
+### Permissions
 
-You will be implementing the convex backend. Follow your knowledge of convex and the documentation to implement the backend.
+Permissions control access to specific actions:
+`view_dashboard`, `create_incident`, `edit_incident`, `delete_incident`,
+`access_evidence`, `run_ai_analysis`, `view_reports`, `view_analytics`,
+`manage_users`, `configure_system`, `view_audit_logs`, etc.
 
-## The Convex Schema
+Authorization is enforced both on the **frontend** (UI guards) and **backend** (Supabase RLS policies).
 
-You must correctly follow the convex schema implementation.
+---
 
-The schema is defined in `src/convex/schema.ts`.
+## Deployment
 
-Do not include the `_id` and `_creationTime` fields in your queries (it is included by default for each table).
-Do not index `_creationTime` as it is indexed for you. Never have duplicate indexes.
+### Build for Production
 
-
-## Convex Actions: Using CRUD operations
-
-When running anything that involves external connections, you must use a convex action with "use node" at the top of the file.
-
-You cannot have queries or mutations in the same file as a "use node" action file. Thus, you must use pre-built queries and mutations in other files.
-
-You can also use the pre-installed internal crud functions for the database:
-
-```ts
-// in convex/users.ts
-import { crud } from "convex-helpers/server/crud";
-import schema from "./schema.ts";
-
-export const { create, read, update, destroy } = crud(schema, "users");
-
-// in some file, in an action:
-const user = await ctx.runQuery(internal.users.read, { id: userId });
-
-await ctx.runMutation(internal.users.update, {
-  id: userId,
-  patch: {
-    status: "inactive",
-  },
-});
+```bash
+bun run build
 ```
 
+The production build outputs to the `dist/` directory.
 
-## Common Convex Mistakes To Avoid
+### Hosting Options
 
-When using convex, make sure:
-- Document IDs are referenced as `_id` field, not `id`.
-- Document ID types are referenced as `Id<"TableName">`, not `string`.
-- Document object types are referenced as `Doc<"TableName">`.
-- Keep schemaValidation to false in the schema file.
-- You must correctly type your code so that it passes the type checker.
-- You must handle null / undefined cases of your convex queries for both frontend and backend, or else it will throw an error that your data could be null or undefined.
-- Always use the `@/folder` path, with `@/convex/folder/file.ts` syntax for importing convex files.
-- This includes importing generated files like `@/convex/_generated/server`, `@/convex/_generated/api`
-- Remember to import functions like useQuery, useMutation, useAction, etc. from `convex/react`
-- NEVER have return type validators.
+#### Option 1: Vercel (Recommended)
+1. Push to GitHub
+2. Import repo in Vercel
+3. Set Build Command: `bun run build`
+4. Set Output Directory: `dist`
+5. Add environment variables in Vercel dashboard
+6. Deploy
+
+#### Option 2: Netlify
+1. Push to GitHub
+2. Import repo in Netlify
+3. Set Build Command: `bun run build`
+4. Set Publish Directory: `dist`
+5. Add `_redirects` file: `/* /index.html 200`
+6. Deploy
+
+#### Option 3: Docker
+```dockerfile
+FROM oven/bun:1 AS build
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install
+COPY . .
+RUN bun run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### Supabase Production Checklist
+
+- [ ] Enable Row Level Security on all tables
+- [ ] Set up appropriate RLS policies (run migration SQL)
+- [ ] Configure authentication settings (disable email confirmation if desired)
+- [ ] Create storage buckets with correct MIME restrictions
+- [ ] Set up signed URL expiration for evidence access
+- [ ] Enable pg_cron (Pro plan) for automated dashboard refreshes
+
+---
+
+## GitHub Actions
+
+The project includes a CI workflow (`.github/workflows/ci.yml`) that runs on every push and pull request:
+
+- ✅ TypeScript typecheck
+- ✅ Lint with ESLint
+- ✅ Production build
+
+---
+
+## Migrations
+
+Database migration SQL files are numbered sequentially:
+
+| File | Description |
+|------|-------------|
+| `supabase-migration-v2.sql` | Core schema: profiles, incidents, evidence, vehicles |
+| `supabase-migration-v4.sql` | Storage buckets and RLS policies |
+| `supabase-migration-v5.sql` | Liberia geography data (counties, districts) |
+| `supabase-migration-v6.sql` | Predictive analytics tables |
+| `supabase-migration-v7.sql` | User roles and permissions |
+| `supabase-migration-v8.sql` | Auth functions and triggers |
+| `supabase-migration-v10.sql` | Citizen reports schema |
+| `supabase-migration-v11.sql` | Officer portal enhancements |
+| `supabase-migration-v12.sql` | Command center views |
+| `supabase-migration-v13.sql` | Notification system |
+| `supabase-migration-v14.sql` | Global search indexes |
+| `supabase-migration-v15.sql` | Report generation |
+| `supabase-migration-v16.sql` | Audit logging |
+| `supabase-migration-v17.sql` | Security policies |
+| `supabase-migration-v18.sql` | Data privacy |
+| `supabase-migration-v20.sql` | RLS policies |
+| `supabase-migration-v21-performance.sql` | Performance indexes |
+
+---
+
+## License
+
+This project is proprietary software. All rights reserved.
+
+---
+
+## Support
+
+For technical support, contact the Liberia National Police IT Division.
