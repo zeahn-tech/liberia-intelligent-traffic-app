@@ -1,11 +1,12 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 import type { Permission, UserRole } from "@/lib/permissions";
 import { roleHasPermission, hasMinimumRole, ROLE_LABELS, getRoleColor } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LoadingState } from "@/components/ErrorDisplay";
 
 interface RequireAuthProps {
   children: ReactNode;
@@ -30,14 +31,7 @@ export function RequireAuth({
   const location = useLocation();
 
   if (isLoading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground animate-pulse">Verifying session...</p>
-        </div>
-      </main>
-    );
+    return <LoadingState message="Verifying session..." fullPage />;
   }
 
   // Not authenticated — redirect to auth with return path

@@ -34,13 +34,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermission } from "@/lib/permissions";
 import { getSecurityArchitectureInfo, getSecurityHeaderStatus } from "@/lib/security";
 import type { SecurityArchitectureInfo, SecurityHeaderStatus } from "@/lib/security";
 import { supabase } from "@/supabase/client";
+import { PermissionDenied, ErrorPage } from "@/components/ErrorDisplay";
 
 export default function SecurityDashboard() {
   const { user } = useAuth();
@@ -58,12 +58,12 @@ export default function SecurityDashboard() {
 
   if (!can("configure_system") && !can("view_audit_logs")) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <ShieldAlert className="w-16 h-16 text-muted-foreground/40" />
-        <h2 className="text-xl font-semibold">Access Restricted</h2>
-        <p className="text-muted-foreground text-sm max-w-md text-center">
-          You need System Administrator or System Auditor permissions to view the Security Dashboard.
-        </p>
+      <div className="py-12">
+        <PermissionDenied
+          title="Access Restricted"
+          description="You need System Administrator or System Auditor permissions to view the Security Dashboard."
+          onGoHome={() => window.location.href = "/dashboard"}
+        />
       </div>
     );
   }
