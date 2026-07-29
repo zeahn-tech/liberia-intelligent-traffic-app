@@ -2,6 +2,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { RequireAuth } from "@/components/RequireAuth";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RealtimeProvider } from "@/lib/realtime-context";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/ErrorDisplay";
+import { useNetwork } from "@/hooks/use-network";
+import { useSessionExpiry } from "@/hooks/use-error-handler";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
@@ -118,6 +122,21 @@ function RouteSyncer() {
   return null;
 }
 
+/**
+ * Watches for session expiry and shows a global offline/online indicator.
+ * Must be rendered inside the BrowserRouter + AuthProvider tree.
+ */
+function SessionWatcher() {
+  useSessionExpiry();
+  const { online } = useNetwork();
+  return <OfflineBanner isOnline={online} className="fixed top-0 left-0 right-0 z-[100] rounded-none border-x-0 border-t-0" />;
+}
+
+/** Helper to wrap a route with error boundary */
+function RouteErrorBoundary({ children, name }: { children: React.ReactNode; name?: string }) {
+  return <ErrorBoundary componentName={name}>{children}</ErrorBoundary>;
+}
+
 // Check Supabase configuration
 if (!isSupabaseConfigured()) {
   console.warn(
@@ -131,19 +150,22 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <BrowserRouter>
           <RouteSyncer />
+          <SessionWatcher />
           <RealtimeProvider>
           <Suspense fallback={<RouteLoading />}>
             <Routes>
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<RouteErrorBoundary name="Landing"><Landing /></RouteErrorBoundary>} />
               <Route
                 path="/auth"
-                element={<AuthPage redirectAfterAuth="/officer" />}
+                element={<RouteErrorBoundary name="Auth"><AuthPage redirectAfterAuth="/officer" /></RouteErrorBoundary>}
               />
               <Route
                 path="/dashboard"
                 element={
                   <RequireAuth>
-                    <Dashboard />
+                    <RouteErrorBoundary name="Dashboard">
+                      <Dashboard />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -151,7 +173,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/officer"
                 element={
                   <RequireAuth>
-                    <OfficerDashboard />
+                    <RouteErrorBoundary name="Officer">
+                      <OfficerDashboard />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -159,7 +183,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/incidents"
                 element={
                   <RequireAuth>
-                    <Incidents />
+                    <RouteErrorBoundary name="Incidents">
+                      <Incidents />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -167,7 +193,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/incidents/new"
                 element={
                   <RequireAuth>
-                    <ReportIncident />
+                    <RouteErrorBoundary name="ReportIncident">
+                      <ReportIncident />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -175,7 +203,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/incidents/:id"
                 element={
                   <RequireAuth>
-                    <IncidentDetail />
+                    <RouteErrorBoundary name="IncidentDetail">
+                      <IncidentDetail />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -183,7 +213,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/evidence"
                 element={
                   <RequireAuth>
-                    <Evidence />
+                    <RouteErrorBoundary name="Evidence">
+                      <Evidence />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -191,7 +223,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/settings"
                 element={
                   <RequireAuth>
-                    <Settings />
+                    <RouteErrorBoundary name="Settings">
+                      <Settings />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -201,7 +235,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/citizen"
                 element={
                   <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
-                    <CitizenDashboard />
+                    <RouteErrorBoundary name="CitizenDashboard">
+                      <CitizenDashboard />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -209,7 +245,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/citizen/report"
                 element={
                   <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
-                    <CitizenReportIncident />
+                    <RouteErrorBoundary name="CitizenReportIncident">
+                      <CitizenReportIncident />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -217,7 +255,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/citizen/reports"
                 element={
                   <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
-                    <CitizenReportsList />
+                    <RouteErrorBoundary name="CitizenReportsList">
+                      <CitizenReportsList />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -225,7 +265,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/citizen/reports/:id"
                 element={
                   <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
-                    <CitizenReportDetail />
+                    <RouteErrorBoundary name="CitizenReportDetail">
+                      <CitizenReportDetail />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -233,7 +275,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/citizen/safety"
                 element={
                   <RequireAuth requireRole="citizen" fallbackPath="/citizen" showForbidden>
-                    <CitizenSafetyNotices />
+                    <RouteErrorBoundary name="CitizenSafetyNotices">
+                      <CitizenSafetyNotices />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -243,7 +287,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/command-center"
                 element={
                   <RequireAuth requireRole="regional_commander" fallbackPath="/dashboard" showForbidden>
-                    <CommandCenter />
+                    <RouteErrorBoundary name="CommandCenter">
+                      <CommandCenter />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -253,7 +299,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/search"
                 element={
                   <RequireAuth>
-                    <SearchResults />
+                    <RouteErrorBoundary name="SearchResults">
+                      <SearchResults />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -263,7 +311,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/review/citizen-reports"
                 element={
                   <RequireAuth requirePermission="review_ai_analysis" fallbackPath="/dashboard" showForbidden>
-                    <ReviewCitizenReports />
+                    <RouteErrorBoundary name="ReviewCitizenReports">
+                      <ReviewCitizenReports />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -272,7 +322,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/audit"
                 element={
                   <RequireAuth requirePermission="view_audit_logs" fallbackPath="/dashboard" showForbidden>
-                    <AuditDashboard />
+                    <RouteErrorBoundary name="AuditDashboard">
+                      <AuditDashboard />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -281,7 +333,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/security"
                 element={
                   <RequireAuth requirePermission="configure_system" fallbackPath="/dashboard" showForbidden>
-                    <SecurityDashboard />
+                    <RouteErrorBoundary name="SecurityDashboard">
+                      <SecurityDashboard />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -291,7 +345,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/ai-detection"
                 element={
                   <RequireAuth requirePermission="run_ai_analysis" fallbackPath="/dashboard" showForbidden>
-                    <AIDetection />
+                    <RouteErrorBoundary name="AIDetection">
+                      <AIDetection />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -301,7 +357,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/vehicles"
                 element={
                   <RequireAuth requirePermission="view_all_incidents" fallbackPath="/dashboard" showForbidden>
-                    <Vehicles />
+                    <RouteErrorBoundary name="Vehicles">
+                      <Vehicles />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -311,7 +369,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/license-plates"
                 element={
                   <RequireAuth requirePermission="run_ai_analysis" fallbackPath="/dashboard" showForbidden>
-                    <LicensePlates />
+                    <RouteErrorBoundary name="LicensePlates">
+                      <LicensePlates />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -321,7 +381,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/reports"
                 element={
                   <RequireAuth requirePermission="view_reports" fallbackPath="/dashboard" showForbidden>
-                    <Reports />
+                    <RouteErrorBoundary name="Reports">
+                      <Reports />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -331,7 +393,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/analytics"
                 element={
                   <RequireAuth requirePermission="view_analytics" fallbackPath="/dashboard" showForbidden>
-                    <Analytics />
+                    <RouteErrorBoundary name="Analytics">
+                      <Analytics />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -341,7 +405,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/notifications"
                 element={
                   <RequireAuth>
-                    <Notifications />
+                    <RouteErrorBoundary name="Notifications">
+                      <Notifications />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -351,7 +417,9 @@ createRoot(document.getElementById("root")!).render(
                 path="/users"
                 element={
                   <RequireAuth requirePermission="view_users" fallbackPath="/dashboard" showForbidden>
-                    <Users />
+                    <RouteErrorBoundary name="Users">
+                      <Users />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
@@ -361,12 +429,14 @@ createRoot(document.getElementById("root")!).render(
                 path="/evidence/upload"
                 element={
                   <RequireAuth requirePermission="access_evidence" fallbackPath="/dashboard" showForbidden>
-                    <EvidenceUploadPage />
+                    <RouteErrorBoundary name="EvidenceUpload">
+                      <EvidenceUploadPage />
+                    </RouteErrorBoundary>
                   </RequireAuth>
                 }
               />
 
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<RouteErrorBoundary name="NotFound"><NotFound /></RouteErrorBoundary>} />
             </Routes>
           </Suspense>
           </RealtimeProvider>

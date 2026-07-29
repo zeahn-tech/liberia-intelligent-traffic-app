@@ -129,8 +129,11 @@ export async function executeQuery<T>(
 
     if (error) {
       const apiError = mapPostgrestError(error);
-      console.warn(`[API:${label}] Failed:`, apiError?.message);
-      if (options.throwOnError) throw new Error(apiError?.message || error.message);
+      const friendlyMessage = apiError?.message || error.message || "An unexpected database error occurred.";
+      console.warn(`[API:${label}] Failed:`, friendlyMessage);
+      if (options.throwOnError) {
+        throw new Error(friendlyMessage);
+      }
       return { success: false, data: null, error: apiError, duration };
     }
 
@@ -139,12 +142,28 @@ export async function executeQuery<T>(
     const duration = Math.round(performance.now() - start);
     if (err instanceof Error && options.throwOnError) throw err;
 
+    const message = err instanceof Error ? err.message : "Query execution failed";
+
+    // User-friendly messages for common network/auth errors
+    let friendlyMessage = message;
+    const msg = message.toLowerCase();
+    if (msg.includes("network") || msg.includes("fetch")) {
+      friendlyMessage = "A network error occurred. Please check your connection and try again.";
+    } else if (msg.includes("permission") || msg.includes("not allowed")) {
+      friendlyMessage = "You do not have permission to perform this action.";
+    } else if (msg.includes("auth") || msg.includes("session") || msg.includes("jwt")) {
+      friendlyMessage = "Your session may have expired. Please try signing in again.";
+    } else if (msg.includes("timeout") || msg.includes("timed out")) {
+      friendlyMessage = "The request timed out. Please check your connection and try again.";
+    }
+
     return {
       success: false,
       data: null,
       error: {
         code: "QUERY_FAILED",
-        message: err instanceof Error ? err.message : "Query execution failed",
+        message: friendlyMessage,
+        details: message,
       },
       duration,
     };
