@@ -1,0 +1,51 @@
+# ── Dependencies ─────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build output ─────────────────────────────────────
+dist/
+build/
+out/
+
+# ── Environment ──────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Version control ──────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── IDE & Editor ─────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Logs ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+bun-debug.log*
+
+# ── TypeScript ──────────────────────────────────────
+*.tsbuildinfo
+
+# ── Coverage ─────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Misc ─────────────────────────────────────────────
+.github/
+README.md
+Dockerfile
+.dockerignore
+nginx.conf
+*.sql
+*.tgz
+*.gz
