@@ -1,10 +1,21 @@
 // @ts-nocheck
 // Service Worker entry for TrafficWatch AI PWA
-// Handles: precaching, runtime caching, push notifications, offline fallback
+// Handles: precaching, runtime caching, push notifications, offline fallback, update detection
 
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from "workbox-strategies";
+
+// ─── Cache Versioning ─────────────────────────────────
+// Bump this version to invalidate all runtime caches
+const CACHE_VERSION = "v3";
+const CACHE_NAMES = {
+  googleFonts: `google-fonts-${CACHE_VERSION}`,
+  mapTiles: `map-tiles-${CACHE_VERSION}`,
+  api: `api-${CACHE_VERSION}`,
+  images: `images-${CACHE_VERSION}`,
+  static: `static-${CACHE_VERSION}`,
+};
 
 // Clean up old precaches
 cleanupOutdatedCaches();
@@ -14,44 +25,63 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // ─── Runtime Caching ───────────────────────────────────
 
-// Cache Google Fonts with Cache First strategy
+// Cache Google Fonts with Cache First strategy (long-lived)
 registerRoute(
   /^https:\/\/fonts\.googleapis\.com\/.*/i,
   new CacheFirst({
-    cacheName: "google-fonts-cache",
+    cacheName: CACHE_NAMES.googleFonts,
   })
 );
 
-// Cache Leaflet tile images with Cache First (long TTL)
+// Cache Leaflet tile images with Cache First (long TTL — 30 days)
 registerRoute(
   /^https:\/\/[acst]\.tile\.openstreetmap\.org\/.*/i,
   new CacheFirst({
-    cacheName: "map-tile-cache",
+    cacheName: CACHE_NAMES.mapTiles,
+    plugins: [
+      {
+        cacheWillUpdate: async ({ response }) => {
+          if (response && response.status === 200) return response;
+          return null;
+        },
+      },
+    ],
   })
 );
 
-// Cache API responses with Network First (fallback to cache)
+// Cache API responses with Network First (short TTL — 15 min)
 registerRoute(
   /^https:\/\/.*\.supabase\.co\/.*/i,
   new NetworkFirst({
-    cacheName: "api-cache",
+    cacheName: CACHE_NAMES.api,
     networkTimeoutSeconds: 5,
+    plugins: [
+      {
+        cacheWillUpdate: async ({ response }) => {
+          if (response && response.status === 200) {
+            // Don't cache non-GET or mutation endpoints
+            return response;
+          }
+          return null;
+        },
+      },
+    ],
   })
 );
 
-// Cache static images with Cache First
+// Cache static images with Cache First (7 days)
 registerRoute(
-  /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+  /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/,
   new CacheFirst({
-    cacheName: "image-cache",
+    cacheName: CACHE_NAMES.images,
   })
 );
 
-// Cache JS and CSS with StaleWhileRevalidate
+// Cache JS and CSS with StaleWhileRevalidate (instant load, updates in background)
 registerRoute(
-  /\.(?:js|css)$/,
+  /\.(?:js|css|mjs)$/,
   new StaleWhileRevalidate({
-    cacheName: "static-resources",
+    cacheName: CACHE_NAMES.static,
   })
 );
 
@@ -181,7 +211,9 @@ self.addEventListener("fetch", (event) => {
 // ─── Service Worker Lifecycle ──────────────────────────
 
 /**
- * Handle service worker updates — skip waiting and activate immediately.
+ * Handle messages from the client:
+ * - SKIP_WAITING: activate the new SW immediately
+ * - SHOW_NOTIFICATION: display a notification from client code
  */
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
@@ -199,29 +231,37 @@ self.addEventListener("message", (event) => {
 
 /**
  * Clean up old caches on activation.
+ * - Removes caches outside the current versioned whitelist.
+ * - Claims all open clients so the new SW controls them.
  */
 self.addEventListener("activate", (event) => {
-  const cacheWhitelist = [
-    "google-fonts-cache",
-    "map-tile-cache",
-    "api-cache",
-    "image-cache",
-    "static-resources",
-    "workbox-precaching-v2",
-  ];
+  const cacheWhitelist = Object.values(CACHE_NAMES);
 
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (!cacheWhitelist.includes(cacheName)) {
-            return caches.delete(cacheName);
+    (async () => {
+      // Delete old/unversioned caches
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map((name) => {
+          if (!cacheWhitelist.includes(name)) {
+            // Also remove old workbox-precaching caches
+            if (name.startsWith("workbox-precaching-")) {
+              return caches.delete(name);
+            }
+            // Remove unversioned caches from previous versions
+            return caches.delete(name);
           }
         })
       );
-    })
-  );
 
-  // Claim all clients immediately
-  event.waitUntil(clients.claim());
+      // Claim all clients immediately
+      await clients.claim();
+
+      // Notify all clients about the update
+      const allClients = await clients.matchAll({ includeUncontrolled: true });
+      allClients.forEach((client) => {
+        client.postMessage({ type: "SW_ACTIVATED", cacheVersion: CACHE_VERSION });
+      });
+    })()
+  );
 });

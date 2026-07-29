@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import {
   getAccessibleNavGroups,
   getAccessibleMobileItems,
@@ -104,6 +105,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       {/* PWA Install Prompt — elegant, non-intrusive, respects dismissals */}
       <PwaInstallPrompt />
+      {/* PWA Update Prompt — notifies when a new version is ready */}
+      <PwaUpdatePrompt />
       {/* Skip-to-content link for keyboard users */}
       <a
         href="#main-content"
