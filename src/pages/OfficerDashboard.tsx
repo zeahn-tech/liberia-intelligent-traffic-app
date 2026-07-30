@@ -59,6 +59,7 @@ import { supabase } from "@/supabase/client";
 import { getPendingSyncQueue } from "@/lib/offline";
 import { EvidenceUpload } from "@/components/EvidenceUpload";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 // ─── Types ─────────────────────────────────────────────
 

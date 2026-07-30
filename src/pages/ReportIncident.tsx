@@ -43,6 +43,7 @@ import { submitForAnalysis, reviewAnalysisResult } from "@/ai/pipeline";
 import { providerRegistry } from "@/ai/registry";
 import type { AIAnalysisResult } from "@/ai/types";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export default function ReportIncident() {
   const navigate = useNavigate();

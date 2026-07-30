@@ -10,6 +10,9 @@
  */
 
 import type { EvidenceCustodyEvent } from "@/supabase/types";
+import { offlineGet } from "@/lib/offline";
+import { offlineSet } from "@/lib/offline";
+import { addToSyncQueue } from "@/lib/sync";
 
 // ===== Types =====
 

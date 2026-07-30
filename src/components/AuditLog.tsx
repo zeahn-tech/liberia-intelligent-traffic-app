@@ -50,6 +50,8 @@ import {
   type AuditSeverity,
 } from "@/lib/audit";
 import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
+import { useMemo } from "react";
 
 // ─── Types ──────────────────────────────────────────────
 

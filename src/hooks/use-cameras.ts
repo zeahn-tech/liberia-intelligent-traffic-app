@@ -15,6 +15,7 @@ import {
   getPendingCameraAlerts,
   acknowledgeCameraAlert,
 } from "@/services/cameras-service";
+import type { CameraSourceType } from "@/ai/camera/types";
 
 // ─── Types ───────────────────────────────────────────────
 

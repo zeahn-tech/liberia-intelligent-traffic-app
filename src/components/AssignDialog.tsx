@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { User } from "lucide-react";
+import { Search } from "lucide-react";
+import { Shield } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 interface Officer {
   id: string;

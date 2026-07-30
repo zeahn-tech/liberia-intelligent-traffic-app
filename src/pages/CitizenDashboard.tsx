@@ -3,8 +3,8 @@ import { useNavigate, Link } from "react-router";
 import { CitizenLayout } from "@/pages/CitizenLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Select,
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
   SelectContent,
@@ -43,6 +43,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/supabase/client";
+import { useCallback } from "react";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 
 // ─── Types ─────────────────────────────────────────────
 

@@ -25,6 +25,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { ANPRScanRecord } from "../anpr/types";
+import type { AIAnalysisResult } from "@/ai/types";
 
 interface AIAnalysisPanelProps {
   analysis: AIAnalysisResult | null;

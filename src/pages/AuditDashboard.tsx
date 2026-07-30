@@ -39,6 +39,11 @@ import {
 import { AuditLog, generateMockAuditEvents, type AuditEvent } from "@/components/AuditLog";
 import { toast } from "sonner";
 import { usePermission } from "@/lib/permissions";
+import { useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
+import { CardTitle } from "@/components/ui/card";
 
 // ─── Severity breakdown cards ──────────────────────────
 

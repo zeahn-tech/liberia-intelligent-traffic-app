@@ -28,6 +28,7 @@ import {
   type PasswordStrength,
 } from "@/supabase/auth";
 import type { UserRole } from "@/lib/permissions";
+import { setSessionCheckInterval } from "@/lib/security";
 
 // ─── Types ─────────────────────────────────────────────
 

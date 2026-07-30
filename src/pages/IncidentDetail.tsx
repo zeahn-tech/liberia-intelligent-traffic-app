@@ -53,6 +53,8 @@ import { InvolvedPersons } from "@/components/InvolvedPersons";
 import { ReportGenerator } from "@/components/ReportGenerator";
 import { AuditLog, generateMockAuditEvents } from "@/components/AuditLog";
 import { toast } from "sonner";
+import { submitForAnalysis } from "@/ai/pipeline";
+import { reviewAnalysisResult } from "@/ai/pipeline";
 
 export default function IncidentDetail() {
   const { id } = useParams();

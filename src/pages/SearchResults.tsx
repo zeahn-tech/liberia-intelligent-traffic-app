@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/supabase/client";
 import type { SearchResult, SearchResponse } from "@/components/GlobalSearch";
+import { Car } from "lucide-react";
 
 // ─── Constants ─────────────────────────────────────────
 

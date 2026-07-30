@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -30,6 +31,10 @@ import { IncidentMap } from "@/components/IncidentMap";
 import { GeoFilter } from "@/components/GeoFilter";
 import { geoFilterFromParams } from "@/lib/geography";
 import type { GeoFilterState } from "@/supabase/types";
+import { useState } from "react";
+import { useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 
 export default function Incidents() {
   const navigate = useNavigate();

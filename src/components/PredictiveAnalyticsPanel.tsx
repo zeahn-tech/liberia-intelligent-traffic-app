@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { predictiveEngine, modelRegistry, DISCLAIMER } from "@/ai/predictive";
+import { useState } from "react";
+import { useEffect } from "react";
 import type {
   PredictionResult,
   RoadRiskPrediction,

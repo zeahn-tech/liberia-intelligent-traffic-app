@@ -1,5 +1,8 @@
 import { usePwaUpdate } from "@/hooks/use-pwa-update";
 import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpCircle } from "lucide-react";
+import { X } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 /**
  * PwaUpdatePrompt — elegant "Update Available" banner for TrafficWatch AI.

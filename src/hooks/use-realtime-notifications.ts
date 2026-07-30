@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { useRealtimeChannel } from "./use-realtime";
 
 // ─── Types ───────────────────────────────────────────────
 

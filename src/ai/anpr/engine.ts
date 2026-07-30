@@ -25,6 +25,10 @@ import type {
 } from "./types";
 import { generateId } from "../utils";
 import { offlineGet, offlineSet, offlineGetAll } from "@/lib/offline";
+import { getPlateVariations } from "./anpr/engine";
+import { correctOCRErrors } from "./anpr/engine";
+import { normalizePlateText } from "./anpr/engine";
+import { buildPlateResult } from "./anpr/engine";
 
 // ===== Stolen Vehicle Database =====
 

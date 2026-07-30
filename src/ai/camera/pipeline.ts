@@ -22,6 +22,7 @@ import type {
 import { streamManager } from "./stream-gateway";
 import { videoProcessor } from "./video-processing";
 import { supabase } from "@/supabase/client";
+import { logAuditEvent } from "@/lib/audit";
 
 // ─── Pipeline Status ───────────────────────────────────
 

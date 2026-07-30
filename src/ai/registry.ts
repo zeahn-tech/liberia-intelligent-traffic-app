@@ -8,6 +8,8 @@
  */
 
 import type { AIProvider } from "./provider";
+import type { AIProviderConfig } from "@/ai/types";
+import type { AIProviderCapability } from "@/ai/types";
 
 type ProviderConstructor = new () => AIProvider;
 

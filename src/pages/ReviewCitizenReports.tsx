@@ -49,6 +49,10 @@ import {
 import { supabase } from "@/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CitizenReport {
   id: string;

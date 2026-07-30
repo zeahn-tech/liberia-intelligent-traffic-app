@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect, useCallback } from "react";
 import {
   Shield,
   ShieldCheck,
@@ -46,6 +47,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { getSecurityArchitectureInfo, getSecurityHeaderStatus } from "@/lib/security";
 import type { SecurityArchitectureInfo, SecurityHeaderStatus } from "@/lib/security";
+import { useState } from "react";
 
 export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState("overview");

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,10 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { supabase } from "@/supabase/client";
+import { useNavigate } from "react-router";
+import { useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 
 // ─── Types ─────────────────────────────────────────────
 

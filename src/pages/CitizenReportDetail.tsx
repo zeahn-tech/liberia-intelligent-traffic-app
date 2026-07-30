@@ -22,6 +22,12 @@ import {
   Lock,
 } from "lucide-react";
 import { supabase } from "@/supabase/client";
+import { useParams } from "react-router";
+import { useNavigate } from "react-router";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
+import { CardTitle } from "@/components/ui/card";
 
 interface CitizenReport {
   id: string;

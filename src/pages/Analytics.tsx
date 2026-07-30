@@ -2,6 +2,14 @@ import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, TrendingUp, Users, Car, Brain, Activity } from "lucide-react";
 
+import { CardHeader } from "@/components/ui/card";
+import { CardTitle } from "@/components/ui/card";
+import { CardDescription } from "@/components/ui/card";
+import { useState } from "react";
+import { useEffect } from "react";
+import { useCallback } from "react";
+import { Card } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 export default function Analytics() {
   return (
     <AppLayout>

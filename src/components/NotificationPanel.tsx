@@ -43,6 +43,9 @@ import { useRealtimeContext } from "@/lib/realtime-context";
 import { supabase } from "@/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useState } from "react";
+import { useCallback } from "react";
+import { useEffect } from "react";
 
 
 // ─── Types ─────────────────────────────────────────────

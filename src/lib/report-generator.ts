@@ -1,5 +1,8 @@
 // ============================================================
 // TrafficWatch AI — Report Generation Engine
+import { useState } from "react";
+import { useEffect } from "react";
+import { useCallback } from "react";
 //
 // Generates professional PDF, CSV, and JSON reports with
 // clear source labeling for all data types.

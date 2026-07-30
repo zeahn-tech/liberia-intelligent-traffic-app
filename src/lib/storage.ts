@@ -1,4 +1,5 @@
 /**
+import { logAuditEvent } from "@/lib/audit";
  * TrafficWatch AI — Secure Media Storage Service
  *
  * Handles:

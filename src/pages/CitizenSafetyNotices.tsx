@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/supabase/client";
+import { useNavigate } from "react-router";
 
 interface SafetyNotice {
   id: string;

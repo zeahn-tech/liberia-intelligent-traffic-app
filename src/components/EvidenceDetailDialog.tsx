@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { generateSignedUrl } from "@/lib/storage";
 import {
   getCustodyChain,
   seedMockCustodyEvents,
@@ -36,6 +37,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
+import { triggerFileDownload } from "@/lib/storage";
 
 // ===== Types =====
 interface EvidenceVersion {
