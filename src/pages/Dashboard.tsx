@@ -423,7 +423,7 @@ export default function Dashboard() {
     } else if (alert.location?.includes("Broad")) {
       navigate("/incidents?view=map");
     } else if (alert.location?.includes("UN Drive")) {
-      navigate("/cameras");
+      navigate("/ai-detection");
     } else {
       navigate("/incidents");
     }
