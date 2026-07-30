@@ -51,6 +51,10 @@ ALTER TABLE public.drivers ENABLE ROW LEVEL SECURITY;
 
 -- 7. VEHICLE OWNERS
 CREATE TABLE IF NOT EXISTS public.vehicle_owners (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), vehicle_id UUID NOT NULL REFERENCES public.vehicles(id) ON DELETE CASCADE, owner_name TEXT NOT NULL, owner_type TEXT NOT NULL DEFAULT 'individual' CHECK (owner_type IN ('individual','company','government','other')), id_type TEXT, id_number TEXT, phone TEXT, email TEXT, address TEXT, is_current BOOLEAN NOT NULL DEFAULT true, ownership_from TIMESTAMPTZ NOT NULL DEFAULT now(), ownership_to TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+-- Add columns if table already exists from earlier migration
+ALTER TABLE public.vehicle_owners ADD COLUMN IF NOT EXISTS is_current BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.vehicle_owners ADD COLUMN IF NOT EXISTS ownership_from TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE public.vehicle_owners ADD COLUMN IF NOT EXISTS ownership_to TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_vehicle_owners_vehicle ON public.vehicle_owners(vehicle_id);
 CREATE INDEX IF NOT EXISTS idx_vehicle_owners_current ON public.vehicle_owners(is_current);
 ALTER TABLE public.vehicle_owners ENABLE ROW LEVEL SECURITY;
