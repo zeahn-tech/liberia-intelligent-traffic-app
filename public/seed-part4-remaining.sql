@@ -103,8 +103,8 @@ WHERE p.email = 'officer1@trafficwatch.gov.lr';
 
 -- === ROAD CONDITIONS ===
 
-INSERT INTO public.road_conditions (condition_type, severity, description, location_lat, location_lng, location_from, location_to, reported_by_type, starts_at)
-SELECT 'construction', 'moderate', 'Road construction on UN Drive near the Ministerial Complex. Lane closures in effect.', 6.3220, -10.8145, 'UN Drive near Ministry of Finance', 'UN Drive near Spriggs Payne Airport', 'system', NOW();
+INSERT INTO public.road_conditions (condition_type, severity, description, location_lat, location_lng, reported_by_type, starts_at)
+SELECT 'construction', 'moderate', 'Road construction on UN Drive near the Ministerial Complex. Lane closures in effect.', 6.3220, -10.8145, 'system', NOW();
 
 INSERT INTO public.road_conditions (condition_type, severity, description, location_lat, location_lng, reported_by_type, starts_at)
 SELECT 'pothole', 'major', 'Large pothole on Tubman Boulevard near SKD junction. Multiple vehicles have reported damage.', 6.2900, -10.7250, 'citizen', NOW();
