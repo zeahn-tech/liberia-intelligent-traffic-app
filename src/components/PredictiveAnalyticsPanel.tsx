@@ -327,6 +327,7 @@ function VolumeForecastCard({ prediction }: { prediction: VolumeForecast }) {
   );
 }
 
+function CongestionCard({ prediction }: { prediction: CongestionForecast }) {
   return (
     <div className="clay-card bg-card p-4 rounded-xl space-y-3">
       <div className="flex items-start justify-between">

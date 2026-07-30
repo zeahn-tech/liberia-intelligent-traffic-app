@@ -154,6 +154,7 @@ export default function IncidentDetail() {
   }, [aiAnalysis, user]);
 
   // Status transition handlers
+  const handleAssign = (officerId: string, role: string) => {
     setAssignedTo({ id: officerId, name: "Officer #" + officerId.slice(-4) });
     setIncidentStatus("assigned");
     addTimelineEntry(`Assigned to ${role} for ${role}`);
@@ -238,6 +239,7 @@ export default function IncidentDetail() {
     }
   };
 
+  const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "critical": return "bg-destructive/10 text-destructive";
       case "serious": return "bg-warning/10 text-warning";

@@ -212,6 +212,7 @@ export default function Evidence() {
     setDialogOpen(true);
   };
 
+  const handleAnalysis = async (ev: EvidenceItem) => {
     setAiLoading(ev.id);
     await initAI();
     try {
@@ -226,8 +227,7 @@ export default function Evidence() {
     } finally {
       setAiLoading(null);
     }
-// eslint-disable-next-line
-  }, [initAI]);
+  };
 
   const filteredEvidence = evidenceItems.filter((ev) => {
     if (searchQuery && !ev.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
