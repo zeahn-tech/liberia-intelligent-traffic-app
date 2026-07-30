@@ -16,7 +16,6 @@ import {
   getAccessibleQuickActions,
 } from "@/lib/navigation";
 import {
-  Bell,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -26,9 +25,6 @@ import {
   Search,
   Command,
   X,
-  Activity,
-  Wifi,
-  WifiOff,
   ChevronDown,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
@@ -67,11 +63,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   );
 
   // Responsive: close sidebar on mobile by default
+  const [initialized, setInitialized] = useState(false);
   useEffect(() => {
-    if (window.innerWidth < 768) {
+    if (!initialized && window.innerWidth < 768) {
       setSidebarOpen(false);
+      setInitialized(true);
     }
-  }, []);
+  }, [initialized]);
 
   // Keyboard shortcut: Cmd+K / Ctrl+K for global search
   useEffect(() => {

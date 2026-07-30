@@ -43,7 +43,7 @@ export async function getSetting(key: string): Promise<ApiResponse<string | null
   if (!data) return success(null);
 
   // Parse based on type
-  let value: string = data.setting_value;
+  const value: string = data.setting_value;
   return success(value);
 }
 

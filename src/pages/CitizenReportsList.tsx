@@ -82,7 +82,7 @@ export default function CitizenReportsList() {
   useEffect(() => {
     const loadReports = async () => {
       try {
-        let query = supabase
+        const query = supabase
           .from("citizen_reports")
           .select("*")
           .eq("citizen_id", user?.id)

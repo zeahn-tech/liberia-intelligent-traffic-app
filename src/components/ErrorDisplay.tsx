@@ -20,10 +20,7 @@ import {
   Loader2,
   CloudOff,
   Clock,
-  Ban,
   Upload,
-  FileX,
-  Play,
   AlertOctagon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -642,6 +639,7 @@ export function SessionExpiredCard({
 
 export function showApiErrorToast(error: unknown, defaultTitle?: string) {
   // Dynamic import to avoid circular deps
-  const { showErrorToast } = require("@/lib/error-handler");
-  showErrorToast(error, { title: defaultTitle });
+  import("@/lib/error-handler").then(({ showErrorToast }) => {
+    showErrorToast(error, { title: defaultTitle });
+  });
 }

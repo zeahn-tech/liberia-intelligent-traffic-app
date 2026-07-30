@@ -348,12 +348,6 @@ export default function Settings() {
   }, [getActiveSessions, getAccountStatus]);
 
   // Load notification preferences
-  useEffect(() => {
-    if (!user?.id) return;
-    loadNotificationPrefs();
-    checkPushStatus();
-  }, [user?.id]);
-
   const loadNotificationPrefs = async () => {
     if (!user?.id) return;
     setNotifPrefsLoading(true);
@@ -385,6 +379,12 @@ export default function Settings() {
     setPushAvailable(avail);
     setPushEnabled(avail);
   };
+
+  useEffect(() => {
+    if (!user?.id) return;
+    loadNotificationPrefs();
+    checkPushStatus();
+  }, [user?.id, loadNotificationPrefs, checkPushStatus]);
 
   const handleSave = () => {
     setSaved(true);
@@ -1344,6 +1344,7 @@ function PrivacyTabContent() {
 
   useEffect(() => {
     loadPrivacyData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadPrivacyData = async () => {

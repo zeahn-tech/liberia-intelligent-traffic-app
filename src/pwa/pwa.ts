@@ -1,6 +1,9 @@
-// @ts-nocheck
-// Service Worker entry for TrafficWatch AI PWA
-// Handles: precaching, runtime caching, push notifications, offline fallback, update detection
+// @ts-nocheck — Service Worker globals (PushEvent, FetchEvent, etc.) require lib "webworker"
+// which conflicts with the DOM lib used by the rest of the app.
+/**
+ * Service Worker entry for TrafficWatch AI PWA
+ * Handles: precaching, runtime caching, push notifications, offline fallback, update detection
+ */
 
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
@@ -40,7 +43,7 @@ registerRoute(
     cacheName: CACHE_NAMES.mapTiles,
     plugins: [
       {
-        cacheWillUpdate: async ({ response }) => {
+        cacheWillUpdate: async ({ response }: { response: Response | null }) => {
           if (response && response.status === 200) return response;
           return null;
         },
@@ -57,9 +60,8 @@ registerRoute(
     networkTimeoutSeconds: 5,
     plugins: [
       {
-        cacheWillUpdate: async ({ response }) => {
+        cacheWillUpdate: async ({ response }: { response: Response | null }) => {
           if (response && response.status === 200) {
-            // Don't cache non-GET or mutation endpoints
             return response;
           }
           return null;
@@ -87,16 +89,32 @@ registerRoute(
 
 // ─── Push Notification Event Handling ──────────────────
 
+interface PushNotificationPayload {
+  title?: string;
+  body?: string;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  vibrate?: number[];
+  requireInteraction?: boolean;
+  silent?: boolean;
+  data?: {
+    url?: string;
+    timestamp?: string;
+    priority?: string;
+    [key: string]: unknown;
+  };
+}
+
 /**
  * Handle incoming push events from the server.
- * The server sends a JSON payload with title, body, icon, and data.
  */
-self.addEventListener("push", (event) => {
+self.addEventListener("push", (event: PushEvent) => {
   if (!(self.Notification && self.Notification.permission === "granted")) {
     return;
   }
 
-  let data = {
+  let data: PushNotificationPayload = {
     title: "TrafficWatch AI",
     body: "New notification",
     icon: "/icons/icon-192x192.png",
@@ -113,7 +131,7 @@ self.addEventListener("push", (event) => {
 
   try {
     if (event.data) {
-      const payload = event.data.json();
+      const payload = event.data.json() as PushNotificationPayload;
       data = { ...data, ...payload };
     }
   } catch {
@@ -129,15 +147,15 @@ self.addEventListener("push", (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
+    self.registration.showNotification(data.title ?? "TrafficWatch AI", {
       body: data.body,
-      icon: data.icon || "/icons/icon-192x192.png",
-      badge: data.badge || "/icons/icon-96x96.png",
-      tag: data.tag || `tw-${Date.now()}`,
+      icon: data.icon ?? "/icons/icon-192x192.png",
+      badge: data.badge ?? "/icons/icon-96x96.png",
+      tag: data.tag ?? `tw-${Date.now()}`,
       vibrate: data.vibrate,
       requireInteraction: data.requireInteraction ?? false,
       silent: data.silent ?? false,
-      data: data.data || {},
+      data: data.data ?? {},
       actions: [
         {
           action: "open",
@@ -154,31 +172,24 @@ self.addEventListener("push", (event) => {
 
 /**
  * Handle notification click events.
- * - Clicking the notification body opens the app to the target URL.
- * - Clicking an action button performs the corresponding action.
  */
-self.addEventListener("notificationclick", (event) => {
+self.addEventListener("notificationclick", (event: NotificationEvent) => {
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url || "/dashboard";
+  const urlToOpen = event.notification.data?.url ?? "/dashboard";
 
   if (event.action === "dismiss") {
-    // Just close the notification
     return;
   }
 
-  // Open or focus the app window
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
-      // Check if there's already a window open
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients: readonly WindowClient[]) => {
       for (const client of windowClients) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
-          // Navigate to the target URL
           client.navigate(urlToOpen);
           return client.focus();
         }
       }
-      // Open a new window
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
@@ -188,18 +199,14 @@ self.addEventListener("notificationclick", (event) => {
 
 // ─── Offline Fallback ──────────────────────────────────
 
-/**
- * Handle navigation requests — serve cached offline page when offline.
- */
-self.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", (event: FetchEvent) => {
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() => {
         return caches.match("/offline-fallback.html").then((response) => {
           if (response) return response;
-          // Last resort: return a minimal offline page
           return new Response(
-            "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Offline - TrafficWatch AI</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#e2e8f0;text-align:center;padding:20px}div{max-width:400px}.shield{font-size:48px;margin-bottom:16px}h1{font-size:20px;margin:0 0 8px}p{color:#94a3b8;font-size:14px;line-height:1.5}</style></head><body><div><div class='shield'>🛡️</div><h1>You're Offline</h1><p>TrafficWatch AI is unavailable offline. Please check your connection and try again.</p></div></body></html>",
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline - TrafficWatch AI</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f172a;color:#e2e8f0;text-align:center;padding:20px}div{max-width:400px}.shield{font-size:48px;margin-bottom:16px}h1{font-size:20px;margin:0 0 8px}p{color:#94a3b8;font-size:14px;line-height:1.5}</style></head><body><div><div class="shield">🛡️</div><h1>You\'re Offline</h1><p>TrafficWatch AI is unavailable offline. Please check your connection and try again.</p></div></body></html>',
             { headers: { "Content-Type": "text/html;charset=UTF-8" } }
           );
         });
@@ -210,54 +217,38 @@ self.addEventListener("fetch", (event) => {
 
 // ─── Service Worker Lifecycle ──────────────────────────
 
-/**
- * Handle messages from the client:
- * - SKIP_WAITING: activate the new SW immediately
- * - SHOW_NOTIFICATION: display a notification from client code
- */
-self.addEventListener("message", (event) => {
+self.addEventListener("message", (event: ExtendableMessageEvent) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 
-  // Handle notification data from client
   if (event.data?.type === "SHOW_NOTIFICATION") {
-    const { title, options } = event.data;
+    const { title, options } = event.data as { title: string; options: NotificationOptions };
     event.waitUntil(
       self.registration.showNotification(title, options)
     );
   }
 });
 
-/**
- * Clean up old caches on activation.
- * - Removes caches outside the current versioned whitelist.
- * - Claims all open clients so the new SW controls them.
- */
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", (event: ExtendableEvent) => {
   const cacheWhitelist = Object.values(CACHE_NAMES);
 
   event.waitUntil(
     (async () => {
-      // Delete old/unversioned caches
       const cacheNames = await caches.keys();
       await Promise.all(
-        cacheNames.map((name) => {
+        cacheNames.map((name: string) => {
           if (!cacheWhitelist.includes(name)) {
-            // Also remove old workbox-precaching caches
             if (name.startsWith("workbox-precaching-")) {
               return caches.delete(name);
             }
-            // Remove unversioned caches from previous versions
             return caches.delete(name);
           }
         })
       );
 
-      // Claim all clients immediately
       await clients.claim();
 
-      // Notify all clients about the update
       const allClients = await clients.matchAll({ includeUncontrolled: true });
       allClients.forEach((client) => {
         client.postMessage({ type: "SW_ACTIVATED", cacheVersion: CACHE_VERSION });
