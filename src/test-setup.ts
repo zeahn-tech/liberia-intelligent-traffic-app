@@ -1,6 +1,9 @@
 // ─── Test Setup for TrafficWatch AI ─────────────────────
 // Provides mocks for browser APIs and Supabase client
 
+// Polyfill IndexedDB for testing offline/sync operations
+import "fake-indexeddb/auto";
+
 // Mock navigator.onLine
 Object.defineProperty(globalThis, "navigator", {
   value: {
