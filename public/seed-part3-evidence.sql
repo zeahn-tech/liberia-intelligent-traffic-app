@@ -1,5 +1,10 @@
 -- ============================================================
--- TrafficWatch AI — Seed Data Part 3: Evidence, AI, ANPR
+-- TrafficWatch AI — ⚠️ DEMO/SEED DATA — PART 3: Evidence, AI, ANPR
+-- ============================================================
+-- !! WARNING: THIS IS DEMO/SEED DATA ONLY !!
+-- Evidence file URLs point to demo paths (no actual files exist).
+-- AI analyses and ANPR scans are simulated results.
+-- All citizen reports are fictional.
 -- ============================================================
 
 -- === EVIDENCE ===

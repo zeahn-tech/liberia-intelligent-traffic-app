@@ -8,6 +8,7 @@ import { NotificationPanel } from "@/components/NotificationPanel";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
+import { DemoBadge } from "@/components/DemoBadge";
 import {
   getAccessibleNavGroups,
   getAccessibleMobileItems,
@@ -380,6 +381,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className={`text-[10px] font-medium ${online ? "text-success" : "text-destructive"}`}>
                   {online ? "Online" : "Offline"}
                 </span>
+              </div>
+              <div className="ml-1">
+                <DemoBadge compact={false} />
               </div>
             </div>
 

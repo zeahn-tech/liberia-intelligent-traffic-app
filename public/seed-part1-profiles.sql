@@ -1,8 +1,14 @@
 -- ============================================================
--- TrafficWatch AI — Seed Data Part 1: Profiles + Vehicles
+-- TrafficWatch AI — ⚠️ DEMO/SEED DATA — PART 1: Profiles + Vehicles
 -- ============================================================
+-- !! WARNING: THIS IS DEMO/SEED DATA ONLY !!
+-- Officer profiles, citizen accounts, and vehicle records
+-- are simulated for development and testing purposes.
+-- They do not represent real personnel or real vehicles.
+--
 -- Run AFTER all migrations have been applied.
 -- All IDs use gen_random_uuid(). FK refs use subqueries.
+-- Safe to run multiple times (uses WHERE NOT EXISTS).
 -- ============================================================
 
 -- === OFFICER PROFILES ===

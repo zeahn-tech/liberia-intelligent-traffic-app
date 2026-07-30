@@ -1,7 +1,13 @@
 -- ============================================================
--- TrafficWatch AI — Seed Data Part 2: Incidents, Persons, Witnesses
+-- TrafficWatch AI — ⚠️ DEMO/SEED DATA — PART 2: Incidents, Persons, Witnesses
 -- ============================================================
+-- !! WARNING: THIS IS DEMO/SEED DATA ONLY !!
+-- These incidents, persons, and witnesses are simulated for
+-- development and testing. They do not represent real events,
+-- real people, or actual law enforcement records.
+--
 -- Run Part 1 first. Uses subqueries to find profile IDs by email.
+-- Safe to run multiple times (uses WHERE NOT EXISTS).
 -- ============================================================
 
 DO LANGUAGE plpgsql $$

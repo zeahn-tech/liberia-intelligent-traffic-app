@@ -1,5 +1,10 @@
 -- ============================================================
--- TrafficWatch AI — Seed Data Part 4: Remaining Tables
+-- TrafficWatch AI — ⚠️ DEMO/SEED DATA — PART 4: Remaining Tables
+-- ============================================================
+-- !! WARNING: THIS IS DEMO/SEED DATA ONLY !!
+-- Predictive analytics are clearly labeled as estimates.
+-- Notifications, tasks, and road conditions are simulated.
+-- Do not treat demo data as real operational information.
 -- ============================================================
 
 -- === PREDICTIVE ANALYTICS (clearly labeled as estimates) ===
