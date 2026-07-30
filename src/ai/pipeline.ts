@@ -29,6 +29,7 @@ import { generateId } from "./utils";
 import type { AnalysisOptions } from "./provider";
 import { addToSyncQueue, offlineSet, offlineGet } from "@/lib/offline";
 import { supabase } from "@/supabase/client";
+import { logAIReview } from "@/lib/audit";
 
 // ===== Event System =====
 
@@ -464,6 +465,14 @@ async function persistAnalysisResult(
 
 /**
  * Mark an analysis result as reviewed by an officer.
+ *
+ * WORKFLOW:
+ *   AI Detection → Confidence Score → Officer Review →
+ *   Confirm / Reject / Correct → Audit Trail → Official Case Record
+ *
+ * AI analysis NEVER automatically becomes an enforcement decision.
+ * Every result requires officer review before it can be used as evidence.
+ * All confirmations, rejections, and corrections are recorded in the audit log.
  */
 export async function reviewAnalysisResult(
   analysisId: string,
@@ -480,19 +489,27 @@ export async function reviewAnalysisResult(
     throw new Error("Analysis result not found locally");
   }
 
+  // Determine the review action type
+  const actionType = !review.confirmed
+    ? "rejected"
+    : review.correctedPlate || (review.overturnedViolations && review.overturnedViolations.length > 0)
+      ? "corrected"
+      : "confirmed";
+
   const updated: AIAnalysisResult = {
     ...local,
     isReviewed: true,
     reviewedBy: review.officerId,
     reviewedAt: new Date().toISOString(),
     officerNotes: review.notes || "",
-    officerOverride: review.correctedPlate || review.overturnedViolations
-      ? {
-          correctedPlate: review.correctedPlate,
-          overturnedCategories: review.overturnedViolations as any,
-          notes: review.notes || "",
-        }
-      : undefined,
+    officerOverride:
+      actionType === "corrected"
+        ? {
+            correctedPlate: review.correctedPlate,
+            overturnedCategories: review.overturnedViolations as any,
+            notes: review.notes || "",
+          }
+        : undefined,
   };
 
   // Update local
@@ -504,6 +521,7 @@ export async function reviewAnalysisResult(
     reviewed_by: review.officerId,
     reviewed_at: updated.reviewedAt,
     license_plate: review.correctedPlate || local.licensePlate?.normalizedPlate || null,
+    officer_notes: review.notes || null,
   };
   await addToSyncQueue({
     tableName: "ai_analyses",
@@ -512,12 +530,27 @@ export async function reviewAnalysisResult(
     payload: reviewPayload,
   });
 
+  // Emit pipeline event for real-time UI updates
   emitEvent({
     type: review.confirmed ? "officer_reviewed" : "officer_overridden",
     timestamp: updated.reviewedAt!,
     jobId: analysisId,
     data: { officerId: review.officerId },
   });
+
+  // ── Record in immutable audit trail ─────────────────────────
+  // Every review action is logged regardless of connectivity
+  await logAIReview(
+    analysisId,
+    local.incidentId,
+    review.officerId,
+    actionType,
+    {
+      notes: review.notes,
+      correctedPlate: review.correctedPlate,
+      overturnedViolations: review.overturnedViolations,
+    }
+  );
 }
 
 /**
