@@ -56,7 +56,7 @@ BEGIN
   INSERT INTO public.incident_logs (incident_id, action, performed_by, details) VALUES (v_inc3, 'status_changed', v_officer2_id, '{"from": "draft", "to": "submitted"}');
   INSERT INTO public.incident_logs (incident_id, action, performed_by, details) VALUES (v_inc3, 'status_changed', v_supervisor_id, '{"from": "submitted", "to": "closed"}');
 
-  INSERT INTO public.incidents (id, officer_id, violation_type_id, title, description, location_lat, location_lng, location_address, vehicle_plate, vehicle_type, vehicle_color, severity, status, officer_notes)
+  INSERT INTO public.incidents (id, officer_id, violation_type_id, title, description, location_lat, location_lng, location_address, vehicle_plate, vehicle_type, vehicle_color, severity, status)
   VALUES (gen_random_uuid(), v_officer1_id, v_reckless_id, 'Reckless Driving - Tubman Boulevard', 'Driver swerving between lanes, cutting off multiple vehicles.', 6.2900, -10.7250, 'Tubman Boulevard, Monrovia', 'LR-2345', 'Sedan', 'Navy', 'critical', 'investigating')
   RETURNING id INTO v_inc4;
   INSERT INTO public.incident_logs (incident_id, action, performed_by, details) VALUES (v_inc4, 'incident_created', v_officer1_id, '{"status": "draft"}');
