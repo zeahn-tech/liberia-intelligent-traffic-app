@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { UserAvatar } from "@/components/UserAvatar";
 import {
   Car,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Camera,
   CheckCircle2,
   AlertTriangle,
@@ -72,6 +72,7 @@ export function LicensePlateCard({
   detection,
   variant = "card",
   showActions = true,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   showExpand = true,
   onViewHistory,
   onSearchIncidents,

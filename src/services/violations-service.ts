@@ -8,10 +8,12 @@ import { supabase } from "@/supabase/client";
 import type { ViolationType } from "@/supabase/types";
 import {
   executeQuery,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   executePaginatedQuery,
   success,
   failure,
   type ApiResponse,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   type PaginatedResponse,
 } from "./base";
 
@@ -85,6 +87,7 @@ export async function getIncidentViolations(incidentId: string): Promise<
 
   if (error) return failure("QUERY_FAILED", error.message);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   return success((data || []).map((iv: any) => ({
     id: iv.id,
     violation_type_id: iv.violation_type_id,

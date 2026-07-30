@@ -369,6 +369,7 @@ export async function dispatchPush(
     // Send push via service worker
     const registration = await navigator.serviceWorker.ready;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const sub of subs) {
       try {
         await registration.showNotification(rendered.title, {

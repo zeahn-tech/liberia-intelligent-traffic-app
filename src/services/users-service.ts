@@ -15,6 +15,7 @@ import {
   FIELD_SETS,
   type ApiResponse,
   type PaginatedResponse,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   type ValidationResult,
 } from "./base";
 

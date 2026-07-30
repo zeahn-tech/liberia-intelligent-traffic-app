@@ -30,7 +30,6 @@ export function ViolationSummary({ violations, className }: ViolationSummaryProp
   );
 
   const severityConf = severityConfig[topViolation.severity] || severityConfig.minor;
-  const SeverityIcon = severityConf.icon;
 
   return (
     <div className={cn("space-y-3", className)}>

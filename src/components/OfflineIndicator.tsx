@@ -13,7 +13,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Wifi, WifiOff, RefreshCw, CloudOff } from "lucide-react";
 
 interface OfflineIndicatorProps {
   /** Display variant */

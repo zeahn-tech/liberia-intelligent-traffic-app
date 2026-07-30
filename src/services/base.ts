@@ -117,11 +117,11 @@ export interface QueryOptions {
  * Accepts any Supabase query builder — awaits it internally.
  */
 export async function executeQuery<T>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: any,
   options: QueryOptions = {}
 ): Promise<ApiResponse<T>> {
   const start = performance.now();
-  const label = options.label || "query";
 
   try {
     const { data, error } = await query;
@@ -172,6 +172,7 @@ export async function executeQuery<T>(
 /**
  * Helper to create a query function for paginated queries.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type QueryBuilder = (q: ReturnType<typeof supabase.from>) => any;
 
 /**
@@ -182,6 +183,7 @@ export async function executePaginatedQuery<T>(
   queryBuilder: QueryBuilder,
   page: number = 1,
   pageSize: number = 20,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   options: QueryOptions = {}
 ): Promise<PaginatedResponse<T>> {
   try {

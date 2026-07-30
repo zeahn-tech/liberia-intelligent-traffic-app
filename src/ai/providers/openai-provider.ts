@@ -75,6 +75,7 @@ export class OpenAIProvider implements AIProvider {
 
   async detectLicensePlate(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<{
     plateText: string;
@@ -101,6 +102,7 @@ export class OpenAIProvider implements AIProvider {
 
   async detectObjects(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -124,6 +126,7 @@ export class OpenAIProvider implements AIProvider {
 
   async classifyViolations(
     detections: Array<{ label: string; confidence: number }>,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -161,6 +164,7 @@ export class OpenAIProvider implements AIProvider {
 
   private async callOpenAIAPI(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<ProviderAnalysisResponse> {
     const model = this.config.modelName || "gpt-4o";
@@ -317,6 +321,7 @@ Violation types: Speeding, Running Red Light, Illegal Parking, Driving Against T
   }
 
   private async callOpenAIClassification(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _detections: Array<{ label: string; confidence: number }>
   ): Promise<Array<{ type: string; confidence: number; description: string; severity: "minor" | "moderate" | "serious" | "critical" }>> {
     // In live mode, uses context from detections
@@ -330,6 +335,7 @@ Violation types: Speeding, Running Red Light, Illegal Parking, Driving Against T
     ];
   }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   private parseOpenAIResponse(data: any): ProviderAnalysisResponse {
     const content = data?.choices?.[0]?.message?.content || "";
     const cleanJson = content.replace(/```json|```/g, "").trim();
@@ -361,6 +367,7 @@ Violation types: Speeding, Running Red Light, Illegal Parking, Driving Against T
   // ===== Simulated Analysis (Demo Mode) =====
 
   private async simulateAnalysis(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _media: MediaInput
   ): Promise<ProviderAnalysisResponse> {
     await new Promise((resolve) => setTimeout(resolve, 900 + Math.random() * 1600));

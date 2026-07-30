@@ -58,6 +58,7 @@ export class FutureTrafficVisionProvider implements AIProvider {
 
   async analyzeImage(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: AnalysisOptions
   ): Promise<ProviderAnalysisResponse> {
     // FUTURE INTEGRATION POINT:
@@ -68,6 +69,7 @@ export class FutureTrafficVisionProvider implements AIProvider {
 
   async analyzeVideo(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: AnalysisOptions
   ): Promise<ProviderAnalysisResponse> {
     // FUTURE INTEGRATION POINT:
@@ -77,7 +79,9 @@ export class FutureTrafficVisionProvider implements AIProvider {
   }
 
   async detectLicensePlate(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<{
     plateText: string;
@@ -102,7 +106,9 @@ export class FutureTrafficVisionProvider implements AIProvider {
   }
 
   async detectObjects(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -125,6 +131,7 @@ export class FutureTrafficVisionProvider implements AIProvider {
 
   async classifyViolations(
     detections: Array<{ label: string; confidence: number }>,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -176,6 +183,7 @@ export class FutureTrafficVisionProvider implements AIProvider {
   // ===== Simulated Analysis (Demo Mode) =====
 
   private async simulateAnalysis(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _media: MediaInput
   ): Promise<ProviderAnalysisResponse> {
     await new Promise((resolve) => setTimeout(resolve, 1200 + Math.random() * 1800));

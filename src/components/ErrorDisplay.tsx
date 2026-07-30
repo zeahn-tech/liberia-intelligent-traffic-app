@@ -637,6 +637,7 @@ export function SessionExpiredCard({
 // ERROR TOAST — Quick toast error display
 // ═══════════════════════════════════════════════════════════
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function showApiErrorToast(error: unknown, defaultTitle?: string) {
   // Dynamic import to avoid circular deps
   import("@/lib/error-handler").then(({ showErrorToast }) => {

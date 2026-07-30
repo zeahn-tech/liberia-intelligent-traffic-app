@@ -28,6 +28,7 @@ describe("Offline Storage", () => {
 
     it("sets and gets a value", async () => {
       await offlineSet("drafts", "test-key", { id: "test-key", name: "test", value: 123 });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await offlineGet<any>("drafts", "test-key");
       expect(result).toBeDefined();
       expect(result.name).toBe("test");
@@ -111,6 +112,7 @@ describe("Offline Storage", () => {
       });
       await updateSyncStatus(id, "completed");
       const queue = await getPendingSyncQueue();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       const entry = queue.find((e: any) => e.id === id);
       expect(entry).toBeDefined();
       expect(entry!.status).toBe("completed");
@@ -127,7 +129,9 @@ describe("Offline Storage", () => {
       await updateSyncStatus(id1, "completed");
       await clearCompletedSync();
       const queue = await getPendingSyncQueue();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(queue.find((e: any) => e.id === id1)).toBeUndefined();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(queue.find((e: any) => e.id === id2)).toBeDefined();
     });
   });
@@ -193,6 +197,7 @@ describe("Offline Storage", () => {
 
     it("sets and gets a cached value", async () => {
       await setCache("route-data", { incidents: [1, 2, 3] }, 60);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cached = await getCache<any>("route-data");
       expect(cached).toBeDefined();
       expect(cached.incidents).toEqual([1, 2, 3]);

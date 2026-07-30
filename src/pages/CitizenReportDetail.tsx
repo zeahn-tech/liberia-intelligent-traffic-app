@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router";
 import { CitizenLayout } from "@/pages/CitizenLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   Clock,
@@ -20,11 +17,11 @@ import {
   Phone,
   Mail,
   Eye,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   EyeOff,
   Lock,
 } from "lucide-react";
 import { supabase } from "@/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 
 interface CitizenReport {
   id: string;
@@ -99,7 +96,6 @@ const REPORT_TYPE_LABELS: Record<string, string> = {
 export default function CitizenReportDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [report, setReport] = useState<CitizenReport | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);

@@ -6,7 +6,6 @@ import {
   stationsToMapPoints,
   checkpointsToMapPoints,
 } from "@/lib/geography";
-import type { GeoFilterState } from "@/supabase/types";
 
 describe("Geography Utilities", () => {
   // ─── geoFilterFromParams ───────────────────────────
@@ -50,6 +49,7 @@ describe("Geography Utilities", () => {
     it("converts counties to map points", () => {
       const counties = [
         { code: "MO", name: "Montserrado", capital: "Bensonville", police_region: "West" },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[];
       const points = countiesToMapPoints(counties);
       expect(points).toHaveLength(1);
@@ -63,6 +63,7 @@ describe("Geography Utilities", () => {
     it("converts stations to map points", () => {
       const stations = [
         { id: "1", name: "Central Station", latitude: 6.3, longitude: -10.8, type: "hq" },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[];
       const points = stationsToMapPoints(stations);
       expect(points).toHaveLength(1);
@@ -75,6 +76,7 @@ describe("Geography Utilities", () => {
     it("converts checkpoints to map points", () => {
       const checks = [
         { id: "1", name: "Main Gate", latitude: 6.3, longitude: -10.8, road_name: "UN Drive" },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] as any[];
       const points = checkpointsToMapPoints(checks);
       expect(points).toHaveLength(1);

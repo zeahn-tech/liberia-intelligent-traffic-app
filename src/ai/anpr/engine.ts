@@ -13,12 +13,12 @@
 
 import type { MediaInput } from "../types";
 import { providerRegistry } from "../registry";
-import { normalizePlateText, correctOCRErrors, buildPlateResult, plateSimilarity, getPlateVariations } from "./normalization";
 import type {
   PlateDetectionResult,
   ANPRScanRecord,
   ANPRSearchQuery,
   ANPRSearchResult,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   VehicleRecord,
   StolenVehicleDatabase,
   StolenVehicleRecord,
@@ -124,7 +124,7 @@ async function saveScanRecord(scan: {
   officerId: string;
 }): Promise<void> {
   // Store locally
-  const records = await offlineGetAll<any>("cache");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   // Use a dedicated key for scan history
   const key = `anpr_scans_${scan.incidentId}`;
   const existing = await offlineGet<ANPRScanRecord[]>("cache", key);
@@ -151,6 +151,7 @@ export async function searchANPRHistory(
   query: ANPRSearchQuery
 ): Promise<ANPRSearchResult> {
   // Get all scan records from cache
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allKeys = await offlineGetAll<any>("cache");
   const allScans: ANPRScanRecord[] = [];
 

@@ -7,6 +7,7 @@ import {
   Smartphone,
   Monitor,
   CheckCircle2,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   ExternalLink,
 } from "lucide-react";
 
@@ -48,6 +49,7 @@ export function PwaInstallPrompt() {
   // ── Standalone mode detection ────────────────────────
   useEffect(() => {
     const match = window.matchMedia("(display-mode: standalone)");
+// eslint-disable-next-line react-hooks/set-state-in-effect
     setIsStandalone(match.matches);
     const handler = (e: MediaQueryListEvent) => setIsStandalone(e.matches);
     match.addEventListener("change", handler);

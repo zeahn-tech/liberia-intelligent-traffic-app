@@ -8,7 +8,6 @@
 // - Batch query deduplication for list endpoints
 // ============================================================
 
-import { supabase } from "@/supabase/client";
 import { setCache, getCache } from "@/lib/offline";
 import type { ApiResponse } from "@/services/base";
 

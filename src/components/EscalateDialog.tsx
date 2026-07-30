@@ -46,6 +46,7 @@ export function EscalateDialog({
       toast.success(`Incident escalated to ${escalationLevel}`);
       onOpenChange(false);
       resetForm();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast.error("Failed to escalate incident");
     } finally {

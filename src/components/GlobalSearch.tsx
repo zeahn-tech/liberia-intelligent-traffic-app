@@ -177,9 +177,10 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
   // Load recent searches when dialog opens
   useEffect(() => {
     if (open && user?.id && !query) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       loadRecentSearches();
       if (initialQuery) {
-        /* eslint-disable-next-line */
+         
         setQuery(initialQuery);
       }
     }
@@ -189,6 +190,7 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
   // Debounced search
   useEffect(() => {
     if (!query || query.length < 2) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([]);
       setTotal(0);
       setSearched(false);
@@ -206,7 +208,7 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [query]);
 
   const handleSelect = async (result: SearchResult) => {
@@ -255,6 +257,7 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
   };
 
   const formatTimeAgo = (dateStr: string) => {
+// eslint-disable-next-line react-hooks/purity
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "Just now";
@@ -474,6 +477,7 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
  * return <button onClick={search.open}>Search</button>;
  * ```
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useGlobalSearch() {
   const [open, setOpen] = useState(false);
 

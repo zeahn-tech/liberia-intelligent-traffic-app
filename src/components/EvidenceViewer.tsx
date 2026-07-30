@@ -23,7 +23,9 @@ import {
   FileText,
   File,
   Download,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Eye,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Lock,
   Shield,
   Clock,
@@ -172,7 +174,6 @@ export function EvidenceViewer({
   onDownload,
   className,
 }: EvidenceViewerProps) {
-  const [expanded, setExpanded] = useState(false);
   const FileIcon = FILE_ICONS[evidence.type] || File;
   const typeColor = FILE_COLORS[evidence.type] || FILE_COLORS.other;
   const iconColor = FILE_ICON_COLORS[evidence.type] || FILE_ICON_COLORS.other;

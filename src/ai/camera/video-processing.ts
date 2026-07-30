@@ -93,6 +93,7 @@ export function extractFramesAtInterval(
     } catch {
       // Frame extraction may fail if video isn't seekable
     }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     frameCount += frameInterval;
   }
 
@@ -123,7 +124,9 @@ export class DefaultVideoProcessingService implements VideoProcessingService {
    * Delegates to the AI provider system for actual analysis.
    */
   async processFrame(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _frame: ImageData,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _profile: CameraAnalysisProfile
   ): Promise<CameraDetectionEvent[]> {
     // ─── Future Implementation ─────────────────────────
@@ -151,7 +154,9 @@ export class DefaultVideoProcessingService implements VideoProcessingService {
    * Extracts frames and analyzes them in batches.
    */
   async processClip(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _videoSource: string | Blob,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _profile: CameraAnalysisProfile
   ): Promise<CameraDetectionEvent[]> {
     // ─── Future Implementation ─────────────────────────

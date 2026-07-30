@@ -9,7 +9,6 @@
  * device/network context.
  */
 
-import { offlineGet, offlineGetAll, offlineSet, addToSyncQueue } from "./offline";
 import type { EvidenceCustodyEvent } from "@/supabase/types";
 
 // ===== Types =====

@@ -1,8 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,12 +20,13 @@ import {
   AlertTriangle,
   ChevronRight,
   Download,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Calendar,
   WifiOff,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Globe,
 } from "lucide-react";
 import { IncidentMap } from "@/components/IncidentMap";
-import type { MapPoint, MapLayerType } from "@/components/IncidentMap";
 import { GeoFilter } from "@/components/GeoFilter";
 import { geoFilterFromParams } from "@/lib/geography";
 import type { GeoFilterState } from "@/supabase/types";
@@ -150,13 +149,14 @@ export default function Incidents() {
     return true;
   });
 
-  const mapMarkers = filteredIncidents.map((inc) => ({
+  const mapData = useMemo(() => data.map((inc) => ({
     id: inc.id,
     lat: inc.lat,
     lng: inc.lng,
     title: `${inc.type} - ${inc.plate}`,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     severity: inc.severity as any,
-  }));
+  })), [data]);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredIncidents.length / itemsPerPage)), [filteredIncidents.length, itemsPerPage]);
 

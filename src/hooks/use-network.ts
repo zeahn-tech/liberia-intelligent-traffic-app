@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from "react";
 import { addOnlineListener, isOnline } from "@/lib/offline";
 
 export function useNetwork() {

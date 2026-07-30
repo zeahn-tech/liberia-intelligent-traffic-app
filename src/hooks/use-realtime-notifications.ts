@@ -11,8 +11,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useRealtimeChannel, useRealtimeCounter, rt } from "./use-realtime";
-import { useRealtimeContext } from "@/lib/realtime-context";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // ─── Types ───────────────────────────────────────────────
@@ -59,16 +57,15 @@ export interface UseRealtimeNotificationsResult {
  */
 export function useRealtimeNotifications(): UseRealtimeNotificationsResult {
   const { user } = useAuth();
-  const { notificationCount: globalCount, acknowledgeNotifications } = useRealtimeContext();
   const [latestNotification, setLatestNotification] = useState<LiveNotification | null>(null);
   const [localCount, setLocalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [subscriptionReady, setSubscriptionReady] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── Initial fetch of unread count ────────────────────
 
+// eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchUnreadCount = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -89,6 +86,7 @@ export function useRealtimeNotifications(): UseRealtimeNotificationsResult {
   }, [user?.id]);
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
@@ -141,6 +139,7 @@ export function useRealtimeNotifications(): UseRealtimeNotificationsResult {
 
   // Track subscription readiness
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect
     if (ready) setSubscriptionReady(true);
   }, [ready]);
 

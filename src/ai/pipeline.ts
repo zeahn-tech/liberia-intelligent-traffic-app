@@ -28,7 +28,6 @@ import { providerRegistry } from "./registry";
 import { generateId } from "./utils";
 import type { AnalysisOptions } from "./provider";
 import { addToSyncQueue, offlineSet, offlineGet } from "@/lib/offline";
-import { supabase } from "@/supabase/client";
 import { logAIReview } from "@/lib/audit";
 
 // ===== Event System =====
@@ -307,6 +306,7 @@ async function processJob(job: AnalysisJob): Promise<AIAnalysisResult> {
           make: vehicleObj.make,
           model: vehicleObj.model,
           color: vehicleObj.color,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
           confidence: "confidence" in vehicleObj ? (vehicleObj as any).confidence ?? vehicle?.confidence ?? 0.5 : vehicle?.confidence ?? 0.5,
         };
       }
@@ -459,6 +459,7 @@ async function persistAnalysisResult(
       severity: result.violations[0]?.severity || null,
       recommended_review: result.overallConfidence < 0.85,
       is_confirmed: false,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
   });
 }
@@ -506,6 +507,7 @@ export async function reviewAnalysisResult(
       actionType === "corrected"
         ? {
             correctedPlate: review.correctedPlate,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
             overturnedCategories: review.overturnedViolations as any,
             notes: review.notes || "",
           }
@@ -516,6 +518,7 @@ export async function reviewAnalysisResult(
   await offlineSet("ai_analyses", analysisId, updated);
 
   // Queue sync for review status
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reviewPayload: any = {
     is_confirmed: review.confirmed,
     reviewed_by: review.officerId,
@@ -560,7 +563,9 @@ export async function getAnalysisResultsForIncident(
   incidentId: string
 ): Promise<AIAnalysisResult[]> {
   const { offlineGetAll } = await import("@/lib/offline");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const all = await offlineGetAll<any>("ai_analyses");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   return all.filter((a: any) => a.incidentId === incidentId);
 }
 

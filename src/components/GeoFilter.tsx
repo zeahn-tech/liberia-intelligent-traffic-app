@@ -38,6 +38,7 @@ import type {
 } from "@/supabase/types";
 import {
   MapPin,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Filter,
   X,
   Loader2,

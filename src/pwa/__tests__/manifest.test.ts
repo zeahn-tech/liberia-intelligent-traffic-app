@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import manifest from "/public/manifest.webmanifest?raw";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -71,6 +70,7 @@ describe("PWA Manifest", () => {
 
     it("includes a maskable icon", () => {
       const hasMaskable = parsed.icons.some(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
         (i: any) => i.purpose && i.purpose.includes("maskable")
       );
       expect(hasMaskable).toBe(true);

@@ -9,6 +9,7 @@ import type { Incident } from "@/supabase/types";
 import {
   executeQuery,
   executePaginatedQuery,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   success,
   failure,
   buildSelect,

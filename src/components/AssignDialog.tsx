@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, User, Shield, CheckCircle2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Officer {
@@ -75,6 +74,7 @@ export function AssignDialog({
       toast.success(`Incident assigned to ${selectedOfficer.full_name}`);
       onOpenChange(false);
       resetForm();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       toast.error("Failed to assign incident");
     } finally {

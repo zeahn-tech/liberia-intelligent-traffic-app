@@ -177,7 +177,9 @@ export interface AIAnalysis {
   vehicle_color: string | null;
   license_plate: string | null;
   license_plate_confidence: number | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   detected_objects: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   violations: any;
   ai_summary: string | null;
   severity: string | null;
@@ -187,6 +189,7 @@ export interface AIAnalysis {
   reviewed_by: string | null;
   reviewed_at: string | null;
   officer_notes: string | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   raw_provider_output: any;
   created_at: string;
 }
@@ -215,6 +218,7 @@ export interface ANPRScan {
   officer_corrected_text: string | null;
   vehicle_type: string | null;
   vehicle_color: string | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   bounding_box: any;
   scanned_at: string;
   officer_id: string;
@@ -298,6 +302,7 @@ export interface IncidentLog {
   incident_id: string;
   action: string;
   performed_by: string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   details: any;
   created_at: string;
 }
@@ -311,6 +316,7 @@ export interface EvidenceCustodyEvent {
   to_officer: string | null;
   ip_address: string | null;
   user_agent: string | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   details: any;
   created_at: string;
 }
@@ -324,6 +330,7 @@ export interface EvidenceVersion {
   mime_type: string | null;
   sha256_hash: string;
   processing_type: "original" | "resized" | "cropped" | "compressed" | "converted" | "watermarked" | "redacted" | "ai_enhanced" | "export";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   processing_params: any;
   created_by: string;
   created_at: string;
@@ -403,6 +410,7 @@ export interface LiberiaCounty {
   center_lat: number | null;
   center_lng: number | null;
   police_region: string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   boundary_geojson: any;
   is_active: boolean;
   created_at: string;
@@ -450,6 +458,7 @@ export interface MajorRoad {
   to_location: string | null;
   length_km: number | null;
   counties: string[];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   route_geojson: any;
   is_active: boolean;
   created_at: string;
@@ -492,6 +501,7 @@ export interface SyncQueueItem {
   table_name: string;
   record_id: string;
   operation: "create" | "update" | "delete";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any;
   status: "pending" | "syncing" | "completed" | "failed";
   error_message: string | null;

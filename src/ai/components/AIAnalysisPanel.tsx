@@ -13,16 +13,17 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Car,
   ScanLine,
   Box,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   FileText,
   ThumbsUp,
   ThumbsDown,
   RotateCcw,
   Loader2,
 } from "lucide-react";
-import type { AIAnalysisResult, ViolationDetection } from "../types";
 import type { ANPRScanRecord } from "../anpr/types";
 
 interface AIAnalysisPanelProps {
@@ -41,6 +42,7 @@ export function AIAnalysisPanel({
   analysis,
   isLoading,
   recentScans = [],
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   officerId,
   onConfirm,
   onReject,

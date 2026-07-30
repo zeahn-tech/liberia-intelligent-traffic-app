@@ -165,6 +165,7 @@ export async function offlineGet<T>(store: OfflineStore, key: string): Promise<T
 
 export async function offlineSet<T>(store: OfflineStore, key: string, value: T): Promise<void> {
   const db = await getDB();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   await db.put(store, { ...value, id: key } as any);
 }
 
@@ -209,6 +210,7 @@ export interface SyncQueueEntry {
   tableName: string;
   recordId: string;
   operation: "create" | "update" | "delete";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any;
   status: "pending" | "syncing" | "completed" | "failed";
   errorMessage?: string;
@@ -233,6 +235,7 @@ export async function addToSyncQueue(entry: Omit<SyncQueueEntry, "id" | "status"
   return db.add("pending_sync", queueEntry) as Promise<number>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getPendingSyncQueue(): Promise<any[]> {
   const db = await getDB();
   return db.getAll("pending_sync");
@@ -269,6 +272,7 @@ export async function clearCompletedSync(): Promise<void> {
 export interface Draft {
   id: string;
   type: "incident" | "evidence" | "note";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
   createdAt: string;
   updatedAt: string;
@@ -310,6 +314,7 @@ export async function clearAllDrafts(): Promise<void> {
 
 // ===== Cache =====
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface CacheEntry<T = any> {
   key: string;
   data: T;

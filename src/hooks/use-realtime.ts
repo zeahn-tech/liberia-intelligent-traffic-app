@@ -88,6 +88,7 @@ export function useRealtimeChannel(
   useEffect(() => {
     mountedRef.current = true;
     if (!enabled) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       setReady(false);
       return;
     }

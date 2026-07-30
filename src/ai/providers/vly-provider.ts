@@ -52,6 +52,7 @@ export class VlyAIProvider implements AIProvider {
 
   async analyzeImage(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<ProviderAnalysisResponse> {
     if (this.useMockMode) {
@@ -65,6 +66,7 @@ export class VlyAIProvider implements AIProvider {
 
   async analyzeVideo(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<ProviderAnalysisResponse> {
     if (this.useMockMode) {
@@ -74,7 +76,9 @@ export class VlyAIProvider implements AIProvider {
   }
 
   async detectLicensePlate(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<{
     plateText: string;
@@ -101,7 +105,9 @@ export class VlyAIProvider implements AIProvider {
   }
 
   async detectObjects(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -118,7 +124,9 @@ export class VlyAIProvider implements AIProvider {
   }
 
   async classifyViolations(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _detections: Array<{ label: string; confidence: number }>,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -149,6 +157,7 @@ export class VlyAIProvider implements AIProvider {
   // ===== Simulated Analysis (Demo Mode) =====
 
   private async simulateAnalysis(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _media: MediaInput
   ): Promise<ProviderAnalysisResponse> {
     // Simulate processing delay

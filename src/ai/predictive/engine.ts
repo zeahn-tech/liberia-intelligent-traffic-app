@@ -21,9 +21,13 @@ import type {
   VolumeForecast,
   RiskSeverity,
   ConfidenceLevel,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   DBModelRecord,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   DBPredictionRecord,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   DBHotspotRecord,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   DBRiskRoadRecord,
 } from "./types";
 
@@ -523,7 +527,6 @@ class PredictiveEngine {
    * Generate a prediction summary for dashboard display.
    */
   getSummary(): PredictionSummary {
-    const models = modelRegistry.getAll();
     return {
       totalActivePredictions: 24, // Placeholder — would query DB
       categoriesBreakdown: {

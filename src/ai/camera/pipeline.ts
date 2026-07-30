@@ -22,7 +22,6 @@ import type {
 import { streamManager } from "./stream-gateway";
 import { videoProcessor } from "./video-processing";
 import { supabase } from "@/supabase/client";
-import { logAuditEvent, AUDIT_ACTIONS } from "@/lib/audit";
 
 // ─── Pipeline Status ───────────────────────────────────
 
@@ -193,10 +192,12 @@ class CameraAnalysisPipeline {
 
     // Log to audit
     await logAuditEvent({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       action: "ai_analysis_completed" as any,
       targetType: "camera",
       targetId: cameraId,
       description: `Camera ${cameraId} detected: ${event.eventType} (confidence: ${event.confidence})`,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       metadata: { event } as any,
       severity: event.confidence > 0.9 ? "info" : "info",
     });

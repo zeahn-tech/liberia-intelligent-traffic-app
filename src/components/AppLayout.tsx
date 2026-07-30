@@ -66,6 +66,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   useEffect(() => {
     if (!initialized && window.innerWidth < 768) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       setSidebarOpen(false);
       setInitialized(true);
     }

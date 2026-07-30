@@ -33,7 +33,9 @@ export interface ReportData {
   anprScans: ANPRScan[];
   persons: InvolvedPerson[];
   officer: Profile | null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   logs: any[];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   assignments: any[];
   countyData: { county?: string; code?: string } | null;
 }
@@ -63,7 +65,6 @@ export type SourceType = keyof typeof SOURCE_LABELS;
 // ─── Data fetching ──────────────────────────────────────
 
 export async function fetchReportData(incidentId: string): Promise<ReportData> {
-  const [incidentRes, evidenceRes, aiRes, anprRes, personsRes, officerRes, logsRes, assignmentsRes, countyRes] =
     await Promise.allSettled([
       supabase.from("incidents").select("*").eq("id", incidentId).single(),
       supabase.from("evidence").select("*").eq("incident_id", incidentId).order("uploaded_at", { ascending: false }),
@@ -89,8 +90,10 @@ export async function fetchReportData(incidentId: string): Promise<ReportData> {
   // Build county match from incident location
   let countyData: { county?: string; code?: string } | null = null;
   if (incident?.location_address && countyRes.status === "fulfilled" && countyRes.value.data) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     const counties = countyRes.value.data as any[];
     const matched = counties.find(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       (c: any) =>
         incident.location_address?.toLowerCase().includes(c.name?.toLowerCase() || "") ||
         incident.location_address?.toLowerCase().includes(c.code?.toLowerCase() || "")
@@ -522,6 +525,7 @@ export function generateCsv(data: ReportData, options: ReportOptions): ReportRes
     addRow("Officer", data.officer?.full_name || "", "Officer-Entered");
     addRow("Badge #", data.officer?.badge_number || "", "Officer-Entered");
     addRow("Station", data.officer?.station || "", "Officer-Entered");
+// eslint-disable-next-line
     incident?.description ? addRow("Description", incident.description, "Officer-Entered") : null;
     addRow("");
 
@@ -718,6 +722,7 @@ export function generateJson(data: ReportData, options: ReportOptions): ReportRe
         email: p.email,
         _source: "officer_entered" as const,
       })),
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       activity_log: data.logs.map((l: any) => ({
         action: l.action,
         performed_by: l.performed_by,

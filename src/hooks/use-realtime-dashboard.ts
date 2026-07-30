@@ -161,8 +161,9 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
   );
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect
     setSubError("incidents", incidentsError);
-    // eslint-disable-next-line
+     
   }, [incidentsError, setSubError]);
 
   // ─── 2. AI Analysis subscription ─────────────────────
@@ -211,8 +212,9 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
   );
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect
     setSubError("ai", aiError);
-    // eslint-disable-next-line
+     
   }, [aiError, setSubError]);
 
   // ─── 3. Evidence subscription ─────────────────────────
@@ -248,8 +250,9 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
   );
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect
     setSubError("evidence", evidenceError);
-    // eslint-disable-next-line
+     
   }, [evidenceError, setSubError]);
 
   // ─── 4. Camera events subscription ────────────────────
@@ -288,8 +291,9 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
   );
 
   useEffect(() => {
+// eslint-disable-next-line react-hooks/set-state-in-effect
     setSubError("camera", cameraError);
-    // eslint-disable-next-line
+     
   }, [cameraError, setSubError]);
 
   // ─── Ready state ──────────────────────────────────────

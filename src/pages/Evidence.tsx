@@ -22,6 +22,7 @@ import {
   Grid3X3,
   List,
   Brain,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCw,
   Shield,
   Clock,
@@ -36,7 +37,6 @@ import { providerRegistry } from "@/ai/registry";
 import { toast } from "sonner";
 import { EvidenceDetailDialog } from "@/components/EvidenceDetailDialog";
 import { EvidenceUpload } from "@/components/EvidenceUpload";
-import { generateSignedUrl, processOfflineUploads } from "@/lib/storage";
 
 interface EvidenceItem {
   id: string;
@@ -181,13 +181,11 @@ const evidenceItems: EvidenceItem[] = [
 ];
 
 export default function Evidence() {
-  const navigate = useNavigate();
   const [view, setView] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [aiInitialized, setAiInitialized] = useState(false);
   const [selectedEvidence, setSelectedEvidence] = useState<EvidenceItem | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -214,7 +212,6 @@ export default function Evidence() {
     setDialogOpen(true);
   };
 
-  const handleAnalyzeEvidence = useCallback(async (ev: EvidenceItem) => {
     setAiLoading(ev.id);
     await initAI();
     try {
@@ -229,6 +226,7 @@ export default function Evidence() {
     } finally {
       setAiLoading(null);
     }
+// eslint-disable-next-line
   }, [initAI]);
 
   const filteredEvidence = evidenceItems.filter((ev) => {

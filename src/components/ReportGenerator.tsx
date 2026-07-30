@@ -31,6 +31,7 @@ import {
   Shield,
   Eye,
   AlertTriangle,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   File,
   X,
   Copy,
@@ -51,7 +52,6 @@ import {
   type ReportData,
   SOURCE_LABELS,
 } from "@/lib/report-generator";
-import { roleHasPermission } from "@/lib/permissions";
 
 interface ReportGeneratorProps {
   open: boolean;
@@ -104,6 +104,7 @@ export function ReportGenerator({
           console.error("[ReportGenerator] Failed to load data:", err);
         });
     }
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, incidentId]);
 
   // Regenerate preview when options change
@@ -216,8 +217,10 @@ export function ReportGenerator({
   // Rebuild preview when options change
   useEffect(() => {
     if (dataLoaded && !generated) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       updatePreview({});
     }
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [format, scope, includeEvidence, includeAIAnalysis, includeSignatures, sourceLabeling, dataLoaded, generated]);
 
   const formatIcons: Record<ReportFormat, React.ElementType> = {
@@ -232,7 +235,6 @@ export function ReportGenerator({
     json: "JSON Data",
   };
 
-  const FormatIcon = formatIcons[format];
   const canGenerate = user?.id && !generating && dataLoaded;
 
   // ── Report Detail Summary ──

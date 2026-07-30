@@ -20,10 +20,15 @@ import type {
   StreamConnection,
   StreamGateway,
   StreamStatus,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   RTSPConfig,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   HLSConfig,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   WebRTCConfig,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   MJPEGConfig,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   CameraDetectionEvent,
 } from "./types";
 

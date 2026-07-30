@@ -10,6 +10,7 @@ import {
   executeQuery,
   executePaginatedQuery,
   success,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   failure,
   buildSelect,
   FIELD_SETS,
@@ -20,7 +21,6 @@ import {
 // ─── Constants ───────────────────────────────────────────
 
 const EVIDENCE_TYPES = ["photo", "video", "document", "audio", "other"] as const;
-const EVIDENCE_STATUSES = ["original", "processed", "reviewed", "archived", "expunged"] as const;
 
 const SELECT_FIELDS = buildSelect([...FIELD_SETS.evidence]);
 

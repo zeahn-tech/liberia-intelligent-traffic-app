@@ -16,8 +16,10 @@ import {
   Brain,
   Camera,
   CheckCircle2,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   AlertTriangle,
   Upload,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   FileText,
   ArrowUpRight,
   TrendingUp,
@@ -269,6 +271,7 @@ export function LiveIncidentFeed({
           </div>
           <span className="text-[9px] text-muted-foreground/40">
             {activities.length > 0 ? `${activities.filter(a => {
+// eslint-disable-next-line react-hooks/purity
               const diff = Date.now() - new Date(a.timestamp).getTime();
               return diff < 3600000;
             }).length} in last hour` : ""}

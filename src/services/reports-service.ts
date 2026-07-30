@@ -8,6 +8,7 @@ import { supabase } from "@/supabase/client";
 import {
   executeQuery,
   executePaginatedQuery,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   success,
   type ApiResponse,
   type PaginatedResponse,

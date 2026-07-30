@@ -73,6 +73,7 @@ export class GeminiProvider implements AIProvider {
 
   async detectLicensePlate(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<{
     plateText: string;
@@ -99,6 +100,7 @@ export class GeminiProvider implements AIProvider {
 
   async detectObjects(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -121,6 +123,7 @@ export class GeminiProvider implements AIProvider {
 
   async classifyViolations(
     detections: Array<{ label: string; confidence: number }>,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<
     Array<{
@@ -162,6 +165,7 @@ export class GeminiProvider implements AIProvider {
 
   private async callGeminiAPI(
     media: MediaInput,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options: AnalysisOptions
   ): Promise<ProviderAnalysisResponse> {
     const model = this.config.modelName || "gemini-2.0-flash";
@@ -311,6 +315,7 @@ Violation types: Speeding, Running Red Light, Illegal Parking, Driving Against T
     ];
   }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   private parseGeminiResponse(data: any): ProviderAnalysisResponse {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     const cleanJson = text.replace(/```json|```/g, "").trim();
@@ -353,6 +358,7 @@ Violation types: Speeding, Running Red Light, Illegal Parking, Driving Against T
   // ===== Simulated Analysis (Demo Mode) =====
 
   private async simulateAnalysis(
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     _media: MediaInput
   ): Promise<ProviderAnalysisResponse> {
     await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1500));

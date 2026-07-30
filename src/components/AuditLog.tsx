@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -41,6 +39,7 @@ import {
   Settings,
   Database,
   ShieldOff,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   File,
 } from "lucide-react";
 import {
@@ -51,7 +50,6 @@ import {
   type AuditSeverity,
 } from "@/lib/audit";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -159,7 +157,6 @@ export function AuditLog({
   showSeverity = true,
   emptyMessage = "No audit events recorded yet",
 }: AuditLogProps) {
-  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
@@ -342,6 +339,7 @@ export function AuditLog({
 
 // ─── Mock Data Generator ───────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function generateMockAuditEvents(incidentId: string, count: number = 10): AuditEvent[] {
   const base = Date.now() - count * 3600000;
   const officers = ["Sgt. John Kollie", "Ofc. James Tarplah", "TrafficWatch AI", "System"];

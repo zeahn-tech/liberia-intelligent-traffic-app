@@ -75,6 +75,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (!user?.id) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       setReadyState(false);
       return;
     }
@@ -166,6 +167,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 /**
  * Access the Realtime context for global count + event subscription.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useRealtimeContext(): RealtimeContextValue {
   const ctx = useContext(RealtimeContext);
   if (!ctx) {

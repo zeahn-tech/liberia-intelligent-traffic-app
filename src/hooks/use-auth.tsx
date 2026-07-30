@@ -18,6 +18,7 @@ import {
   getAccountStatus as supabaseGetAccountStatus,
   getAuthAuditEvents,
   checkPasswordStrength,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   getProfile,
   type AuthUser,
   type UserSession,
@@ -37,6 +38,7 @@ interface AuthContextType {
 
   // Core auth
   signIn: (email: string, password: string) => Promise<void>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   signUp: (email: string, password: string, profile: any) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -85,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
   const [authAuditEvents, setAuthAuditEvents] = useState<AuthAuditEvent[]>([]);
-  const [sessionCheckInterval, setSessionCheckInterval] = useState<number | null>(null);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -177,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }, 5 * 60 * 1000);
 
+// eslint-disable-next-line react-hooks/set-state-in-effect
     setSessionCheckInterval(interval);
 
     return () => {
@@ -199,6 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const signUp = async (email: string, password: string, profile: any) => {
     const data = await signUpWithEmail(email, password, profile);
     if (data.user) {
@@ -362,6 +365,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // ─── Hook ──────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {

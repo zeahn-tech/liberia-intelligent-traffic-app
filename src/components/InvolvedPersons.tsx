@@ -25,12 +25,16 @@ import {
   UserPlus,
   Eye,
   Phone,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Mail,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   MapPin,
   FileText,
   Trash2,
   CheckCircle2,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   X,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -60,6 +64,7 @@ interface InvolvedPersonsProps {
   incidentId: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function InvolvedPersons({ incidentId }: InvolvedPersonsProps) {
   const [persons, setPersons] = useState<Person[]>([
     {

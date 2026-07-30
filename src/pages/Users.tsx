@@ -2,8 +2,6 @@ import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Users as UsersIcon, Search, UserPlus, Shield, User, UserCheck } from "lucide-react";
 
 export default function Users() {
   return (

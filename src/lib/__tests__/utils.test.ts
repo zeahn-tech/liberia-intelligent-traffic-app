@@ -7,6 +7,7 @@ describe("cn (class name utility)", () => {
   });
 
   it("handles conditional classes", () => {
+// eslint-disable-next-line
     expect(cn("base", false && "hidden", "visible")).toBe("base visible");
   });
 

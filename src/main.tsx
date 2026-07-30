@@ -50,6 +50,7 @@ import OfficerDashboard from "./pages/OfficerDashboard.tsx";
 
 // PWA registration handled by vite-plugin-pwa
 // Simple loading fallback for route transitions
+// eslint-disable-next-line react-refresh/only-export-components
 function RouteLoading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -99,6 +100,7 @@ class RootErrorBoundary extends React.Component<
   }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 function RouteSyncer() {
   const location = useLocation();
   useEffect(() => {
@@ -126,6 +128,7 @@ function RouteSyncer() {
  * Watches for session expiry and shows a global offline/online indicator.
  * Must be rendered inside the BrowserRouter + AuthProvider tree.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 function SessionWatcher() {
   useSessionExpiry();
   const { online } = useNetwork();
@@ -133,6 +136,7 @@ function SessionWatcher() {
 }
 
 /** Helper to wrap a route with error boundary */
+// eslint-disable-next-line react-refresh/only-export-components
 function RouteErrorBoundary({ children, name }: { children: React.ReactNode; name?: string }) {
   return <ErrorBoundary componentName={name}>{children}</ErrorBoundary>;
 }

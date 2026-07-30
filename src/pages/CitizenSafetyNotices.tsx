@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router";
 import { CitizenLayout } from "@/pages/CitizenLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

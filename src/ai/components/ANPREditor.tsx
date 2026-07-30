@@ -11,6 +11,7 @@ import {
   Edit3,
   Camera,
   Search,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   AlertTriangle,
   Shield,
   History,

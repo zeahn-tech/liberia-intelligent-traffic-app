@@ -8,6 +8,7 @@ import {
   validatePassword,
   validateLicensePlate,
   validatePhoneNumber,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   validateBadgeNumber,
   validateName,
   validatePositiveNumber,
@@ -21,7 +22,9 @@ import {
 
 import {
   roleHasPermission,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   roleHasAllPermissions,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   roleHasAnyPermission,
   hasMinimumRole,
   getRoleLevel,

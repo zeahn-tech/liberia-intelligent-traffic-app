@@ -9,7 +9,6 @@ import {
 } from "@/lib/custody";
 import type { EvidenceCustodyEvent } from "@/supabase/types";
 import { useAuth } from "@/hooks/use-auth";
-import { generateSignedUrl, triggerFileDownload } from "@/lib/storage";
 import {
   Dialog,
   DialogContent,
@@ -164,6 +163,7 @@ export function EvidenceDetailDialog({
   useEffect(() => {
     if (evidence && open) {
       const role = user?.profile?.role;
+// eslint-disable-next-line react-hooks/set-state-in-effect
       setCustodyAuthorized(isAuthorizedForCustody(role));
 
       if (isAuthorizedForCustody(role)) {
@@ -194,7 +194,6 @@ export function EvidenceDetailDialog({
     }
   };
 
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
 
   const handleDownload = useCallback(async () => {
     if (evidence && user?.id) {

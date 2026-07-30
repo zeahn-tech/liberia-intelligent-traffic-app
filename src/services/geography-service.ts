@@ -7,7 +7,9 @@
 import { supabase } from "@/supabase/client";
 import {
   executeQuery,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   success,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   failure,
   type ApiResponse,
 } from "./base";

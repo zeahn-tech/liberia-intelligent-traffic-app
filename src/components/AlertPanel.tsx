@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Flame,
   ShieldAlert,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Car,
   Clock,
   MapPin,
@@ -19,6 +20,7 @@ import {
   X,
   Bell,
   TrendingUp,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   UserX,
 } from "lucide-react";
 

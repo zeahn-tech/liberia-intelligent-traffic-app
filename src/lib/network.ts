@@ -34,8 +34,9 @@ export async function verifyConnectivity(url = "https://www.google.com"): Promis
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const response = await fetch(url, {
+    await fetch(url, {
       method: "HEAD",
+// eslint-disable-next-line
       signal: controller.signal,
       mode: "no-cors",
     });

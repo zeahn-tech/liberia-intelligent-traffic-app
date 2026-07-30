@@ -119,7 +119,9 @@ function createMockClient(): SupabaseClient {
     removeChannel: () => {},
     removeAllChannels: () => {},
     getChannels: () => [],
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     realtime: {} as any,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     rest: {} as any,
   } as unknown as SupabaseClient;
 }

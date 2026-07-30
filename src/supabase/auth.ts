@@ -329,6 +329,7 @@ export async function getMFAMethods(): Promise<MFAMethod[]> {
     .order("created_at", { ascending: false });
 
   if (dbMethods && dbMethods.length > 0) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     return dbMethods.map((m: any) => ({
       id: m.id,
       methodType: m.method_type as MFAMethod["methodType"],
@@ -401,6 +402,7 @@ export async function getActiveSessions(): Promise<UserSession[]> {
     return getLocalSessionFallback();
   }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((s: any) => ({
     id: s.id,
     sessionId: s.session_id,
@@ -475,6 +477,7 @@ export async function revokeSession(sessionId: string): Promise<void> {
       .update({ is_active: false, revoked_at: new Date().toISOString() })
       .eq("id", sessionId)
       .eq("user_id", user.id);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.warn("Failed to revoke session:", e.message);
   }
@@ -491,6 +494,7 @@ export async function revokeAllOtherSessions(): Promise<void> {
       .update({ is_active: false, revoked_at: new Date().toISOString() })
       .eq("user_id", user.id)
       .eq("is_current", false);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.warn("Failed to revoke sessions:", e.message);
   }
@@ -566,6 +570,7 @@ export async function getAuthAuditEvents(
     .limit(limit);
 
   if (error) return [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((e: any) => ({
     id: e.id,
     userId: e.user_id,

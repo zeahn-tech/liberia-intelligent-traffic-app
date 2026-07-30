@@ -15,8 +15,11 @@ import {
   ChevronDown,
   Menu,
   X,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Scale,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   Gavel,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   ScrollText,
 } from "lucide-react";
 import { useNavigate } from "react-router";

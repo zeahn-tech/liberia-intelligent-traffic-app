@@ -20,7 +20,6 @@ import {
 // ─── Constants ───────────────────────────────────────────
 
 const VEHICLE_FIELDS = buildSelect([...FIELD_SETS.vehicle]);
-const DRIVER_FIELDS = buildSelect([...FIELD_SETS.driver]);
 
 // ─── Vehicle Registry ────────────────────────────────────
 
