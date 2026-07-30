@@ -293,6 +293,10 @@ function NotificationPreferenceRow({
 // ─── Settings Page ─────────────────────────────────────
 
 export default function Settings() {
+  const [pushAvailable, setPushAvailable] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showNewPw, setShowNewPw] = useState(false);
+
   const {
     user,
     signOut,
@@ -1358,6 +1362,7 @@ function PrivacyTabContent() {
   const [erasureRequesting, setErasureRequesting] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [activePrivacyTab, setActivePrivacyTab] = useState("overview");
+const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
 // eslint-disable-next-line react-hooks/immutability

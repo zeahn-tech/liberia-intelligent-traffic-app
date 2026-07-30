@@ -183,6 +183,7 @@ const evidenceItems: EvidenceItem[] = [
 
 export default function Evidence() {
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [aiLoading, setAiLoading] = useState<any>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -214,7 +215,9 @@ export default function Evidence() {
   };
 
   const handleAnalysis = async (ev: EvidenceItem) => {
-    setAiLoading(ev.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const _anyLoading: any = null;
+  setAiLoading(ev.id);
     await initAI();
     try {
       await submitForAnalysis(

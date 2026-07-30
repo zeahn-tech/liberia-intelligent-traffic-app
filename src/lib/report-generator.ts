@@ -68,13 +68,32 @@ export type SourceType = keyof typeof SOURCE_LABELS;
 // ─── Data fetching ──────────────────────────────────────
 
 export async function fetchReportData(incidentId: string): Promise<ReportData> {
-    await Promise.allSettled([
+    const [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      incidentRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      evidenceRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      aiRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      anprRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      personsRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      officerRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      logsRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      assignmentsRes,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+      countyRes,
+    ] = await Promise.allSettled([
       supabase.from("incidents").select("*").eq("id", incidentId).single(),
       supabase.from("evidence").select("*").eq("incident_id", incidentId).order("uploaded_at", { ascending: false }),
       supabase.from("ai_analyses").select("*").eq("incident_id", incidentId).order("created_at", { ascending: false }),
       supabase.from("anpr_scans").select("*").eq("incident_id", incidentId).order("scanned_at", { ascending: false }),
       supabase.from("involved_persons").select("*").eq("incident_id", incidentId),
-      supabase.from("profiles").select("*").eq("id", (() => { return ""; })()),
+      supabase.from("profiles").select("*").limit(1).single(),
       supabase.from("incident_logs").select("*").eq("incident_id", incidentId).order("created_at", { ascending: false }).limit(50),
       supabase.from("incident_assignments").select("*").eq("incident_id", incidentId),
       supabase.from("liberia_counties").select("name, code").limit(1),
@@ -93,7 +112,6 @@ export async function fetchReportData(incidentId: string): Promise<ReportData> {
   // Build county match from incident location
   let countyData: { county?: string; code?: string } | null = null;
   if (incident?.location_address && countyRes.status === "fulfilled" && countyRes.value.data) {
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
     const counties = countyRes.value.data as any[];
     const matched = counties.find(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

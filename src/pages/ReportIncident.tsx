@@ -48,6 +48,7 @@ import { useEffect } from "react";
 export default function ReportIncident() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [isOffline, setIsOffline] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);

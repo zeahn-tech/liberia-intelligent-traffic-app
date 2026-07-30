@@ -31,7 +31,6 @@ import {
   Clock,
   MapPin,
 // eslint-disable-next-line
-  ChevronRight,
   ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/supabase/client";

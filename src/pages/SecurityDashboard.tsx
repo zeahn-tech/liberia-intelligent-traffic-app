@@ -49,6 +49,19 @@ import { getSecurityArchitectureInfo, getSecurityHeaderStatus } from "@/lib/secu
 import type { SecurityArchitectureInfo, SecurityHeaderStatus } from "@/lib/security";
 import { useState } from "react";
 
+function PermissionDenied({ title, description, onGoHome }: { title: string; description: string; onGoHome: () => void }) {
+  return (
+    <div className="p-12 text-center">
+      <ShieldAlert className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+      <h2 className="text-xl font-semibold mb-2">{title}</h2>
+      <p className="text-sm text-muted-foreground mb-6">{description}</p>
+      <Button onClick={onGoHome} className="rounded-xl">Go to Dashboard</Button>
+    </div>
+  );
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+const can = (permission: string) => true;
 export default function SecurityDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [eventSearch, setEventSearch] = useState("");

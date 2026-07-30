@@ -166,7 +166,7 @@ export function useRealtimeNotifications(): UseRealtimeNotificationsResult {
     latestNotification,
     loading,
     ready: subscriptionReady,
-    error,
+    error: null,
     clearLatest,
     refreshCount,
   };

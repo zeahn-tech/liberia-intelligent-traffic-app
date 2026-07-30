@@ -156,14 +156,14 @@ export default function IncidentDetail() {
   }, [aiAnalysis, user]);
 
   // Status transition handlers
-  const handleAssign = (officerId: string, role: string) => {
+  const handleAssign = async (officerId: string, role: string): Promise<void> => {
     setAssignedTo({ id: officerId, name: "Officer #" + officerId.slice(-4) });
     setIncidentStatus("assigned");
     addTimelineEntry(`Assigned to ${role} for ${role}`);
     return;
   };
 
-  const handleEscalate = (level: string, reason: string) => {
+  const handleEscalate = async (level: string, reason: string, notes: string = ''): Promise<void> => {
     setIncidentStatus("escalated");
     addTimelineEntry(`Escalated to ${level} — ${reason.replace(/_/g, " ")}`);
     return;

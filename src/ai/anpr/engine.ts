@@ -25,10 +25,6 @@ import type {
 } from "./types";
 import { generateId } from "../utils";
 import { offlineGet, offlineSet, offlineGetAll } from "@/lib/offline";
-import { getPlateVariations } from "./anpr/engine";
-import { correctOCRErrors } from "./anpr/engine";
-import { normalizePlateText } from "./anpr/engine";
-import { buildPlateResult } from "./anpr/engine";
 
 // ===== Stolen Vehicle Database =====
 
@@ -290,6 +286,80 @@ function detectedRegion(normalized: string): string | undefined {
   if (normalized.startsWith("LNP")) return "Liberia - Government";
   return undefined;
 }
+
+
+// ===== Helper Functions =====
+
+function getPlateVariations(plate: string): string[] {
+  const normalized = plate.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const variations: string[] = [normalized];
+  // Common OCR substitutions
+  variations.push(normalized.replace(/0/g, "O"));
+  variations.push(normalized.replace(/O/g, "0"));
+  variations.push(normalized.replace(/1/g, "I"));
+  variations.push(normalized.replace(/I/g, "1"));
+  variations.push(normalized.replace(/5/g, "S"));
+  variations.push(normalized.replace(/S/g, "5"));
+  variations.push(normalized.replace(/8/g, "B"));
+  variations.push(normalized.replace(/B/g, "8"));
+  return [...new Set(variations)];
+}
+
+interface OCRCorrectionResult {
+  corrected: string;
+  confidence: number;
+}
+
+function correctOCRErrors(text: string): OCRCorrectionResult {
+  let corrected = text.toUpperCase();
+  // Common OCR errors
+  const substitutions: [RegExp, string][] = [
+    [/[Il1|!]/g, "1"],
+    [/[Oo0]/g, "O"],
+    [/[Ss5$]/g, "S"],
+    [/[Bb8]/g, "B"],
+    [/[Zz2]/g, "Z"],
+    [/\s+/g, ""],
+    [/[^A-Z0-9-]/g, ""],
+  ];
+  let confidence = 0.95;
+  for (const [pattern, replacement] of substitutions) {
+    if (pattern.test(corrected)) {
+      corrected = corrected.replace(pattern, replacement);
+      confidence -= 0.02;
+    }
+  }
+  return { corrected, confidence: Math.max(0.5, confidence) };
+}
+
+function normalizePlateText(text: string): string {
+  return text
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+interface BoundingBox { x: number; y: number; width: number; height: number; }
+
+interface PlateBuildResult {
+  rawText: string;
+  normalizedPlate: string;
+  confidence: number;
+  boundingBox?: BoundingBox;
+  region: string | undefined;
+  officerVerified: boolean;
+}
+
+function buildPlateResult(plate: string, confidence: number): PlateDetectionResult {
+  return {
+    rawText: plate,
+    normalizedPlate: normalizePlateText(plate),
+    confidence,
+    officerVerified: false,
+  };
+}
+
 
 function simulatePlateScan(): PlateDetectionResult {
   const plates = ["LBR-4521", "MON-5567", "GRD-3309", "RIV-7782", "LNP-8741"];

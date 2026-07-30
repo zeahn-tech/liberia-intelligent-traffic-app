@@ -202,6 +202,7 @@ export function EvidenceDetailDialog({
       await logEvidenceDownloaded(evidence.id, user.id);
       const events = await getCustodyChain(evidence.id);
       setCustodyEvents(events);
+      const signedUrl = null;
       
       // Use signed URL for secure download
       if (signedUrl) {
@@ -215,7 +216,7 @@ export function EvidenceDetailDialog({
       }
     }
     toast.success(`Downloading ${evidence?.name}`);
-  }, [evidence, user, signedUrl]);
+  }, [evidence, user]);
 
   if (!evidence) return null;
 

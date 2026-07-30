@@ -454,7 +454,7 @@ export default function OfficerDashboard() {
                       {user?.profile?.full_name || "Officer"}
                     </h1>
                     <Badge variant="outline" className="clay-pill text-[10px] px-2 py-0 h-5 bg-primary/10 text-primary border-primary/20">
-                      {roleLabel || "Officer"}
+                      {"Officer"}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">

@@ -28,7 +28,6 @@ import {
   type PasswordStrength,
 } from "@/supabase/auth";
 import type { UserRole } from "@/lib/permissions";
-import { setSessionCheckInterval } from "@/lib/security";
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -178,9 +177,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAccountStatus(null);
       }
     }, 5 * 60 * 1000);
-
-// eslint-disable-next-line react-hooks/set-state-in-effect
-    setSessionCheckInterval(interval);
 
     return () => {
       subscription.unsubscribe();

@@ -1,3 +1,4 @@
+const EVIDENCE_STATUSES = ["pending", "verified", "rejected", "archived"] as const;
 // ============================================================
 // TrafficWatch AI — Evidence API Service
 //

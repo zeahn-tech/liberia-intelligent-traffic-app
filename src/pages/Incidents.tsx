@@ -154,14 +154,14 @@ export default function Incidents() {
     return true;
   });
 
-  const mapData = useMemo(() => data.map((inc) => ({
+  const mapData = useMemo(() => filteredIncidents && filteredIncidents.length > 0 ? filteredIncidents.map((inc) => ({
     id: inc.id,
     lat: inc.lat,
     lng: inc.lng,
     title: `${inc.type} - ${inc.plate}`,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     severity: inc.severity as any,
-  })), [data]);
+  })) : [], [filteredIncidents]);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredIncidents.length / itemsPerPage)), [filteredIncidents.length, itemsPerPage]);
 

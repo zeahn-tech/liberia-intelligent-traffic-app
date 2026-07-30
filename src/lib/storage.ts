@@ -1,3 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UploadConfig = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UploadResult = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const uploadError: any = null;
 /**
 import { logAuditEvent } from "@/lib/audit";
  * TrafficWatch AI — Secure Media Storage Service

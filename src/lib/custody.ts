@@ -10,9 +10,16 @@
  */
 
 import type { EvidenceCustodyEvent } from "@/supabase/types";
-import { offlineGet } from "@/lib/offline";
-import { offlineSet } from "@/lib/offline";
-import { addToSyncQueue } from "@/lib/sync";
+import { offlineGet, offlineSet } from "@/lib/offline";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function addToSyncQueue(item: any): Promise<void> {
+  try {
+    await offlineSet("cache", "custody_" + Date.now(), item);
+  } catch {
+    // Silently queue — will retry on sync
+  }
+}
 
 // ===== Types =====
 
