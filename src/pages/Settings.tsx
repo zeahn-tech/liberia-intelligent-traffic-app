@@ -69,6 +69,7 @@ import {
   updateNotificationPreference,
   requestPushPermission,
   isPushAvailable,
+  ensureNotificationPreferences,
   type NotificationPreference,
   type NotificationPriority,
   type NotificationType,
@@ -356,7 +357,14 @@ export default function Settings() {
   const loadNotificationPrefs = async () => {
     if (!user?.id) return;
     setNotifPrefsLoading(true);
-    const prefs = await getNotificationPreferences(user.id);
+    let prefs = await getNotificationPreferences(user.id);
+
+    // Auto-seed preferences if none exist yet
+    if (prefs.length === 0) {
+      await ensureNotificationPreferences(user.id);
+      prefs = await getNotificationPreferences(user.id);
+    }
+
     setNotifPrefs(prefs);
 
     // Check global quiet hours from first preference
@@ -368,6 +376,8 @@ export default function Settings() {
       }
       setGlobalPaused(prefs.some((p) => p.is_paused));
     }
+
+    setNotifPrefsLoading(false);
   };
 
   const checkPushStatus = async () => {
