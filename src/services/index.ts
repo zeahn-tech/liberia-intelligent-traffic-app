@@ -174,6 +174,24 @@ export {
   getCameraStats,
   getCamerasNearLocation,
   getCamerasPendingAnalysis,
+  // Camera Streams
+  listCameraStreams,
+  registerCameraStream,
+  updateCameraStream,
+  deleteCameraStream,
+  getCameraStreamHealth,
+  // Camera Detections
+  recordCameraDetection,
+  listCameraDetections,
+  getCameraDetectionStats,
+  // Camera Violations
+  recordCameraViolation,
+  listCameraViolations,
+  updateCameraViolationStatus,
+  // Camera Evidence
+  recordCameraEvidence,
+  listCameraEvidence,
+  updateCameraEvidenceStatus,
 } from "./cameras-service";
 export type { CameraFilter } from "./cameras-service";
 

@@ -268,6 +268,196 @@ export interface StreamConnection {
   close: () => void;
 }
 
+// ─── Camera Stream Configuration ───────────────────────
+
+/**
+ * Stream configuration for a camera.
+ * A camera can have multiple streams (main, sub, backup).
+ */
+export interface CameraStream {
+  id: string;
+  camera_id: string;
+  stream_name: string;
+  stream_url: string;
+  stream_type: CameraSourceType;
+  stream_profile: "main" | "sub" | "backup" | "mobile" | "archive";
+  is_active: boolean;
+  is_primary: boolean;
+  username?: string;
+  password_enc?: string;
+  auth_token?: string;
+  transport?: "tcp" | "udp" | "http";
+  quality?: "low" | "medium" | "high" | "ultra";
+  resolution?: string;
+  max_fps?: number;
+  bitrate_kbps?: number;
+  record_enabled: boolean;
+  max_recording_sec?: number;
+  health_status: "unknown" | "healthy" | "degraded" | "offline" | "error";
+  last_health_check?: string;
+  last_connected_at?: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Camera Detection (individual detection result) ────
+
+/**
+ * An individual detection result from camera AI analysis.
+ * Each detection is a single object/event identified in a frame.
+ */
+export interface CameraDetection {
+  id: string;
+  camera_id: string;
+  camera_event_id?: string;
+  stream_id?: string;
+  detection_type: CameraDetectionType;
+  confidence: number;
+  bounding_box?: { x: number; y: number; width: number; height: number };
+  detected_at: string;
+  frame_timestamp?: string;
+  frame_number?: number;
+  snapshot_url?: string;
+  attributes: Record<string, unknown>;
+
+  // Vehicle-specific
+  vehicle_type?: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_color?: string;
+  vehicle_speed_kmh?: number;
+  license_plate_text?: string;
+  license_plate_conf?: number;
+
+  // Relationships
+  incident_id?: string;
+  anpr_scan_id?: string;
+  officer_reviewed: boolean;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  review_notes?: string;
+
+  // Metadata
+  source: "camera" | "upload" | "body_cam" | "dashcam" | "drone" | "mobile" | "other";
+  ai_model_version?: string;
+  processing_time_ms?: number;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export type CameraDetectionType =
+  | "vehicle" | "license_plate" | "pedestrian" | "obstacle"
+  | "accident" | "congestion" | "speed" | "red_light"
+  | "illegal_turn" | "wrong_way" | "helmet" | "seatbelt"
+  | "mobile_phone" | "lane_departure" | "fire" | "smoke"
+  | "animal" | "unknown";
+
+// ─── Camera Violation (violation from detection) ───────
+
+/**
+ * Violation-specific record derived from a camera detection.
+ * One detection can produce multiple violation records.
+ */
+export interface CameraViolation {
+  id: string;
+  camera_id: string;
+  camera_event_id?: string;
+  camera_detection_id?: string;
+  incident_id?: string;
+  violation_type: string;
+  violation_code?: string;
+  description?: string;
+  snapshot_url?: string;
+  clip_url?: string;
+  evidence_id?: string;
+  confidence: number;
+  detected_speed_kmh?: number;
+  speed_limit_kmh?: number;
+  location_lat?: number;
+  location_lng?: number;
+  detected_at: string;
+  stream_id?: string;
+  clip_start_sec?: number;
+  clip_end_sec?: number;
+  frame_start?: number;
+  frame_end?: number;
+  status: "pending" | "confirmed" | "rejected" | "citation_issued" | "escalated" | "closed";
+  severity?: "minor" | "moderate" | "major" | "critical";
+  fine_amount?: number;
+  points?: number;
+  officer_reviewed: boolean;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  review_decision?: "confirmed" | "rejected" | "modified" | "pending";
+  officer_notes?: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Camera Evidence (evidence from detection) ─────────
+
+/**
+ * Evidence artifact generated from a camera detection event.
+ * Links to the evidence system for chain of custody.
+ */
+export interface CameraEvidence {
+  id: string;
+  camera_id: string;
+  camera_event_id?: string;
+  camera_detection_id?: string;
+  camera_violation_id?: string;
+  evidence_id?: string;
+  incident_id?: string;
+  evidence_type: CameraEvidenceType;
+  file_url: string;
+  file_size?: number;
+  mime_type?: string;
+  sha256_hash?: string;
+  captured_at: string;
+  location_lat?: number;
+  location_lng?: number;
+  duration_seconds?: number;
+  frame_count?: number;
+  annotations?: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+  stream_id?: string;
+  officer_id?: string;
+  officer_notes?: string;
+  status: "pending" | "verified" | "flagged" | "archived" | "deleted";
+  is_original: boolean;
+  processing_status: "pending" | "processing" | "completed" | "failed";
+  created_at: string;
+  updated_at: string;
+}
+
+export type CameraEvidenceType =
+  | "snapshot" | "video_clip" | "timelapse" | "anpr_capture"
+  | "speed_reading" | "red_light_capture" | "violation_sequence"
+  | "ai_analysis_report" | "raw_frame" | "compilation";
+
+// ─── Camera Stream Health Summary ──────────────────────
+
+export interface CameraStreamHealth {
+  total_streams: number;
+  healthy_streams: number;
+  degraded_streams: number;
+  offline_streams: number;
+  primary_stream: string | null;
+}
+
+// ─── Camera Detection Stats Summary ────────────────────
+
+export interface CameraDetectionStats {
+  total_detections: number;
+  vehicle_detections: number;
+  plate_detections: number;
+  violations_detected: number;
+  avg_confidence: number;
+  top_detection_type: string | null;
+}
+
 // ─── Video Processing Service Interface ─────────────────
 
 export interface VideoProcessingService {
