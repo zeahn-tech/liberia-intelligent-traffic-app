@@ -6,19 +6,19 @@
 
 INSERT INTO public.prediction_results (model_id, category, title, summary, confidence_score, confidence_level, risk_severity, location_name, latitude, longitude, county, district, road_name, details_json, data_sources, model_version)
 SELECT m.id, 'road_risk', 'High Risk - UN Drive, Monrovia', 'UN Drive segment shows elevated risk of speed-related violations. This prediction is an ESTIMATE based on analysis of available data.', 82.5, 'high', 'high', 'UN Drive, Monrovia', 6.3215, -10.8145, 'Montserrado', 'Greater Monrovia', 'UN Drive',
-  '{"disclaimer": "This is an AI-generated ESTIMATE based on available historical data. Not a guarantee of future incidents.", "factors": ["high_volume", "speeding_trend", "pedestrian_activity"], "recommendation": "Increase patrol presence during peak hours 7-9 AM and 4-7 PM"}',
+  '{"disclaimer": "This is an AI-generated estimate based on available historical data. Not a guarantee of future incidents.", "factors": ["high_volume", "speeding_trend", "pedestrian_activity"], "recommendation": "Increase patrol presence during peak hours 7-9 AM and 4-7 PM"}',
   ARRAY['incidents_90days', 'road_geometry', 'traffic_volume'], '1.0.0'
 FROM public.prediction_models m WHERE m.name = 'Road Risk Analyzer' LIMIT 1;
 
 INSERT INTO public.prediction_results (model_id, category, title, summary, confidence_score, confidence_level, risk_severity, location_name, latitude, longitude, county, details_json, data_sources, model_version)
 SELECT m.id, 'hotspot_prediction', 'Emerging Hotspot - Red Light Area, Paynesville', 'Cluster of 5 incidents detected near the Red Light intersection in Paynesville over the past 7 days. This prediction is an ESTIMATE.', 78.3, 'moderate', 'high', 'Red Light, Paynesville, Monrovia', 6.2856, -10.7224, 'Montserrado',
-  '{"disclaimer": "This is an AI-generated ESTIMATE based on available historical data.", "factors": ["cluster_5_incidents_7days", "red_light_violations", "peak_hours_1600_1900"], "recommendation": "Deploy traffic officer during peak evening hours"}',
+  '{"disclaimer": "This is an AI-generated estimate based on available historical data.", "factors": ["cluster_5_incidents_7days", "red_light_violations", "peak_hours_1600_1900"], "recommendation": "Deploy traffic officer during peak evening hours"}',
   ARRAY['incidents_30days', 'locations', 'time_data'], '1.0.0'
 FROM public.prediction_models m WHERE m.name = 'Hotspot Prediction Model' LIMIT 1;
 
 INSERT INTO public.prediction_results (model_id, category, title, summary, confidence_score, confidence_level, risk_severity, location_name, latitude, longitude, county, details_json, data_sources, model_version)
 SELECT m.id, 'accident_risk', 'Elevated Accident Risk - Ganta Highway', 'Segment between Kakata and Ganta shows elevated accident risk. This prediction is an ESTIMATE.', 76.8, 'moderate', 'high', 'Monrovia-Ganta Highway, Kakata to Ganta', 6.7500, -9.7200, 'Margibi',
-  '{"disclaimer": "This is an AI-generated ESTIMATE based on available historical data.", "factors": ["road_condition_deterioration", "high_volume", "overtaking_incidents"], "recommendation": "Consider road safety audit and warning signage"}',
+  '{"disclaimer": "This is an AI-generated estimate based on available historical data.", "factors": ["road_condition_deterioration", "high_volume", "overtaking_incidents"], "recommendation": "Consider road safety audit and warning signage"}',
   ARRAY['accidents_12months', 'weather_data', 'road_conditions'], '1.0.0'
 FROM public.prediction_models m WHERE m.name = 'Accident Risk Estimator' LIMIT 1;
 
