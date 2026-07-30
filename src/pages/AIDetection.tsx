@@ -3,10 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDemoMode } from "@/hooks/use-demo-mode";
-import { Brain, Upload, History, Settings, AlertTriangle, Info } from "lucide-react";
+import { Brain, Upload, History, Settings, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 
 export default function AIDetection() {
   const { isDemo } = useDemoMode();
+  const navigate = useNavigate();
 
   return (
     <AppLayout>
@@ -41,7 +44,7 @@ export default function AIDetection() {
               <p className="text-sm text-muted-foreground">AI-assisted traffic violation analysis</p>
             </div>
           </div>
-          <Button className="rounded-xl"><Upload className="w-4 h-4 mr-1.5" />Analyze Media</Button>
+          <Button className="rounded-xl" onClick={() => navigate("/evidence/upload")}><Upload className="w-4 h-4 mr-1.5" />Analyze Media</Button>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
@@ -57,7 +60,7 @@ export default function AIDetection() {
                 <p className="text-xs text-muted-foreground mt-1 max-w-sm">
                   Upload traffic camera footage, officer body cam, or citizen-submitted media for AI-powered violation detection.
                 </p>
-                <Button variant="outline" size="sm" className="mt-4 rounded-xl">
+                <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => { navigate("/evidence/upload"); toast.info("Upload media evidence first, then AI analysis will be available"); }}>
                   <Upload className="w-3.5 h-3.5 mr-1.5" />
                   Upload Media for Analysis
                 </Button>

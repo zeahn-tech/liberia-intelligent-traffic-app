@@ -1,9 +1,14 @@
 import { AppLayout } from "@/components/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Download, Plus, FileSpreadsheet } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Reports() {
+  const handleGenerate = (title: string) => {
+    toast.info("Generating report: " + title + " — Report generation will create a PDF or CSV export.");
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -17,7 +22,7 @@ export default function Reports() {
               <p className="text-sm text-muted-foreground">Generate and export official reports</p>
             </div>
           </div>
-          <Button className="rounded-xl"><Plus className="w-4 h-4 mr-1.5" />New Report</Button>
+          <Button className="rounded-xl" onClick={() => handleGenerate("Custom Report")}><Plus className="w-4 h-4 mr-1.5" />New Report</Button>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -29,7 +34,7 @@ export default function Reports() {
             { title: "AI Detection Report", desc: "AI-assisted detection results", icon: FileText },
             { title: "Custom Report", desc: "Build a custom report", icon: FileSpreadsheet },
           ].map((r) => (
-            <Card key={r.title} className="card-premium cursor-pointer hover:border-primary/30 transition-all group">
+            <Card key={r.title} className="card-premium cursor-pointer hover:border-primary/30 transition-all group" onClick={() => handleGenerate(r.title)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">

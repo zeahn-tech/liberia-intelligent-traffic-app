@@ -4,8 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IdCard, Search, Camera, Hash, ScanLine } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function LicensePlates() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      toast.info("Searching plates: " + searchQuery);
+    } else {
+      toast.error("Please enter a plate number");
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -22,15 +34,15 @@ export default function LicensePlates() {
               <p className="text-sm text-muted-foreground">Automatic Number Plate Recognition</p>
             </div>
           </div>
-          <Button className="rounded-xl"><Camera className="w-4 h-4 mr-1.5" />New Scan</Button>
+          <Button className="rounded-xl" onClick={() => toast.info("New ANPR scan — connect a camera or upload media for plate recognition")}><Camera className="w-4 h-4 mr-1.5" />New Scan</Button>
         </div>
 
         <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by plate number..." className="pl-9 font-mono" />
+            <Input placeholder="Search by plate number..." className="pl-9 font-mono" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
           </div>
-          <Button variant="outline" className="rounded-xl">Search</Button>
+          <Button variant="outline" className="rounded-xl" onClick={handleSearch}>Search</Button>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">

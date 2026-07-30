@@ -3,8 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Truck, Search, Plus, Car } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Vehicles() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      toast.info("Searching vehicles: " + searchQuery);
+    } else {
+      toast.error("Please enter a search term");
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -18,15 +30,15 @@ export default function Vehicles() {
               <p className="text-sm text-muted-foreground">Vehicle registration and search</p>
             </div>
           </div>
-          <Button className="rounded-xl"><Plus className="w-4 h-4 mr-1.5" />Add Vehicle</Button>
+          <Button className="rounded-xl" onClick={() => toast.info("Add vehicle form coming soon")}><Plus className="w-4 h-4 mr-1.5" />Add Vehicle</Button>
         </div>
 
         <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search by license plate, make, model, or owner..." className="pl-9" />
+            <Input placeholder="Search by license plate, make, model, or owner..." className="pl-9" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
           </div>
-          <Button variant="outline" className="rounded-xl">Search</Button>
+          <Button variant="outline" className="rounded-xl" onClick={handleSearch}>Search</Button>
         </div>
 
         <Card className="card-premium">

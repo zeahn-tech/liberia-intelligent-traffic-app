@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNetwork } from "@/hooks/use-network";
 import { useRealtimeContext } from "@/lib/realtime-context";
 import { usePermission } from "@/lib/permissions";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationPanel } from "@/components/NotificationPanel";
@@ -45,6 +46,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  // Respect reduced motion preference to prevent mobile flicker
+  const prefersReducedMotion = useReducedMotion();
 
   // Compute accessible nav items based on user role
   const accessibleGroups = useMemo(
@@ -243,13 +247,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   )}
 
                   {/* Collapsible group items */}
-                  <AnimatePresence initial={false}>
+                  <AnimatePresence initial={!prefersReducedMotion}>
                     {(isExpanded || !(sidebarOpen || mobileSidebarOpen)) && (
                       <motion.div
-                        initial={false}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        {...(prefersReducedMotion
+                          ? { initial: false, animate: {}, exit: {} }
+                          : { initial: false, animate: { height: "auto", opacity: 1 }, exit: { height: 0, opacity: 0 }, transition: { duration: 0.2 } }
+                        )}
                         className="space-y-0.5 overflow-hidden"
                       >
                         {group.items.map((item) => {
