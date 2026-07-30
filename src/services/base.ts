@@ -130,7 +130,6 @@ export async function executeQuery<T>(
     if (error) {
       const apiError = mapPostgrestError(error);
       const friendlyMessage = apiError?.message || error.message || "An unexpected database error occurred.";
-      console.warn(`[API:${label}] Failed:`, friendlyMessage);
       if (options.throwOnError) {
         throw new Error(friendlyMessage);
       }

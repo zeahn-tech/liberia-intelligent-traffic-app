@@ -7,7 +7,16 @@
 // ============================================================
 
 import { supabase } from "@/supabase/client";
-import type { CameraRegistration, CameraDetectionEvent } from "@/ai/camera/types";
+import type {
+  CameraRegistration,
+  CameraDetectionEvent,
+  CameraStream,
+  CameraDetection,
+  CameraViolation,
+  CameraEvidence,
+  CameraDetectionType,
+  CameraEvidenceType,
+} from "@/ai/camera/types";
 import {
   executeQuery,
   executePaginatedQuery,
@@ -91,7 +100,7 @@ export interface CameraFilter {
  */
 export async function listCameras(
   filter: CameraFilter = {}
-): Promise<PaginatedResponse<any>> {
+): Promise<PaginatedResponse<Record<string, unknown>>> {
   const page = filter.page || 1;
   const pageSize = filter.pageSize || 20;
 
@@ -114,7 +123,7 @@ export async function listCameras(
 /**
  * Get a single camera by ID.
  */
-export async function getCamera(id: string): Promise<ApiResponse<any>> {
+export async function getCamera(id: string): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("traffic_cameras").select(CAMERA_SELECT.join(",")).eq("id", id).maybeSingle(),
     { label: "cameras.get" }
@@ -139,7 +148,7 @@ export async function registerCamera(input: {
   field_of_view?: number;
   resolution?: string;
   max_fps?: number;
-}): Promise<ApiResponse<any>> {
+}): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("traffic_cameras").insert([{
       ...input,
@@ -167,7 +176,7 @@ export async function updateCamera(
     orientation: string;
     field_of_view: number;
   }>
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("traffic_cameras").update(updates).eq("id", id).select(CAMERA_SELECT.join(",")).single(),
     { label: "cameras.update" }
@@ -201,7 +210,7 @@ export async function recordCameraEvent(
     incident_id?: string;
     evidence_id?: string;
   }
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_events").insert([event]).select(EVENT_SELECT.join(",")).single(),
     { label: "cameras.events.create" }
@@ -221,7 +230,7 @@ export async function listCameraEvents(
     page?: number;
     pageSize?: number;
   } = {}
-): Promise<PaginatedResponse<any>> {
+): Promise<PaginatedResponse<Record<string, unknown>>> {
   const page = filter.page || 1;
   const pageSize = filter.pageSize || 20;
 
@@ -247,7 +256,7 @@ export async function listCameraEvents(
  */
 export async function getPendingCameraAlerts(
   limit: number = 20
-): Promise<ApiResponse<any[]>> {
+): Promise<ApiResponse<Record<string, unknown>[]>> {
   return executeQuery(
     supabase.from("camera_events")
       .select(EVENT_SELECT.join(","))
@@ -278,7 +287,7 @@ export async function acknowledgeCameraAlert(eventId: string): Promise<ApiRespon
  */
 export async function listCameraStreams(
   cameraId: string
-): Promise<ApiResponse<any[]>> {
+): Promise<ApiResponse<Record<string, unknown>[]>> {
   return executeQuery(
     supabase.from("camera_streams")
       .select(STREAM_SELECT.join(","))
@@ -304,7 +313,7 @@ export async function registerCameraStream(input: {
   max_fps?: number;
   bitrate_kbps?: number;
   record_enabled?: boolean;
-}): Promise<ApiResponse<any>> {
+}): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_streams").insert([{
       ...input,
@@ -325,7 +334,7 @@ export async function registerCameraStream(input: {
 export async function updateCameraStream(
   id: string,
   updates: Record<string, unknown>
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_streams").update(updates).eq("id", id).select(STREAM_SELECT.join(",")).single(),
     { label: "cameras.streams.update" }
@@ -347,7 +356,7 @@ export async function deleteCameraStream(id: string): Promise<ApiResponse<null>>
  */
 export async function getCameraStreamHealth(
   cameraId: string
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.rpc("get_camera_stream_health", { p_camera_id: cameraId }),
     { label: "cameras.streams.health" }
@@ -373,7 +382,7 @@ export async function recordCameraDetection(input: {
   license_plate_conf?: number;
   incident_id?: string;
   source?: string;
-}): Promise<ApiResponse<any>> {
+}): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_detections").insert([{
       ...input,
@@ -402,7 +411,7 @@ export async function listCameraDetections(
     page?: number;
     pageSize?: number;
   } = {}
-): Promise<PaginatedResponse<any>> {
+): Promise<PaginatedResponse<Record<string, unknown>>> {
   const page = filter.page || 1;
   const pageSize = filter.pageSize || 20;
 
@@ -432,7 +441,7 @@ export async function getCameraDetectionStats(
   cameraId: string,
   dateFrom?: string,
   dateTo?: string
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.rpc("get_camera_detection_stats", {
       p_camera_id: cameraId,
@@ -464,7 +473,7 @@ export async function recordCameraViolation(input: {
   location_lat?: number;
   location_lng?: number;
   severity?: string;
-}): Promise<ApiResponse<any>> {
+}): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_violations").insert([{
       ...input,
@@ -493,7 +502,7 @@ export async function listCameraViolations(
     page?: number;
     pageSize?: number;
   } = {}
-): Promise<PaginatedResponse<any>> {
+): Promise<PaginatedResponse<Record<string, unknown>>> {
   const page = filter.page || 1;
   const pageSize = filter.pageSize || 20;
 
@@ -531,7 +540,7 @@ export async function updateCameraViolationStatus(
     fine_amount?: number;
     points?: number;
   }
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_violations")
       .update({
@@ -570,7 +579,7 @@ export async function recordCameraEvidence(input: {
   stream_id?: string;
   officer_id?: string;
   officer_notes?: string;
-}): Promise<ApiResponse<any>> {
+}): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_evidence").insert([{
       ...input,
@@ -598,7 +607,7 @@ export async function listCameraEvidence(
     page?: number;
     pageSize?: number;
   } = {}
-): Promise<PaginatedResponse<any>> {
+): Promise<PaginatedResponse<Record<string, unknown>>> {
   const page = filter.page || 1;
   const pageSize = filter.pageSize || 20;
 
@@ -630,7 +639,7 @@ export async function updateCameraEvidenceStatus(
     officer_notes?: string;
     processing_status?: string;
   }
-): Promise<ApiResponse<any>> {
+): Promise<ApiResponse<Record<string, unknown>>> {
   return executeQuery(
     supabase.from("camera_evidence").update(updates).eq("id", id).select(EVIDENCE_SELECT.join(",")).single(),
     { label: "cameras.evidence.update" }
@@ -685,7 +694,7 @@ export async function getCamerasNearLocation(
   lat: number,
   lng: number,
   radiusKm: number = 10
-): Promise<ApiResponse<any[]>> {
+): Promise<ApiResponse<Record<string, unknown>[]>> {
   const latDelta = radiusKm / 111;
   const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
 
@@ -707,7 +716,7 @@ export async function getCamerasNearLocation(
 /**
  * Get cameras that have pending AI analysis jobs.
  */
-export async function getCamerasPendingAnalysis(): Promise<ApiResponse<any[]>> {
+export async function getCamerasPendingAnalysis(): Promise<ApiResponse<Record<string, unknown>[]>> {
   return executeQuery(
     supabase.from("camera_events")
       .select("camera_id")
