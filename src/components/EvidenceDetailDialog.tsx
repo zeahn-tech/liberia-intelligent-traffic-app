@@ -28,38 +28,17 @@ import {
   Download,
   Shield,
   MapPin,
-  Clock,
-  User,
-  Camera,
   Hash,
   Fingerprint,
   FileText,
-  Activity,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle,
-  ExternalLink,
   Copy,
   Smartphone,
-  Globe,
-  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
 // ===== Types =====
-interface CustodyEvent {
-  id: string;
-  action: string;
-  performed_by: string;
-  performed_by_name?: string;
-  from_officer?: string;
-  to_officer?: string;
-  ip_address?: string;
-  user_agent?: string;
-  details?: Record<string, unknown>;
-  created_at: string;
-}
-
 interface EvidenceVersion {
   id: string;
   version_number: number;
@@ -117,43 +96,11 @@ function getStatusColor(status: string) {
   }
 }
 
-function getActionIcon(action: string) {
-  switch (action) {
-    case "uploaded": return <UploadIcon className="w-3.5 h-3.5" />;
-    case "viewed": return <EyeIcon className="w-3.5 h-3.5" />;
-    case "downloaded": return <DownloadIcon className="w-3.5 h-3.5" />;
-    case "analyzed": return <BrainIcon className="w-3.5 h-3.5" />;
-    case "transferred": return <TransferIcon className="w-3.5 h-3.5" />;
-    case "reviewed": return <ReviewIcon className="w-3.5 h-3.5" />;
-    case "verified": return <CheckCircle2 className="w-3.5 h-3.5" />;
-    case "hash_verified": return <Hash className="w-3.5 h-3.5" />;
-    default: return <Activity className="w-3.5 h-3.5" />;
-  }
-}
-
 // Simple SVG icons for custody actions
 function LockIcon({ className }: { className?: string }) {
   return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
 }
 
-function UploadIcon({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
-}
-function EyeIcon({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
-}
-function DownloadIcon({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
-}
-function BrainIcon({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a7 7 0 0 0-7 7c0 2.4 1.2 4.5 3 5.7V20a2 2 0 0 0 4 0v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 0 0-7-7z"/><path d="M9 12h6"/></svg>;
-}
-function TransferIcon({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>;
-}
-function ReviewIcon({ className }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>;
-}
 
 // ===== Component =====
 interface EvidenceDetailDialogProps {
@@ -188,22 +135,6 @@ export function EvidenceDetailDialog({
     },
   ] : []);
 
-  // Check custody authorization and load events
-  useEffect(() => {
-    if (evidence && open) {
-      const role = user?.profile?.role;
-      setCustodyAuthorized(isAuthorizedForCustody(role));
-
-      if (isAuthorizedForCustody(role)) {
-        loadCustodyChain(evidence.id);
-        // Log that user viewed this evidence
-        if (user?.id) {
-          logEvidenceViewed(evidence.id, user.id).catch(() => {});
-        }
-      }
-    }
-  }, [evidence, open, user]);
-
   const loadCustodyChain = async (evidenceId: string) => {
     setCustodyLoading(true);
     try {
@@ -229,6 +160,23 @@ export function EvidenceDetailDialog({
     }
   };
 
+  // Check custody authorization and load events
+  useEffect(() => {
+    if (evidence && open) {
+      const role = user?.profile?.role;
+      setCustodyAuthorized(isAuthorizedForCustody(role));
+
+      if (isAuthorizedForCustody(role)) {
+        loadCustodyChain(evidence.id);
+        // Log that user viewed this evidence
+        if (user?.id) {
+          logEvidenceViewed(evidence.id, user.id).catch(() => {});
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evidence, open, user]);
+
   const handleVerifyHash = useCallback(async () => {
     if (evidence && user?.id) {
       await logHashVerified(evidence.id, user.id, true);
@@ -247,34 +195,6 @@ export function EvidenceDetailDialog({
   };
 
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const [signedUrlLoading, setSignedUrlLoading] = useState(false);
-
-  // Load signed URL when dialog opens
-  useEffect(() => {
-    if (evidence && open && evidence.file_path) {
-      loadSignedUrl();
-    }
-  }, [evidence, open]);
-
-  const loadSignedUrl = useCallback(async () => {
-    if (!evidence?.file_path) return;
-    setSignedUrlLoading(true);
-    try {
-      const bucket = evidence.type === "photo" ? "evidence-images" :
-                     evidence.type === "video" ? "evidence-videos" :
-                     evidence.type === "audio" ? "evidence-audio" :
-                     evidence.type === "document" ? "evidence-documents" :
-                     "evidence-other";
-      const result = await generateSignedUrl(bucket, evidence.file_path);
-      if (result.success && result.url) {
-        setSignedUrl(result.url);
-      }
-    } catch (err) {
-      console.warn("Failed to generate signed URL:", err);
-    } finally {
-      setSignedUrlLoading(false);
-    }
-  }, [evidence]);
 
   const handleDownload = useCallback(async () => {
     if (evidence && user?.id) {

@@ -10,7 +10,7 @@
 // ============================================================
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useRealtimeChannel, useRealtimeCounter, rt } from "./use-realtime";
+import { useRealtimeChannel, rt } from "./use-realtime";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 // ─── Types ───────────────────────────────────────────────
@@ -80,7 +80,13 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
     cameraEvents: 0,
     statusChanges: 0,
   });
-  const [liveCounts, setLiveCounts] = useState(liveCountsRef.current);
+  const [liveCounts, setLiveCounts] = useState({
+    newIncidentsToday: 0,
+    aiAnalysesCompleted: 0,
+    evidenceProcessed: 0,
+    cameraEvents: 0,
+    statusChanges: 0,
+  });
 
   // Helper: add activity to feed (max 20)
   const addActivity = useCallback((activity: DashboardActivity) => {
@@ -156,6 +162,7 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
 
   useEffect(() => {
     setSubError("incidents", incidentsError);
+    // eslint-disable-next-line
   }, [incidentsError, setSubError]);
 
   // ─── 2. AI Analysis subscription ─────────────────────
@@ -205,6 +212,7 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
 
   useEffect(() => {
     setSubError("ai", aiError);
+    // eslint-disable-next-line
   }, [aiError, setSubError]);
 
   // ─── 3. Evidence subscription ─────────────────────────
@@ -241,6 +249,7 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
 
   useEffect(() => {
     setSubError("evidence", evidenceError);
+    // eslint-disable-next-line
   }, [evidenceError, setSubError]);
 
   // ─── 4. Camera events subscription ────────────────────
@@ -280,6 +289,7 @@ export function useRealtimeDashboard(): UseRealtimeDashboardResult {
 
   useEffect(() => {
     setSubError("camera", cameraError);
+    // eslint-disable-next-line
   }, [cameraError, setSubError]);
 
   // ─── Ready state ──────────────────────────────────────

@@ -9,11 +9,9 @@
 // citizen reports, involved persons, and profiles.
 // ============================================================
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   CommandDialog,
   CommandEmpty,
@@ -22,7 +20,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
 import {
   Car,
@@ -32,18 +29,15 @@ import {
   User,
   Search,
   Clock,
-  TrendingUp,
   AlertTriangle,
   Loader2,
   Hash,
   MapPin,
   ChevronRight,
-  X,
   ArrowRight,
 } from "lucide-react";
 import { supabase } from "@/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
 
 // ─── Types ─────────────────────────────────────────────
 
@@ -137,36 +131,6 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
   const [searched, setSearched] = useState(false);
   const debounceRef = useRef<number | null>(null);
 
-  // Load recent searches when dialog opens
-  useEffect(() => {
-    if (open && user?.id && !query) {
-      loadRecentSearches();
-      setQuery(initialQuery);
-    }
-  }, [open, user?.id, initialQuery, query]);
-
-  // Debounced search
-  useEffect(() => {
-    if (!query || query.length < 2) {
-      setResults([]);
-      setTotal(0);
-      setSearched(false);
-      return;
-    }
-
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = window.setTimeout(() => {
-      performSearch(query);
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [query]);
-
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery || searchQuery.length < 2) return;
 
@@ -197,8 +161,9 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
 
   const loadRecentSearches = async () => {
     try {
+      if (!user?.id) return;
       const { data } = await supabase.rpc("get_recent_searches", {
-        p_user_id: user!.id,
+        p_user_id: user.id,
         p_limit: 5,
       });
       if (data) {
@@ -208,6 +173,41 @@ export function GlobalSearch({ open, onOpenChange, initialQuery = "" }: GlobalSe
       // Silent
     }
   };
+
+  // Load recent searches when dialog opens
+  useEffect(() => {
+    if (open && user?.id && !query) {
+      loadRecentSearches();
+      if (initialQuery) {
+        /* eslint-disable-next-line */
+        setQuery(initialQuery);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.id, initialQuery]);
+
+  // Debounced search
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setResults([]);
+      setTotal(0);
+      setSearched(false);
+      return;
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = window.setTimeout(() => {
+      performSearch(query);
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
 
   const handleSelect = async (result: SearchResult) => {
     // Save to search history
