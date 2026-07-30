@@ -65,7 +65,7 @@ SELECT au.id, 'system_alert', 'Welcome to TrafficWatch AI', 'Your account has be
 FROM auth.users au JOIN public.profiles p ON au.email = p.email;
 
 INSERT INTO public.officer_notifications (user_id, type, title, message, reference_type, priority, is_read, action_url)
-SELECT au.id, 'wanted_vehicle', 'WANTED Vehicle Alert', 'ALERT: Vehicle LR-WANTED (Nissan Altima, Silver) flagged as STOLEN. If sighted, DO NOT APPROACH. Contact investigators immediately.', 'incident', 'urgent', false, '/incidents'
+SELECT au.id, 'system_alert', 'WANTED Vehicle Alert', 'ALERT: Vehicle LR-WANTED (Nissan Altima, Silver) flagged as STOLEN. If sighted, DO NOT APPROACH. Contact investigators immediately.', 'incident', 'urgent', false, '/incidents'
 FROM auth.users au JOIN public.profiles p ON au.email = p.email
 WHERE p.role IN ('system_administrator', 'traffic_officer', 'police_supervisor', 'traffic_commander', 'investigator');
 
