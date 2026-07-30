@@ -58,49 +58,40 @@ VALUES ('Tubman Boulevard', 'Montserrado', 'medium', 55.0, 18, ARRAY['Speeding',
   ARRAY['Wide road encourages speeding', 'Nightlife areas', 'Multiple access roads'],
   'Consider median barriers and speed calming measures near the SKD junction area.');
 
--- === NOTIFICATIONS ===
+-- === OFFICER NOTIFICATIONS (uses officer_notifications table from v11 migration) ===
 
-INSERT INTO public.notifications (user_id, title, message, type, priority, is_read, metadata)
-SELECT p.id, 'Welcome to TrafficWatch AI', 'Your account has been created. Please complete your profile and set your preferences.', 'system', 'normal', false, '{}'::jsonb
-FROM public.profiles p
-WHERE NOT EXISTS (SELECT 1 FROM public.notifications WHERE title = 'Welcome to TrafficWatch AI' AND user_id = p.id);
+INSERT INTO public.officer_notifications (user_id, type, title, message, reference_type, priority, is_read, action_url)
+SELECT p.id, 'system_alert', 'Welcome to TrafficWatch AI', 'Your account has been created. Check your assigned cases and review queue.', 'system', 'normal', false, '/officer'
+FROM public.profiles p;
 
-INSERT INTO public.notifications (user_id, title, message, type, priority, is_read, metadata)
-SELECT p.id, 'Wanted Vehicle Alert', 'ALERT: Vehicle LR-WANTED (Nissan Altima, Silver) flagged as STOLEN. If sighted, DO NOT APPROACH. Contact investigators immediately.', 'wanted_vehicle', 'critical', false,
-  '{"plate_number": "LR-WANTED", "vehicle": "Nissan Altima", "color": "Silver", "incident_type": "hit_and_run"}'::jsonb
+INSERT INTO public.officer_notifications (user_id, type, title, message, reference_type, priority, is_read, action_url)
+SELECT p.id, 'wanted_vehicle', 'WANTED Vehicle Alert', 'ALERT: Vehicle LR-WANTED (Nissan Altima, Silver) flagged as STOLEN. If sighted, DO NOT APPROACH. Contact investigators immediately.', 'incident', 'urgent', false, '/incidents'
 FROM public.profiles p WHERE p.role IN ('system_administrator', 'traffic_officer', 'police_supervisor', 'traffic_commander', 'investigator');
 
-INSERT INTO public.notifications (user_id, title, message, type, priority, is_read)
-SELECT p.id, 'AI Analysis Completed', 'AI analysis has been completed for a speeding incident on UN Drive. High confidence - 95.5%.', 'ai_complete', 'high', false
+INSERT INTO public.officer_notifications (user_id, type, title, message, reference_type, priority, is_read, action_url)
+SELECT p.id, 'ai_analysis_complete', 'AI Analysis Complete', 'AI analysis has been completed for a speeding incident on UN Drive. Confidence: 95.5%.', 'incident', 'high', false, '/ai-detection'
 FROM public.profiles p WHERE p.role IN ('system_administrator', 'traffic_officer', 'police_supervisor');
 
--- === NOTIFICATION PREFERENCES ===
+INSERT INTO public.officer_notifications (user_id, type, title, message, reference_type, priority, is_read, action_url)
+SELECT p.id, 'citizen_report', 'Citizen Report Submitted', 'A citizen has submitted a new traffic violation report that requires review.', 'citizen_report', 'normal', false, '/citizen-reports'
+FROM public.profiles p WHERE p.role IN ('system_administrator', 'police_supervisor', 'traffic_commander', 'investigator');
 
-INSERT INTO public.notification_preferences (user_id, channels, notify_violations, notify_assignments, notify_evidence, notify_ai_results, notify_wanted_alerts, notify_system, quiet_hours_enabled)
-SELECT p.id, ARRAY['in_app', 'push']::TEXT[], true, true, true, true, true, true, false
-FROM public.profiles p
-WHERE NOT EXISTS (SELECT 1 FROM public.notification_preferences WHERE user_id = p.id);
-
--- === AUDIT LOGS ===
-
-INSERT INTO public.audit_logs (action, performed_by, target_type, target_id, details, ip_address)
-SELECT 'account_created', p.id, 'profile', p.id::TEXT, ('{"method": "seed_data", "role": "' || p.role::TEXT || '"}'), '127.0.0.1'
-FROM public.profiles p;
+INSERT INTO public.officer_notifications (user_id, type, title, message, reference_type, priority, is_read, action_url)
+SELECT p.id, 'case_assigned', 'Case Assigned: Hit and Run - Ganta', 'You have been assigned to investigate the hit and run incident in Ganta. Review evidence and witness statements.', 'incident', 'high', false, '/incidents'
+FROM public.profiles p WHERE p.email = 'investigator@trafficwatch.gov.lr';
 
 -- === OFFICER TASKS ===
 
-INSERT INTO public.officer_tasks (officer_id, title, description, status, priority, task_type, related_incident_id)
-SELECT p.id, 'Review AI Analysis - Speeding Incident', 'Please review the AI analysis results for the UN Drive speeding incident.', 'pending', 'high', 'ai_review', i.id
-FROM public.profiles p, public.incidents i
-WHERE p.email = 'officer1@trafficwatch.gov.lr' AND i.title ILIKE '%Speeding%UN Drive%';
+INSERT INTO public.officer_tasks (officer_id, title, description, status, priority, task_type, reference_type, reference_id)
+SELECT p.id, 'Review AI Analysis - Speeding Incident', 'Please review the AI analysis results for the UN Drive speeding incident on UN Drive. High confidence (95.5%). Confirm or reject findings.', 'pending', 'high', 'ai_review', 'incident', (SELECT i.id::TEXT FROM public.incidents i WHERE i.title ILIKE '%Speeding%UN Drive%' LIMIT 1)
+FROM public.profiles p WHERE p.email = 'officer1@trafficwatch.gov.lr';
 
-INSERT INTO public.officer_tasks (officer_id, title, description, status, priority, task_type, related_incident_id)
-SELECT p.id, 'Investigate Hit and Run - Ganta', 'Follow up on witness statements and review evidence from the hit and run incident in Ganta.', 'in_progress', 'critical', 'investigation', i.id
-FROM public.profiles p, public.incidents i
-WHERE p.email = 'investigator@trafficwatch.gov.lr' AND i.title ILIKE '%Hit and Run%Ganta%';
+INSERT INTO public.officer_tasks (officer_id, title, description, status, priority, task_type, reference_type, reference_id)
+SELECT p.id, 'Investigate Hit and Run - Ganta', 'Follow up on witness statements and review evidence from the hit and run incident in Ganta. Coordinate with local police.', 'in_progress', 'urgent', 'investigation', 'incident', (SELECT i.id::TEXT FROM public.incidents i WHERE i.title ILIKE '%Hit and Run%Ganta%' LIMIT 1)
+FROM public.profiles p WHERE p.email = 'investigator@trafficwatch.gov.lr';
 
 INSERT INTO public.officer_tasks (officer_id, title, description, status, priority, task_type)
-SELECT p.id, 'Upload Dashcam Evidence', 'Your dashcam footage from the Broad Street red light incident needs to be uploaded.', 'pending', 'high', 'evidence_upload'
+SELECT p.id, 'Upload Dashcam Evidence', 'Your dashcam footage from the Broad Street red light incident needs to be uploaded to the evidence system.', 'pending', 'high', 'evidence_review'
 FROM public.profiles p WHERE p.email = 'officer1@trafficwatch.gov.lr';
 
 -- === ROAD CONDITIONS ===
