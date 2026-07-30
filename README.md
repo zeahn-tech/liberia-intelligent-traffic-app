@@ -1,4 +1,4 @@
-# TrafficWatch AI — Liberia Intelligent Traffic App
+# TrafficWatch Liberia — Liberia Intelligent Traffic App
 
 **AI-powered traffic monitoring, incident reporting, evidence management, and analytics platform for national police operations.**
 
@@ -35,7 +35,7 @@
 
 ## 🚀 Overview
 
-TrafficWatch AI is a centralized, AI-powered traffic monitoring, incident reporting, evidence management, analytics, and enforcement platform designed for national police traffic operations. 
+TrafficWatch Liberia is a centralized, AI-powered traffic monitoring, incident reporting, evidence management, analytics, and enforcement platform designed for national police traffic operations. 
 
 Authorized police personnel can monitor, investigate, document, analyze, and manage traffic violations from anywhere in the country. Citizens can submit reports, track their submissions, and receive safety notices.
 
