@@ -108,42 +108,58 @@ $$;
 
 INSERT INTO public.involved_persons (id, incident_id, full_name, id_type, id_number, phone, role, statement)
 SELECT gen_random_uuid(), i.id, 'Thomas Kerkula', 'drivers_license', 'DL-2020-12345', '+231-77-100-0001', 'driver', 'I was driving at normal speed when the officer stopped me.'
-FROM public.incidents i WHERE i.title ILIKE 'Speeding%UN Drive%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0001');
+FROM public.incidents i
+WHERE i.title ILIKE 'Speeding%UN Drive%'
+  AND NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0001')
+LIMIT 1;
 
 INSERT INTO public.involved_persons (id, incident_id, full_name, id_type, id_number, phone, role, statement)
 SELECT gen_random_uuid(), i.id, 'James Kollie Jr.', 'drivers_license', 'DL-2019-54321', '+231-77-100-0002', 'driver', 'The light was yellow when I crossed.'
-FROM public.incidents i WHERE i.title ILIKE '%Red Light%Broad Street%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0002');
+FROM public.incidents i
+WHERE i.title ILIKE '%Red Light%Broad Street%'
+  AND NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0002')
+LIMIT 1;
 
 INSERT INTO public.involved_persons (id, incident_id, full_name, id_type, id_number, phone, role, statement)
 SELECT gen_random_uuid(), i.id, 'Amara Sheriff', 'national_id', 'NID-2018-98765', '+231-77-100-0003', 'driver', 'I was not driving recklessly. The officer was mistaken.'
-FROM public.incidents i WHERE i.title ILIKE '%Reckless%Tubman%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0003');
+FROM public.incidents i
+WHERE i.title ILIKE '%Reckless%Tubman%'
+  AND NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0003')
+LIMIT 1;
 
 INSERT INTO public.involved_persons (id, incident_id, full_name, id_type, id_number, phone, role)
 SELECT gen_random_uuid(), i.id, 'Musu Williams', 'national_id', 'NID-2021-45678', '+231-77-100-0004', 'pedestrian'
-FROM public.incidents i WHERE i.title ILIKE '%Hit and Run%Ganta%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0004');
+FROM public.incidents i
+WHERE i.title ILIKE '%Hit and Run%Ganta%'
+  AND NOT EXISTS (SELECT 1 FROM public.involved_persons WHERE phone = '+231-77-100-0004')
+LIMIT 1;
 
 -- === WITNESSES ===
 
 INSERT INTO public.witnesses (id, incident_id, full_name, phone, statement, consent_given)
 SELECT gen_random_uuid(), i.id, 'Josephine Brown', '+231-77-200-0001', 'I saw the silver car speed through the red light.', true
-FROM public.incidents i WHERE i.title ILIKE '%Red Light%Broad Street%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0001');
+FROM public.incidents i
+WHERE i.title ILIKE '%Red Light%Broad Street%'
+  AND NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0001')
+LIMIT 1;
 
 INSERT INTO public.witnesses (id, incident_id, full_name, phone, statement, consent_given)
 SELECT gen_random_uuid(), i.id, 'Mohamed Fofana', '+231-77-200-0002', 'The car was definitely speeding.', true
-FROM public.incidents i WHERE i.title ILIKE '%Red Light%Broad Street%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0002');
+FROM public.incidents i
+WHERE i.title ILIKE '%Red Light%Broad Street%'
+  AND NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0002')
+LIMIT 1;
 
 INSERT INTO public.witnesses (id, incident_id, full_name, phone, statement, consent_given)
 SELECT gen_random_uuid(), i.id, 'Sia Kabbah', '+231-77-200-0003', 'I heard the crash and saw the car speeding away.', true
-FROM public.incidents i WHERE i.title ILIKE '%Hit and Run%Ganta%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0003');
+FROM public.incidents i
+WHERE i.title ILIKE '%Hit and Run%Ganta%'
+  AND NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0003')
+LIMIT 1;
 
 INSERT INTO public.witnesses (id, incident_id, full_name, phone, statement, consent_given)
 SELECT gen_random_uuid(), i.id, 'David Gbartea', '+231-77-200-0004', 'The driver was swerving all over the road.', false
-FROM public.incidents i WHERE i.title ILIKE '%Reckless%Tubman%' LIMIT 1
-WHERE NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0004');
+FROM public.incidents i
+WHERE i.title ILIKE '%Reckless%Tubman%'
+  AND NOT EXISTS (SELECT 1 FROM public.witnesses WHERE phone = '+231-77-200-0004')
+LIMIT 1;
