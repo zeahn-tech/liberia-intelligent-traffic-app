@@ -51,18 +51,10 @@ CREATE INDEX IF NOT EXISTS idx_camera_streams_health ON public.camera_streams(he
 
 ALTER TABLE public.camera_streams ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authorized personnel can read camera streams"
-  ON public.camera_streams FOR SELECT
-  USING (
-    auth.role() = 'authenticated' AND
-    public.get_current_user_role() IN ('system_administrator', 'national_commissioner', 'regional_commander', 'traffic_commander', 'police_supervisor', 'traffic_officer', 'investigator', 'system_auditor')
-  );
-
-CREATE POLICY "Administrators and commanders can manage camera streams"
-  ON public.camera_streams FOR ALL
-  USING (
-    public.get_current_user_role() IN ('system_administrator', 'traffic_commander')
-  );
+DROP POLICY IF EXISTS "Authorized personnel can read camera streams" ON public.camera_streams;
+CREATE POLICY "Authorized personnel can read camera streams" ON public.camera_streams FOR SELECT USING (auth.role()='authenticated' AND public.get_current_user_role() IN ('system_administrator','national_commissioner','regional_commander','traffic_commander','police_supervisor','traffic_officer','investigator','system_auditor'));
+DROP POLICY IF EXISTS "Administrators and commanders can manage camera streams" ON public.camera_streams;
+CREATE POLICY "Administrators and commanders can manage camera streams" ON public.camera_streams FOR ALL USING (public.get_current_user_role() IN ('system_administrator','traffic_commander'));
 
 -- ============================================================
 -- 2. CAMERA DETECTIONS
@@ -210,18 +202,10 @@ CREATE INDEX IF NOT EXISTS idx_camera_violations_detected ON public.camera_viola
 
 ALTER TABLE public.camera_violations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authorized personnel can read camera violations"
-  ON public.camera_violations FOR SELECT
-  USING (
-    auth.role() = 'authenticated' AND
-    public.get_current_user_role() IN ('system_administrator', 'national_commissioner', 'regional_commander', 'traffic_commander', 'police_supervisor', 'traffic_officer', 'investigator', 'evidence_officer', 'system_auditor')
-  );
-
-CREATE POLICY "Officers and investigators can manage violations"
-  ON public.camera_violations FOR ALL
-  USING (
-    public.get_current_user_role() IN ('system_administrator', 'traffic_officer', 'police_supervisor', 'investigator', 'traffic_commander')
-  );
+DROP POLICY IF EXISTS "Authorized personnel can read camera violations" ON public.camera_violations;
+CREATE POLICY "Authorized personnel can read camera violations" ON public.camera_violations FOR SELECT USING (auth.role()='authenticated' AND public.get_current_user_role() IN ('system_administrator','national_commissioner','regional_commander','traffic_commander','police_supervisor','traffic_officer','investigator','evidence_officer','system_auditor'));
+DROP POLICY IF EXISTS "Officers and investigators can manage violations" ON public.camera_violations;
+CREATE POLICY "Officers and investigators can manage violations" ON public.camera_violations FOR ALL USING (public.get_current_user_role() IN ('system_administrator','traffic_officer','police_supervisor','investigator','traffic_commander'));
 
 -- ============================================================
 -- 4. CAMERA EVIDENCE
@@ -287,20 +271,12 @@ CREATE INDEX IF NOT EXISTS idx_camera_evidence_captured ON public.camera_evidenc
 
 ALTER TABLE public.camera_evidence ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Authorized personnel can read camera evidence"
-  ON public.camera_evidence FOR SELECT
-  USING (
-    auth.role() = 'authenticated' AND
-    public.get_current_user_role() IN ('system_administrator', 'national_commissioner', 'regional_commander', 'traffic_commander', 'police_supervisor', 'traffic_officer', 'investigator', 'evidence_officer', 'system_auditor')
-  );
-
-CREATE POLICY "Authorized personnel can insert camera evidence"
-  ON public.camera_evidence FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Evidence officers can manage camera evidence"
-  ON public.camera_evidence FOR UPDATE
-  USING (public.get_current_user_role() IN ('system_administrator', 'evidence_officer', 'investigator'));
+DROP POLICY IF EXISTS "Authorized personnel can read camera evidence" ON public.camera_evidence;
+CREATE POLICY "Authorized personnel can read camera evidence" ON public.camera_evidence FOR SELECT USING (auth.role()='authenticated' AND public.get_current_user_role() IN ('system_administrator','national_commissioner','regional_commander','traffic_commander','police_supervisor','traffic_officer','investigator','evidence_officer','system_auditor'));
+DROP POLICY IF EXISTS "Authorized personnel can insert camera evidence" ON public.camera_evidence;
+CREATE POLICY "Authorized personnel can insert camera evidence" ON public.camera_evidence FOR INSERT WITH CHECK (auth.role()='authenticated');
+DROP POLICY IF EXISTS "Evidence officers can manage camera evidence" ON public.camera_evidence;
+CREATE POLICY "Evidence officers can manage camera evidence" ON public.camera_evidence FOR UPDATE USING (public.get_current_user_role() IN ('system_administrator','evidence_officer','investigator'));
 
 -- ============================================================
 -- 5. HELPER: Get stream health summary for a camera
