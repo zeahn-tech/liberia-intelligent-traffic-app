@@ -1,144 +1,260 @@
-# 🛡️ TrafficWatch AI — Liberia Intelligent Traffic App
+# TrafficWatch AI — Liberia Intelligent Traffic App
 
 **AI-powered traffic monitoring, incident reporting, evidence management, and analytics platform for national police operations.**
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![PWA](https://img.shields.io/badge/PWA-ready-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-green)
+> Built for the Liberia National Police — designed to scale from manual officer reports to full live-camera AI computer vision.
 
 ---
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Available Scripts](#available-scripts)
-- [Project Structure](#project-structure)
-- [PWA Features](#pwa-features)
-- [Authentication](#authentication)
-- [Authorization & RBAC](#authorization--rbac)
-- [Deployment](#deployment)
-- [GitHub Actions](#github-actions)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Technology Stack](#-technology-stack)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Supabase Configuration](#-supabase-configuration)
+- [Authentication Setup](#-authentication-setup)
+- [Database Setup](#-database-setup)
+- [Storage Setup](#-storage-setup)
+- [AI Provider Setup](#-ai-provider-setup)
+- [Maps Setup](#-maps-setup)
+- [Development](#-development)
+- [Testing](#-testing)
+- [Production Build](#-production-build)
+- [PWA Installation](#-pwa-installation)
+- [GitHub Deployment](#-github-deployment)
+- [Vercel Deployment](#-vercel-deployment)
+- [Security](#-security)
+- [Project Structure](#-project-structure)
+- [Troubleshooting](#-troubleshooting)
+- [Future Camera Integration](#-future-camera-integration)
 
 ---
 
-## Overview
+## 🚀 Overview
 
-TrafficWatch AI is a centralized, progressive web application (PWA) designed for the Liberia National Police to monitor, investigate, document, analyze, and manage traffic violations from anywhere in the country.
+TrafficWatch AI is a centralized, AI-powered traffic monitoring, incident reporting, evidence management, analytics, and enforcement platform designed for national police traffic operations. 
 
-### Core Capabilities
+Authorized police personnel can monitor, investigate, document, analyze, and manage traffic violations from anywhere in the country. Citizens can submit reports, track their submissions, and receive safety notices.
 
-| Feature | Description |
-|---------|-------------|
-| **Incident Management** | Create, track, assign, escalate, and resolve traffic incidents |
-| **Digital Evidence Center** | Secure upload, storage, and chain-of-custody for photos, videos, audio, and documents |
-| **AI Analysis Pipeline** | Modular AI engine for computer vision, object detection, and traffic violation analysis |
-| **ANPR System** | Automatic Number Plate Recognition with OCR, normalization, and confidence scoring |
-| **Interactive Map** | Real-time incident map with clustering, filters, and county-level boundaries |
-| **Command Dashboard** | Executive overview with KPIs, charts, and live incident feed |
-| **Citizen Portal** | Public reporting portal with anonymous submission option |
-| **Officer Portal** | Dedicated workspace for patrol officers with offline support |
-| **Predictive Analytics** | Trend analysis, hotspot prediction, and incident volume forecasting |
-| **Audit & Security** | Comprehensive audit logging, RBAC, and data privacy controls |
-| **Reports** | Professional PDF/CSV report generation with evidence references |
+### Key Capabilities
+
+- **Officer Reports** — Create, manage, and investigate traffic incidents
+- **Evidence Management** — Secure upload, chain-of-custody, cryptographic hashing
+- **AI Analysis** — Computer vision for violation detection and ANPR
+- **Command Dashboard** — Real-time KPIs, charts, maps, and predictive analytics
+- **Citizen Portal** — Report violations, upload evidence, track submissions
+- **Offline-First** — Create reports and capture evidence without connectivity
+- **PWA** — Installable on mobile and desktop devices
 
 ---
 
-## Tech Stack
+## ✨ Features
 
-### Frontend
-- **React 19** — UI framework
-- **TypeScript** — Type safety
-- **Vite 7** — Build tooling
-- **Tailwind CSS v4** — Utility-first styling
-- **shadcn/ui** — Accessible UI primitives
-- **Framer Motion** — Animations
-- **Recharts** — Interactive charts
-- **Leaflet** — Map visualization
-- **Lucide React** — Icons
+### Command Center
+- National, regional, and county overview
+- Live incident feed with real-time updates
+- Critical alert notifications
+- Heat maps and incident clustering
+- Officer activity monitoring
+- Violation trend analytics
 
-### Backend & Data
-- **Supabase** — PostgreSQL database, authentication, storage, realtime
-- **Supabase Auth** — Authentication with email OTP and role management
+### Incident Management
+- Full lifecycle: Draft → Submitted → Review → Investigate → Resolve → Close
+- Status transitions with audit trail
+- Assignment and escalation workflows
+- Involved persons and witness management
+- GPS location capture
 
-### PWA
-- **vite-plugin-pwa** — PWA manifest, service worker, offline support
-- **Workbox** — Service worker strategies (precaching, runtime caching)
-- **IndexedDB** — Offline data queue
+### Evidence Center
+- Upload images, videos, audio, and documents
+- SHA-256 cryptographic hash for integrity
+- Chain-of-custody tracking (who viewed, downloaded, exported)
+- Immutable original evidence with derived versions
+- Signed URL access control
+- Offline upload queue with sync
+
+### AI Detection
+- Upload photos/videos for automated violation detection
+- Automatic Number Plate Recognition (ANPR)
+- Violation type classification with confidence scores
+- Officer review workflow (confirm/reject/correct)
+- Results labeled as AI-assisted, not final legal determinations
+
+### License Plate Recognition
+- Plate text detection and OCR
+- Normalized plate text
+- Confidence scoring
+- Officer correction and verification
+- Historical plate search
+- Repeat offender identification
+
+### Citizen Portal
+- Submit traffic violation, accident, and road hazard reports
+- Anonymous reporting option
+- Upload evidence
+- Track report status
+- Road safety notices
+
+### Officer Portal
+- Assigned case view
+- Quick incident creation
+- Evidence capture and upload
+- AI result review
+- Offline mode with sync
+
+### Maps
+- Interactive Leaflet map
+- Incident markers with clustering
+- County and district boundaries
+- Police stations and checkpoints
+- Road network overlay
+- Geolocation support
+
+### Global Search
+- Full-text search across incidents, evidence, ANPR scans, and citizen reports
+- Filter by type, status, severity, date range
+- Relevance ranking
+
+### Predictive Analytics
+- High-risk road prediction
+- Violation hotspot analysis
+- Repeat offender risk
+- Clearly labeled as estimates
+
+### Notifications
+- In-app notification panel
+- Web push notification architecture
+- Configurable notification preferences
+- Priority-based alerting
+
+### Reports
+- Generate PDF and CSV case summaries
+- Export evidence reports
+- Distinguish original evidence from AI analysis
+
+### Audit Logging
+- Immutable audit trail
+- All security-sensitive actions recorded
+- Role-restricted audit access
 
 ---
 
-## Architecture
+## 🏗 Architecture
 
-### AI Analysis Pipeline
 ```
-Evidence Upload → Secure Storage → Media Validation → AI Processing Queue
-→ Computer Vision Analysis → Object Detection → Traffic Violation Analysis
-→ License Plate Detection → OCR → Confidence Evaluation → Officer Review
-→ Confirmed Violation → Case Record
-```
-
-### Camera System (Future)
-```
-Camera → Stream Gateway → Video Processing → AI Computer Vision Engine
-→ Detection Events → TrafficWatch AI → Alerts / Incidents / Evidence
+┌─────────────────────────────────────────────────────┐
+│                    Client Layer                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │        React PWA (Vite + TypeScript)         │   │
+│  │  ┌─────┐ ┌──────┐ ┌──────┐ ┌───────────┐   │   │
+│  │  │ UI  │ │Pages │ │Hooks │ │Components │   │   │
+│  │  └─────┘ └──────┘ └──────┘ └───────────┘   │   │
+│  └──────────────────────────────────────────────┘   │
+└──────────────────┬──────────────────────────────────┘
+                   │ HTTPS / REST / Realtime
+┌──────────────────▼──────────────────────────────────┐
+│                  Service Layer                        │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  API Services (Supabase SDK)                 │   │
+│  │  ┌─────────┐ ┌──────────┐ ┌──────────────┐  │   │
+│  │  │Auth Svc│ │Incidents│ │Evidence Svc  │  │   │
+│  │  └─────────┘ └──────────┘ └──────────────┘  │   │
+│  │  ┌─────────┐ ┌──────────┐ ┌──────────────┐  │   │
+│  │  │AI Svc  │ │Vehicles │ │Analytics Svc │  │   │
+│  │  └─────────┘ └──────────┘ └──────────────┘  │   │
+│  └──────────────────────────────────────────────┘   │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│              Backend Layer                            │
+│  ┌──────────────────────────────────────────────┐   │
+│  │           Supabase Platform                    │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────────┐  │   │
+│  │  │PostgreSQL│ │  Auth    │ │   Storage    │  │   │
+│  │  │  + RLS   │ │(GoTrue) │ │ (S3-backed)  │  │   │
+│  │  └──────────┘ └──────────┘ └──────────────┘  │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────────┐  │   │
+│  │  │Realtime │ │  Edge   │ │  DB Functions │  │   │
+│  │  │(WebSocket)│ │Functions│ │   (plpgsql)  │  │   │
+│  │  └──────────┘ └──────────┘ └──────────────┘  │   │
+│  └──────────────────────────────────────────────┘   │
+└──────────────────┬──────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│             AI Analysis Layer                         │
+│  ┌──────────────────────────────────────────────┐   │
+│  │  Provider Registry                            │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────────┐  │   │
+│  │  │VlyAI     │ │Gemini   │ │  OpenAI      │  │   │
+│  │  │Provider  │ │Provider │ │  Provider    │  │   │
+│  │  └──────────┘ └──────────┘ └──────────────┘  │   │
+│  │  ┌──────────────────────────────────────┐    │   │
+│  │  │   Future Traffic Vision Provider     │    │   │
+│  │  └──────────────────────────────────────┘    │   │
+│  └──────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
 ```
 
 ### Data Flow
+
 ```
-Offline-first: IndexedDB → Sync Queue → Supabase (when online)
-Real-time: Supabase Realtime → WebSocket → Live UI updates
+Evidence Upload → Secure Storage → Media Validation → AI Queue
+→ Computer Vision → Object Detection → Violation Analysis
+→ ANPR/OCR → Confidence Scoring → Officer Review
+→ Confirmed Violation → Case Record (with Chain of Custody)
 ```
 
 ---
 
-## Getting Started
+## 🛠 Technology Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 19, TypeScript 5.9, Vite 7 |
+| **Styling** | Tailwind CSS 4, Framer Motion, shadcn/ui |
+| **Maps** | Leaflet, react-leaflet, leaflet.markercluster |
+| **Charts** | Recharts |
+| **Backend** | Supabase (PostgreSQL, Auth, Storage, Realtime) |
+| **Authentication** | Supabase Auth (GoTrue) |
+| **Database** | PostgreSQL 15+ with Row Level Security |
+| **AI Providers** | VlyAI, Google Gemini, OpenAI (pluggable) |
+| **PWA** | vite-plugin-pwa, Workbox, Service Workers |
+| **Offline Storage** | IndexedDB via idb |
+| **Reports** | jsPDF, html2canvas |
+| **Forms** | react-hook-form, zod |
+| **Icons** | lucide-react |
+| **Testing** | Vitest |
+| **Linting** | ESLint, Prettier, TypeScript strict |
+| **Deployment** | Vercel, Docker |
+
+---
+
+## 🚦 Getting Started
 
 ### Prerequisites
 
-- **Bun** (recommended) or **Node.js 20+**
-- A **Supabase** project (free tier works)
+- [Bun](https://bun.sh/) (recommended) or Node.js 18+
+- A [Supabase](https://supabase.com/) project (free tier works)
+- API keys for AI providers (optional for development)
 
-### 1. Clone & Install
+### Installation
 
 ```bash
+# Clone the repository
 git clone https://github.com/your-org/trafficwatch-ai.git
 cd trafficwatch-ai
+
+# Install dependencies
 bun install
-```
 
-### 2. Configure Environment
+# Copy environment variables
+cp .env.example .env
+# Edit .env with your values
 
-Copy the example env file and fill in your Supabase credentials:
-
-```bash
-cp env-example.txt .env
-```
-
-Required environment variables:
-| Variable | Description | Where to find it |
-|----------|-------------|------------------|
-| `VITE_SUPABASE_URL` | Supabase project URL | Supabase Dashboard → Settings → API → Project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon/public key | Supabase Dashboard → Settings → API → anon public key |
-
-### 3. Database Setup
-
-1. Go to your **Supabase Dashboard** → **SQL Editor**
-2. Run the migration files in order:
-   - `supabase-migration-v2.sql` through `supabase-migration-v21-performance.sql`
-3. Create storage buckets (from SQL Editor storage setup):
-   - `evidence-images` — JPEG, PNG, WebP, TIFF (50 MB max)
-   - `evidence-videos` — MP4, WebM, AVI, MKV (50 MB max)
-   - `evidence-audio` — MP3, WAV, OGG, AAC (50 MB max)
-   - `evidence-documents` — PDF, DOC, XLS, TXT, CSV (25 MB max)
-   - `evidence-other` — Any (50 MB max)
-
-### 4. Start Development
-
-```bash
+# Start the development server
 bun run dev
 ```
 
@@ -146,269 +262,647 @@ The app will be available at `http://localhost:5173`.
 
 ---
 
-## Environment Variables
+## 🔐 Environment Variables
 
-The app uses Vite's `import.meta.env` pattern. All variables are prefixed with `VITE_`.
+Create a `.env` file in the project root:
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `VITE_SUPABASE_URL` | ✅ Yes | — | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | ✅ Yes | — | Supabase anon/public key |
+```env
+# ─── Required ──────────────────────────────────────────
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 
-*Note: Only variables actually used by the implementation are listed. If the app does not find these variables, it gracefully falls back to a mock client so the landing page still renders.*
+# ─── Optional (for AI features) ────────────────────────
+VITE_AI_PROVIDER=vly          # Options: vly, gemini, openai, custom
+VITE_AI_API_KEY=your-ai-key
+
+# ─── Optional (for map features) ───────────────────────
+VITE_MAPBOX_ACCESS_TOKEN=your-mapbox-token
+```
+
+### Where to find these values
+
+| Variable | Location |
+|----------|----------|
+| `VITE_SUPABASE_URL` | Supabase Dashboard → Settings → API → Project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → anon/public key |
+| `VITE_AI_API_KEY` | Your AI provider dashboard (VlyAI, Google AI Studio, OpenAI) |
 
 ---
 
-## Available Scripts
+## 🗄️ Supabase Configuration
 
-| Script | Description |
-|--------|-------------|
-| `bun run dev` | Start development server with HMR |
-| `bun run build` | TypeScript typecheck + production build |
-| `bun run preview` | Preview the production build locally |
-| `bun run lint` | Run ESLint across the codebase |
-| `bun run format` | Format code with Prettier |
-| `bun run pwa:build` | Build + preview with PWA optimizations |
-| `bun tsc -b --noEmit` | TypeScript typecheck only |
+### 1. Create a Supabase Project
+
+1. Go to [supabase.com](https://supabase.com/) and create an account
+2. Create a new project (free tier is sufficient)
+3. Wait for the database to provision (~1-2 minutes)
+
+### 2. Run Database Migrations
+
+All migration files are in the `supabase/` directory:
+
+```bash
+supabase/
+├── migrations/
+│   ├── 00001_init.sql           ← Core schema (42+ tables, enums, RLS)
+│   ├── 00002_functions.sql      ← Stored procedures & functions
+│   └── 00003_camera_entities.sql ← Camera infrastructure tables
+└── seed/
+    ├── seed-part1-profiles.sql  ← Demo officer profiles
+    ├── seed-part2-incidents.sql ← Demo incidents
+    ├── seed-part3-evidence.sql  ← Demo evidence
+    └── seed-part4-remaining.sql ← Demo geography & predictions
+```
+
+**Run order in Supabase SQL Editor:**
+
+1. Open Supabase Dashboard → SQL Editor
+2. Paste and run each migration file **in order**
+3. (Optional) Run seed files for demo data
+
+### 3. Row Level Security
+
+All tables have RLS policies enforcing role-based access. The `get_current_user_role()` function determines the authenticated user's role. Key policies:
+
+- **Officers** can read/create their own incidents
+- **Supervisors** can read incidents in their jurisdiction
+- **Citizens** can only see their own reports
+- **Auditors** can read audit logs but not modify them
+
+### 4. Auth Hooks
+
+The migration automatically creates:
+- A `handle_new_user()` trigger that creates a profile on signup
+- A `handle_new_user_notification_prefs()` trigger that creates default notification preferences
 
 ---
 
-## Project Structure
+## 📦 Storage Setup
+
+### Create Storage Buckets
+
+The application requires 5 Supabase Storage buckets:
+
+| Bucket | Max Size | Allowed MIME Types |
+|--------|----------|-------------------|
+| `evidence-images` | 50 MB | `image/jpeg`, `image/png`, `image/webp`, `image/tiff` |
+| `evidence-videos` | 50 MB | `video/mp4`, `video/quicktime`, `video/webm` |
+| `evidence-audio` | 50 MB | `audio/mpeg`, `audio/wav`, `audio/ogg` |
+| `evidence-documents` | 25 MB | `application/pdf`, `text/plain`, `text/csv` |
+| `evidence-other` | 50 MB | `*/*` |
+
+**Steps:**
+1. Supabase Dashboard → Storage → New Bucket
+2. Create each bucket with the settings above
+3. Ensure buckets are set to **private** (not public)
+
+---
+
+## 🔑 Authentication Setup
+
+### 1. Configure Auth Settings
+
+Supabase Dashboard → Authentication → Settings:
+
+- **Site URL**: `http://localhost:5173` (dev) / `https://your-app.vercel.app` (prod)
+- **Redirect URLs**: `http://localhost:5173/**`, `https://your-app.vercel.app/**`
+- **Email confirmation**: Disable for development (toggle off "Confirm email")
+
+### 2. Available Demo Accounts
+
+After running seed data:
+
+| Email | Role | Badge |
+|-------|------|-------|
+| `admin@trafficwatch.gov.lr` | System Administrator | ADM-001 |
+| `commissioner@trafficwatch.gov.lr` | National Commissioner | COM-001 |
+| `supervisor@trafficwatch.gov.lr` | Police Supervisor | SUP-001 |
+| `officer1@trafficwatch.gov.lr` | Traffic Officer | OFC-001 |
+| `investigator@trafficwatch.gov.lr` | Investigator | INV-001 |
+| `citizen1@example.com` | Citizen | CIT-001 |
+
+### 3. Role Hierarchy
+
+```
+system_administrator (highest)
+  → national_commissioner
+    → regional_commander
+      → traffic_commander
+        → police_supervisor
+          → traffic_officer
+          → investigator
+          → evidence_officer
+          → system_auditor
+            → citizen (lowest)
+```
+
+---
+
+## 🤖 AI Provider Setup
+
+TrafficWatch AI supports pluggable AI providers. Currently supported:
+
+### VlyAI (Default)
+No configuration needed — built into the platform.
+
+### Google Gemini
+```env
+VITE_AI_PROVIDER=gemini
+VITE_AI_API_KEY=your-gemini-api-key
+```
+1. Get an API key from [Google AI Studio](https://aistudio.google.com/)
+2. Uses `gemini-2.0-flash` model
+
+### OpenAI
+```env
+VITE_AI_PROVIDER=openai
+VITE_AI_API_KEY=your-openai-api-key
+```
+1. Get an API key from [OpenAI Platform](https://platform.openai.com/)
+2. Uses `gpt-4o` model
+
+### Switching Providers at Runtime
+
+```typescript
+import { providerRegistry } from "@/ai/providers";
+
+await providerRegistry.initialize({ id: "gemini", apiKey: "YOUR_KEY" });
+providerRegistry.setActiveProvider("gemini");
+```
+
+No pipeline or UI changes needed — the `ProviderRegistry` handles the swap transparently.
+
+---
+
+## 🗺 Maps Setup
+
+TrafficWatch AI uses [Leaflet](https://leafletjs.com/) with OpenStreetMap tiles by default — no API key required for basic functionality.
+
+For custom map styles or higher rate limits, configure:
+
+```env
+VITE_MAPBOX_ACCESS_TOKEN=your-mapbox-token
+```
+
+### Map Features
+- Traffic incidents with marker clustering
+- Police stations and checkpoints
+- Road networks
+- County boundaries
+- Geolocation
+- Search and filtering
+- Heat maps for violation hotspots
+
+---
+
+## 💻 Development
+
+### Available Scripts
+
+```bash
+bun run dev            # Start development server (Vite hot-reload)
+bun run test           # Run all tests once
+bun run test:watch     # Watch mode for development
+bun run test:coverage  # Run with V8 coverage report
+bun run test:ui        # Open Vitest UI dashboard
+bun run lint           # ESLint check
+bun run format         # Prettier formatting
+bun run build          # Production build (tsc + vite build)
+bun run preview        # Preview production build
+```
+
+### Project Structure
+
+```
+src/
+├── ai/                  # AI analysis pipeline & providers
+│   ├── components/      # AI UI components (AIAnalysisPanel, ANPREditor)
+│   ├── providers/       # Provider implementations (Vly, Gemini, OpenAI)
+│   ├── camera/          # Camera stream architecture
+│   ├── pipeline.ts      # AI processing pipeline
+│   └── types.ts         # AI type definitions
+├── components/          # Shared UI components
+│   └── ui/              # shadcn/ui components
+├── hooks/               # React hooks
+├── lib/                 # Utilities & helpers
+│   └── __tests__/       # Test files
+├── pages/               # Route page components
+├── services/            # API service layer
+├── supabase/            # Supabase client & types
+├── pwa/                 # PWA helpers (offline, service worker)
+├── index.css            # Global styles
+└── main.tsx             # Application entry point
+```
+
+### Key Conventions
+
+- **TypeScript strict mode** enabled — no implicit `any`
+- **React hooks** follow rules of hooks strictly
+- **Framer Motion** for animations (respects `prefers-reduced-motion`)
+- **Tailwind CSS** for styling with shadcn/ui components
+- **Search params** for filter/sort state (not useState/useReducer)
+- **Supabase Realtime** for live updates (not polling)
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+bun run test
+
+# Watch mode
+bun run test:watch
+
+# With coverage
+bun run test:coverage
+
+# Vitest UI dashboard
+bun run test:ui
+```
+
+### Test Structure
+
+Tests are colocated with source files in `src/lib/__tests__/`:
+
+| Test File | Covers |
+|-----------|--------|
+| `geography.test.ts` | Geographic filter utilities |
+| `offline.test.ts` | Offline IndexedDB storage |
+| `security.test.ts` | XSS sanitization, input validation |
+| `permissions.test.ts` | Role-based access logic |
+
+### E2E Testing (Future)
+The architecture supports end-to-end testing workflows:
+- Login → Dashboard → Create Incident → Upload Evidence → AI Analysis → Review → Assign → Update Status → Generate Report → Close
+
+---
+
+## 📦 Production Build
+
+```bash
+# Full production build
+bun run build
+
+# Preview the build locally
+bun run preview
+```
+
+The build:
+- Runs `tsc -b` for TypeScript type-checking
+- Runs `vite build` with code splitting
+- Generates PWA service worker
+- Outputs to `dist/` directory
+
+### Build Optimizations
+
+- **Code splitting**: React vendor, UI vendor, map vendor, PWA vendor chunks
+- **Hash-based filenames**: Long-term caching
+- **Tree-shaking**: Dead code elimination
+- **esbuild minification**: Fast, efficient bundle
+- **PWA precaching**: Static assets cached by service worker
+
+---
+
+## 📱 PWA Installation
+
+TrafficWatch AI is a true Progressive Web App.
+
+### Installation Steps
+
+**Desktop (Chrome, Edge):**
+1. Open the app in the browser
+2. Click the install icon in the address bar (or ⋮ → Install TrafficWatch AI)
+3. The app opens in standalone mode
+
+**Android (Chrome):**
+1. Open the app
+2. Tap ⋮ → Add to Home screen
+3. The app installs with its icon
+
+**iOS (Safari):**
+1. Open the app
+2. Tap Share → Add to Home Screen
+3. The app opens in standalone mode
+
+### PWA Features
+
+- ✅ Installable to home screen
+- ✅ Offline support with service worker
+- ✅ Offline incident creation and draft storage
+- ✅ Background sync when connectivity returns
+- ✅ cached map tiles (30-day cache)
+- ✅ API response caching (NetworkFirst strategy)
+- ✅ Update detection with user notification
+- ✅ Responsive design (mobile, tablet, desktop)
+
+### Testing PWA
+
+```bash
+# Build for production
+bun run build
+
+# Preview
+bun run preview
+```
+
+Test with Chrome DevTools → Application → Manifest / Service Workers.
+
+---
+
+## 🐙 GitHub Deployment
+
+### Prepare for GitHub
+
+```bash
+# The project includes:
+# - .gitignore (node_modules, dist, .env)
+# - .env.example (documentation, no secrets)
+# - Complete migration files
+# - README with setup instructions
+
+git init
+git add .
+git commit -m "Initial commit: TrafficWatch AI"
+git remote add origin https://github.com/your-org/trafficwatch-ai.git
+git push -u origin main
+```
+
+### GitHub Actions (CI/CD)
+
+A sample workflow is available for automated testing:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run build
+      - run: bun run test
+```
+
+---
+
+## ▲ Vercel Deployment
+
+### Deploy from GitHub
+
+1. Push the project to GitHub
+2. Go to [vercel.com](https://vercel.com/) → Import GitHub repository
+3. Configure:
+
+| Setting | Value |
+|---------|-------|
+| **Framework Preset** | Vite |
+| **Build Command** | `bun run build` |
+| **Output Directory** | `dist` |
+| **Install Command** | `bun install` |
+
+4. Add environment variables (all `VITE_*` from `.env.example`)
+5. Deploy
+
+### Vercel Configuration
+
+Create `vercel.json` in project root:
+
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+This ensures SPA routing works on Vercel (no 404 on route refresh).
+
+### Post-Deployment
+
+- Verify PWA manifest loads: `https://your-app.vercel.app/manifest.webmanifest`
+- Verify service worker registers: Chrome DevTools → Application → Service Workers
+- Test offline capabilities
+- Update Supabase Auth redirect URLs to your Vercel domain
+
+---
+
+## 🔒 Security
+
+### Database Security
+
+- **Row Level Security** on every table — enforced at database level
+- **Role-based access** — never rely on frontend-only protection
+- **Parameterized queries** — SQL injection prevented via Supabase SDK
+- **Signed URLs** — evidence files accessed through time-limited signed URLs
+- **Input validation** — all inputs validated server-side and client-side
+
+### Authentication
+
+- Supabase Auth with secure session management
+- Password hashing handled by Supabase (bcrypt)
+- MFA architecture ready
+- Session expiration and refresh
+
+### File Upload Security
+
+- MIME type validation
+- File size limits per bucket
+- SHA-256 hash computed for integrity verification
+- Private storage buckets (no public URLs)
+- Virus scanning architecture ready
+
+### Audit Trail
+
+- All security-sensitive actions logged to `audit_logs`
+- Chain-of-custody for every evidence interaction
+- Immutable logs (no UPDATE/DELETE policies for auditors)
+- Severity classification (info, warning, error, critical)
+
+### Secrets Management
+
+- **Never store secrets in frontend code**
+- API keys managed via Supabase Edge Functions or environment variables
+- Service-role keys never leave the backend
+- AI provider keys passed through environment configuration
+
+### XSS Prevention
+
+- React's built-in escaping (JSX)
+- Content Security Policy ready
+- Input sanitization utilities in `src/lib/security.ts`
+
+---
+
+## 📁 Project Structure
 
 ```
 trafficwatch-ai/
-├── .github/workflows/     # GitHub Actions CI
-├── public/                 # Static assets, manifest, icons
+├── public/                    # Static assets
+│   ├── logo.svg
+│   ├── manifest.webmanifest
+│   └── seed-part*.sql
+├── supabase/                  # Database migrations & seed
+│   ├── README.md
+│   ├── migrations/            # Numbered SQL migrations
+│   └── seed/                  # Demo/seed data
 ├── src/
-│   ├── ai/                 # AI analysis pipeline modules
-│   │   ├── anpr/           # Automatic Number Plate Recognition
-│   │   ├── camera/         # Camera stream processing
-│   │   ├── components/     # AI analysis UI components
-│   │   ├── predictive/     # Predictive analytics engine
-│   │   └── providers/      # AI provider abstraction
-│   ├── components/
-│   │   ├── ui/             # shadcn/ui primitives
-│   │   └── ...             # App-specific components
-│   ├── convex/             # Convex backend (auth)
-│   ├── hooks/              # React hooks
-│   ├── lib/                # Utilities, services, helpers
-│   ├── pages/              # Route page components
-│   ├── pwa/                # Service worker & offline fallback
-│   ├── services/           # API service layer
-│   ├── supabase/           # Supabase client, auth, types
-│   └── main.tsx            # App entry point & routing
-├── .env.example            # Environment variable template
+│   ├── ai/                    # AI analysis engine
+│   │   ├── camera/            # Camera stream types & processing
+│   │   ├── components/        # AI UI components
+│   │   ├── providers/         # Pluggable AI providers
+│   │   ├── pipeline.ts        # AI processing pipeline
+│   │   └── types.ts           # AI type definitions
+│   ├── components/            # Reusable UI components
+│   │   └── ui/                # shadcn/ui primitives
+│   ├── hooks/                 # Custom React hooks
+│   ├── lib/                   # Utilities & helpers
+│   │   └── __tests__/         # Test files
+│   ├── pages/                 # Route page components
+│   ├── services/              # API service layer
+│   ├── supabase/              # Supabase client & types
+│   ├── pwa/                   # PWA offline support
+│   ├── index.css              # Global styles
+│   └── main.tsx               # App entry point
+├── .env.example               # Environment variable template
 ├── .gitignore
-├── index.html
-├── package.json
-├── vite.config.ts          # Vite config with PWA plugin
-└── env-example.txt         # Environment variable template
+├── index.html                 # HTML entry point
+├── package.json               # Dependencies & scripts
+├── tsconfig.json              # TypeScript configuration
+├── vite.config.ts             # Vite & PWA configuration
+└── README.md                  # This file
 ```
 
 ---
 
-## PWA Features
+## 🔧 Troubleshooting
 
-TrafficWatch AI is a fully installable Progressive Web App:
+### Common Issues
 
-| Feature | Status |
-|---------|--------|
-| App manifest | ✅ Configurable via `vite.config.ts` |
-| Service worker | ✅ Workbox precaching + runtime caching |
-| Offline fallback | ✅ Custom offline page |
-| iOS support | ✅ apple-mobile-web-app meta tags |
-| Install prompt | ✅ Elegant in-app prompt (respects dismissals) |
-| Update detection | ✅ Banner when new version available |
-| Push notifications | ✅ Service worker notification handlers |
-| Map tile caching | ✅ 30-day CacheFirst for OSM tiles |
-| API caching | ✅ NetworkFirst with 5s timeout |
-| Offline queue | ✅ IndexedDB sync queue |
-| Auto-sync | ✅ Sync queued data when back online |
+| Issue | Solution |
+|-------|----------|
+| **supabaseUrl is required** | Ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in your environment |
+| **Blank app / 404** | Ensure SPA rewrites are configured (Vercel: `vercel.json`) |
+| **Login fails** | Check that Auth → Settings → Site URL matches your app URL |
+| **Maps not loading** | OpenStreetMap tiles are used by default — check network connectivity |
+| **AI analysis fails** | Verify your AI provider API key is correct |
+| **PWA not installable** | Ensure the app is served over HTTPS (or localhost) |
+| **Offline sync not working** | Check that IndexedDB is available and service worker is registered |
+| **Build errors** | Run `bun install` to ensure all dependencies are installed |
+| **TypeScript errors** | Run `bun tsc -b --noEmit` to check for type errors |
 
-### Installing the PWA
+### Debug Mode
 
-1. Open TrafficWatch AI in Chrome/Edge on desktop or Android
-2. Click the install icon in the address bar, or
-3. Tap the "Install App" button in the in-app prompt
-4. The app will launch in standalone mode with offline support
+- Check the **browser console** for detailed error messages
+- Supabase queries with errors are returned with user-friendly messages
+- Hidden error details in `ApiResponse.error.original`
+
+### Getting Help
+
+- Check existing GitHub issues
+- Review the Supabase dashboard logs
+- Verify environment variables are correctly named
 
 ---
 
-## Authentication
+## 📹 Future Camera Integration
 
-### Auth is already set up
+The architecture is designed for future integration with live camera systems without requiring a complete rebuild.
 
-All authentication is handled through **Supabase Auth** with email OTP.
+### Architecture
 
-### Using Auth on the Frontend
+```
+Camera Hardware (RTSP/HLS/WebRTC)
+      ↓
+  Stream Gateway (src/ai/camera/stream-gateway.ts)
+      ↓
+  Video Processing (src/ai/camera/video-processing.ts)
+      ↓
+  Camera Pipeline (src/ai/camera/pipeline.ts)
+      ↓
+  ┌──────────────┬──────────────┬──────────────┐
+  ▼              ▼              ▼              ▼
+camera_streams  camera_detections  camera_violations  camera_evidence
+      ↓
+  Incident & Evidence Systems
+```
+
+### Database Tables (Already Created)
+
+| Table | Purpose |
+|-------|---------|
+| `traffic_cameras` | Camera registrations and metadata |
+| `camera_events` | Raw event logs from cameras |
+| `camera_streams` | Stream configurations (main/sub/backup) |
+| `camera_detections` | Individual AI detection results |
+| `camera_violations` | Violation records from detections |
+| `camera_evidence` | Evidence artifacts from detections |
+
+### Stream Gateways (Already Implemented)
+
+- **RTSP Gateway** — Real-Time Streaming Protocol
+- **HLS Gateway** — HTTP Live Streaming
+- **WebRTC Gateway** — Peer-to-peer streaming
+- **File Gateway** — Uploaded video files
+
+### Supported Camera Types
+
+- Traffic cameras (fixed)
+- CCTV cameras
+- Highway monitoring
+- Speed enforcement cameras
+- Red light cameras
+- ANPR cameras
+- Body-worn cameras
+- Vehicle dashcams
+- Drone feeds
+- Mobile device cameras
+
+### Adding a New Camera Source
 
 ```typescript
-import { useAuth } from "@/hooks/use-auth";
+import { StreamGateway, StreamConfig, StreamConnection } from "@/ai/camera/types";
 
-const { isLoading, isAuthenticated, user, signIn, signOut } = useAuth();
-```
-
-### Protected Routes
-
-Use the `RequireAuth` wrapper in `src/main.tsx`:
-
-```tsx
-<Route
-  path="/dashboard"
-  element={
-    <RequireAuth>
-      <Dashboard />
-    </RequireAuth>
+class CustomCameraGateway implements StreamGateway {
+  readonly type = "rtsp"; // or your custom type
+  
+  async connect(config: StreamConfig): Promise<StreamConnection> {
+    // Implement connection logic
   }
-/>
-```
-
-### Role-Based Access Control
-
-Routes can require specific permissions or minimum roles:
-
-```tsx
-<Route
-  path="/admin"
-  element={
-    <RequireAuth
-      requirePermission="configure_system"
-      fallbackPath="/dashboard"
-      showForbidden
-    >
-      <AdminPanel />
-    </RequireAuth>
+  
+  async disconnect(connectionId: string): Promise<void> {
+    // Implement disconnection
   }
-/>
+  
+  getStatus(connectionId: string) {
+    // Return current status
+  }
+  
+  async listAvailableStreams(): Promise<StreamConfig[]> {
+    // Return available streams
+  }
+}
 ```
 
 ---
 
-## Authorization & RBAC
+## 📄 License
 
-### Roles
-
-| Role | Level |
-|------|-------|
-| System Administrator | 100 |
-| National Police Commissioner | 90 |
-| Regional Commander | 70 |
-| Traffic Commander | 60 |
-| Police Supervisor | 50 |
-| Traffic Officer | 40 |
-| Investigator | 30 |
-| Evidence Officer | 20 |
-| System Auditor | 15 |
-| Citizen | 10 |
-
-### Permissions
-
-Permissions control access to specific actions:
-`view_dashboard`, `create_incident`, `edit_incident`, `delete_incident`,
-`access_evidence`, `run_ai_analysis`, `view_reports`, `view_analytics`,
-`manage_users`, `configure_system`, `view_audit_logs`, etc.
-
-Authorization is enforced both on the **frontend** (UI guards) and **backend** (Supabase RLS policies).
+This project is designed for government law enforcement use. All rights reserved.
 
 ---
 
-## Deployment
+## 🙏 Acknowledgments
 
-### Build for Production
-
-```bash
-bun run build
-```
-
-The production build outputs to the `dist/` directory.
-
-### Hosting Options
-
-#### Option 1: Vercel (Recommended)
-1. Push to GitHub
-2. Import repo in Vercel
-3. Set Build Command: `bun run build`
-4. Set Output Directory: `dist`
-5. Add environment variables in Vercel dashboard
-6. Deploy
-
-#### Option 2: Netlify
-1. Push to GitHub
-2. Import repo in Netlify
-3. Set Build Command: `bun run build`
-4. Set Publish Directory: `dist`
-5. Add `_redirects` file: `/* /index.html 200`
-6. Deploy
-
-#### Option 3: Docker
-```dockerfile
-FROM oven/bun:1 AS build
-WORKDIR /app
-COPY package.json bun.lock ./
-RUN bun install
-COPY . .
-RUN bun run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### Supabase Production Checklist
-
-- [ ] Enable Row Level Security on all tables
-- [ ] Set up appropriate RLS policies (run migration SQL)
-- [ ] Configure authentication settings (disable email confirmation if desired)
-- [ ] Create storage buckets with correct MIME restrictions
-- [ ] Set up signed URL expiration for evidence access
-- [ ] Enable pg_cron (Pro plan) for automated dashboard refreshes
+- Built with React, TypeScript, and Vite
+- Backend powered by Supabase (PostgreSQL)
+- Maps by Leaflet and OpenStreetMap
+- UI components from shadcn/ui
+- AI providers: VlyAI, Google Gemini, OpenAI
 
 ---
 
-## GitHub Actions
-
-The project includes a CI workflow (`.github/workflows/ci.yml`) that runs on every push and pull request:
-
-- ✅ TypeScript typecheck
-- ✅ Lint with ESLint
-- ✅ Production build
-
----
-
-## Migrations
-
-Database migration SQL files are numbered sequentially:
-
-| File | Description |
-|------|-------------|
-| `supabase-migration-v2.sql` | Core schema: profiles, incidents, evidence, vehicles |
-| `supabase-migration-v4.sql` | Storage buckets and RLS policies |
-| `supabase-migration-v5.sql` | Liberia geography data (counties, districts) |
-| `supabase-migration-v6.sql` | Predictive analytics tables |
-| `supabase-migration-v7.sql` | User roles and permissions |
-| `supabase-migration-v8.sql` | Auth functions and triggers |
-| `supabase-migration-v10.sql` | Citizen reports schema |
-| `supabase-migration-v11.sql` | Officer portal enhancements |
-| `supabase-migration-v12.sql` | Command center views |
-| `supabase-migration-v13.sql` | Notification system |
-| `supabase-migration-v14.sql` | Global search indexes |
-| `supabase-migration-v15.sql` | Report generation |
-| `supabase-migration-v16.sql` | Audit logging |
-| `supabase-migration-v17.sql` | Security policies |
-| `supabase-migration-v18.sql` | Data privacy |
-| `supabase-migration-v20.sql` | RLS policies |
-| `supabase-migration-v21-performance.sql` | Performance indexes |
-
----
-
-## License
-
-This project is proprietary software. All rights reserved.
-
----
-
-## Support
-
-For technical support, contact the Liberia National Police IT Division.
+*TrafficWatch AI — Making Liberian roads safer through technology.*
