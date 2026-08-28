@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Liberia Intelligent Traffic App</title>
+  <script>
+    // GitHub Pages SPA redirect
+    // Capture the 404 path, store it, then redirect to root.
+    // index.html will read sessionStorage and restore the correct route.
+    (function() {
+      var repo = '/liberia-intelligent-traffic-app';
+      var path = window.location.pathname;
+
+      // If the path already starts with the repo prefix, strip it
+      if (path.indexOf(repo) === 0) {
+        path = path.substring(repo.length) || '/';
+      }
+
+      // Store the intended path for the app to pick up
+      try {
+        sessionStorage.setItem('gh-pages-redirect', path + window.location.search + window.location.hash);
+      } catch (e) {
+        // sessionStorage may be unavailable
+      }
+
+      // Redirect to the root of the deployed app
+      window.location.replace(repo + '/');
+    })();
+  </script>
+</head>
+<body>
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;">
+    <p>Redirecting...</p>
+  </div>
+</body>
+</html>

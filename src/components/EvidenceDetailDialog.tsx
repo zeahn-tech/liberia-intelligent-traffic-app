@@ -202,20 +202,43 @@ export function EvidenceDetailDialog({
       await logEvidenceDownloaded(evidence.id, user.id);
       const events = await getCustodyChain(evidence.id);
       setCustodyEvents(events);
-      const signedUrl = null;
-      
-      // Use signed URL for secure download
-      if (signedUrl) {
+
+      // Determine bucket and file path from evidence type
+      const bucketMap: Record<string, string> = {
+        photo: "evidence-images",
+        video: "evidence-videos",
+        audio: "evidence-audio",
+        document: "evidence-documents",
+      };
+      const bucket = bucketMap[evidence.type] || "evidence-other";
+      const filePath = evidence.file_path || evidence.file_url || `${evidence.incident_id}/${evidence.id}/${evidence.name}`;
+
+      // Generate signed URL for secure download
+      try {
+        const signedResult = await generateSignedUrl(bucket, filePath);
+        if (signedResult.success && signedResult.url) {
+          await triggerFileDownload(signedResult.url, evidence.name);
+          toast.success(`Downloading ${evidence.name}`);
+          return;
+        }
+        console.warn("Signed URL generation failed:", signedResult.error);
+      } catch (err) {
+        console.warn("Download failed:", err);
+      }
+
+      // Fallback: try to download directly if there's a URL
+      if (evidence.file_url && evidence.file_url.startsWith("http")) {
         try {
-          await triggerFileDownload(signedUrl, evidence.name);
-          toast.success(`Downloading ${evidence.name} via secure signed URL`);
+          await triggerFileDownload(evidence.file_url, evidence.name);
+          toast.success(`Downloading ${evidence.name}`);
           return;
         } catch (err) {
-          console.warn("Signed URL download failed, falling back:", err);
+          console.warn("Direct download failed:", err);
         }
       }
+
+      toast.error(`Unable to download ${evidence.name} — file may need to be re-uploaded`);
     }
-    toast.success(`Downloading ${evidence?.name}`);
   }, [evidence, user]);
 
   if (!evidence) return null;
@@ -251,6 +274,46 @@ export function EvidenceDetailDialog({
             </div>
           </div>
         </DialogHeader>
+
+        {/* Media Preview */}
+        {evidence.type === "photo" && evidence.file_url && (
+          <div className="rounded-xl overflow-hidden border border-border/50 bg-black/5">
+            <img
+              src={evidence.file_url}
+              alt={evidence.name}
+              className="w-full max-h-[300px] object-contain"
+            />
+          </div>
+        )}
+        {evidence.type === "video" && evidence.file_url && (
+          <div className="rounded-xl overflow-hidden border border-border/50 bg-black/5">
+            <video
+              src={evidence.file_url}
+              controls
+              className="w-full max-h-[300px]"
+              preload="metadata"
+            />
+          </div>
+        )}
+        {evidence.type === "audio" && evidence.file_url && (
+          <div className="rounded-xl border border-border/50 bg-secondary/30 p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <File className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{evidence.name}</p>
+                <p className="text-[10px] text-muted-foreground">Audio evidence file</p>
+              </div>
+            </div>
+            <audio
+              src={evidence.file_url}
+              controls
+              className="w-full"
+              preload="metadata"
+            />
+          </div>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4 rounded-xl p-1 bg-secondary">

@@ -245,6 +245,24 @@ export function EvidenceViewer({
             className="w-full h-full object-cover"
             loading="lazy"
           />
+        ) : evidence.type === "video" && evidence.fileUrl ? (
+          <video
+            src={evidence.fileUrl}
+            className="w-full h-full object-cover"
+            controls
+            preload="metadata"
+            poster={undefined}
+          />
+        ) : evidence.type === "audio" && evidence.fileUrl ? (
+          <div className="flex flex-col items-center gap-2 p-4 w-full">
+            <FileAudio className={cn("w-12 h-12", iconColor)} />
+            <audio
+              src={evidence.fileUrl}
+              controls
+              className="w-full max-w-[280px]"
+              preload="metadata"
+            />
+          </div>
         ) : (
           <div className="flex flex-col items-center gap-1.5">
             <FileIcon className={cn("w-10 h-10", iconColor)} />

@@ -2,10 +2,8 @@
 type UploadConfig = any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UploadResult = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const uploadError: any = null;
+
 /**
-import { logAuditEvent } from "@/lib/audit";
  * TrafficWatch AI — Secure Media Storage Service
  *
  * Handles:
@@ -411,10 +409,15 @@ export async function uploadEvidenceFile(
     const filePath = `${incidentId}/${evidenceId}/${sanitizedName}`;
 
     // Upload to Supabase Storage (with retry)
+    const { data: uploadData, error: uploadErr } = await uploadWithRetry(
+      file,
+      validation.bucket,
+      filePath,
+    );
 
-    if (uploadError) {
+    if (uploadErr) {
       // If offline, queue for later sync
-      if (isOfflineError(uploadError)) {
+      if (isOfflineError(uploadErr)) {
         await queueOfflineUpload(file, incidentId, evidenceId, validation.bucket, filePath, sha256Hash);
         return {
           success: true,
@@ -430,7 +433,7 @@ export async function uploadEvidenceFile(
       }
       return {
         success: false,
-        error: uploadError.message || "Upload failed after retries",
+        error: uploadErr.message || "Upload failed after retries",
         metadata,
       };
     }

@@ -333,6 +333,7 @@ export default function Evidence() {
                   <SelectItem value="photo">Photos</SelectItem>
                   <SelectItem value="video">Videos</SelectItem>
                   <SelectItem value="document">Documents</SelectItem>
+                  <SelectItem value="audio">Audio</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -374,11 +375,12 @@ export default function Evidence() {
         )}
 
         {/* Summary stats */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
             { label: "Total Files", count: filteredEvidence.length, color: "text-foreground", icon: File },
             { label: "Photos", count: filteredEvidence.filter(e => e.type === "photo").length, color: "text-blue-500", icon: Image },
             { label: "Videos", count: filteredEvidence.filter(e => e.type === "video").length, color: "text-purple-500", icon: Video },
+            { label: "Audio", count: filteredEvidence.filter(e => e.type === "audio").length, color: "text-amber-500", icon: File },
             { label: "Verified", count: filteredEvidence.filter(e => e.sha256_hash).length, color: "text-emerald-500", icon: Shield },
           ].map((stat) => (
             <div key={stat.label} className="clay-card bg-card p-4 rounded-xl text-center">
