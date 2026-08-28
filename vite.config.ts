@@ -5,14 +5,20 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 import { defineConfig } from "vite";
 
+// Base path: "/" for local/Freebuff, "/liberia-intelligent-traffic-app/" for GitHub Pages
+const isGHPages = process.env.DEPLOY_TARGET === "gh-pages";
+const base = isGHPages ? "/liberia-intelligent-traffic-app/" : "/";
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     vlyPlugin(),
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      base,
       includeAssets: [
         "logo.svg",
         "favicon.ico",
@@ -26,12 +32,12 @@ export default defineConfig({
         background_color: "#f4f2ee",
         display: "standalone",
         orientation: "any",
-        scope: "/",
-        start_url: "/",
-        id: "/",
+        scope: base,
+        start_url: base,
+        id: base,
         icons: [
           {
-            src: "/logo.svg",
+            src: `${base}logo.svg`,
             sizes: "any",
             type: "image/svg+xml",
             purpose: "any maskable",
@@ -44,10 +50,10 @@ export default defineConfig({
             name: "Dashboard",
             short_name: "Dashboard",
             description: "View traffic enforcement dashboard",
-            url: "/dashboard",
+            url: `${base}dashboard`,
             icons: [
               {
-                src: "/logo.svg",
+                src: `${base}logo.svg`,
                 sizes: "any",
                 type: "image/svg+xml",
               },
@@ -57,10 +63,10 @@ export default defineConfig({
             name: "New Incident",
             short_name: "New Report",
             description: "Create a new incident report",
-            url: "/incidents/new",
+            url: `${base}incidents/new`,
             icons: [
               {
-                src: "/logo.svg",
+                src: `${base}logo.svg`,
                 sizes: "any",
                 type: "image/svg+xml",
               },
